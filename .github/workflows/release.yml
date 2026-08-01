@@ -33,7 +33,7 @@ jobs:
     runs-on:
       - ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Java, GraalVM, and Gradle
         uses: ./.github/actions/setup-java-gradle
@@ -72,7 +72,7 @@ jobs:
     needs: build_native_image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
