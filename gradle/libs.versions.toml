@@ -11,20 +11,20 @@ test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 
 [versions]
 
-graalvm = "0.11.4"
-http4k = "5.38.0.0"
-jackson = "2.21.0"
-junit = "5.14.2"
-kotlin = "2.3.10"
-kotlin-logging = "8.0.01"
-logback = "1.5.32"
-mockk = "1.14.9"
-mockserver = "5.15.0"
+graalvm = "1.1.6"
+http4k = "6.56.0.0"
+jackson = "2.22.1"
+junit = "6.1.2"
+kotlin = "2.4.10"
+kotlin-logging = "8.0.4"
+logback = "1.6.1"
+mockk = "1.14.11"
+mockserver = "7.5.0"
 picocli = "4.7.7"
-rest-assured = "5.5.7"
+rest-assured = "6.0.1"
 rgxgen = "3.1"
-spring-boot = "3.5.7"
-swagger = "2.1.41"
+spring-boot = "4.1.0"
+swagger = "2.1.45"
 test-logger = "4.0.0"
 
 [libraries]
