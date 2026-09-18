@@ -24,6 +24,8 @@ fun apiOperation(
 class ApiOperationBuilder internal constructor(val method: String, val path: String) {
   private var requestBuilder: RequestBuilder? = null
   private val responses = mutableMapOf<Int, ResponseSchema>()
+  private val classResponses = mutableMapOf<Int, ResponseSchema>()
+  private var defaultSchema: ResponseSchema? = null
   private val scenarios = mutableListOf<Scenario>()
 
   fun request(block: RequestBuilder.() -> Unit) {
@@ -34,6 +36,16 @@ class ApiOperationBuilder internal constructor(val method: String, val path: Str
     responses[statusCode] = ResponseBuilder().apply(block).build()
   }
 
+  /** Declares a class response such as `4XX`, keyed by its leading digit. */
+  fun classResponse(statusClass: Int, block: ResponseBuilder.() -> Unit = {}) {
+    require(statusClass in 1..5) { "Status class must be 1..5 (for 1XX..5XX) but was $statusClass" }
+    classResponses[statusClass] = ResponseBuilder().apply(block).build()
+  }
+
+  fun defaultResponse(block: ResponseBuilder.() -> Unit = {}) {
+    defaultSchema = ResponseBuilder().apply(block).build()
+  }
+
   fun scenario(key: String, status: Int, block: ScenarioBuilder.() -> Unit = {}) {
     scenarios += ScenarioBuilder(path, method, key, status).apply(block).build()
   }
@@ -42,7 +54,11 @@ class ApiOperationBuilder internal constructor(val method: String, val path: Str
     path = path,
     method = method,
     requestSchema = (requestBuilder ?: RequestBuilder()).build(),
-    responseSchemas = ResponseSchemas(byStatusCode = responses.toMap()),
+    responseSchemas = ResponseSchemas(
+      byStatusCode = responses.toMap(),
+      byClass = classResponses.toMap(),
+      defaultResponse = defaultSchema
+    ),
     scenarios = scenarios.toList()
   )
 }

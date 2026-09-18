@@ -2,6 +2,7 @@ rootProject.name = "contracteer"
 
 include(
   "contracteer-cli",
+  "contracteer-conformance-test",
   "contracteer-core",
   "contracteer-mockserver",
   "contracteer-mockserver-spring",
