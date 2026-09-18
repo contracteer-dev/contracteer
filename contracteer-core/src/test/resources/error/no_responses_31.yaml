@@ -1,0 +1,13 @@
+openapi: 3.1.0
+info:
+  title: Product API
+  version: '1.0'
+paths:
+  /products/{id}:
+    get:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer

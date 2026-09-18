@@ -15,6 +15,18 @@ class ExtractionErrorTest {
     assert(errors.first().contains("file not found"))
   }
 
+  // Characterization: OAS 3.1 does not require `responses` on the Operation Object, but
+  // swagger-parser reports it missing and Contracteer treats every parser message as fatal.
+  @Test
+  fun `fails when a 3 1 operation declares no responses`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/no_responses_31.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("responses is missing") }) { "Expected error about missing responses but got: $errors" }
+  }
+
   @Test
   fun `fails when path parameter is not required`() {
     // when

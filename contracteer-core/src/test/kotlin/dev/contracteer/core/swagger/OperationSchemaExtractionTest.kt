@@ -537,6 +537,28 @@ class OperationSchemaExtractionTest {
     assert(responseSchema.headers.size == 1)
   }
 
+  @Test
+  fun `extracts an operation declaring only a status code class response`() {
+    // when
+    val operation = loadSingleOperation("status_code_class_only_response.yaml")
+
+    // then
+    assert(operation.responseSchemas.summary() == "4XX")
+    assert(operation.responseSchemas.responseFor(404) != null)
+    assert(operation.responseSchemas.responseFor(200) == null)
+  }
+
+  @Test
+  fun `extracts an operation declaring only a default response`() {
+    // when
+    val operation = loadSingleOperation("default_only_response.yaml")
+
+    // then
+    assert(operation.responseSchemas.summary() == "default")
+    assert(operation.responseSchemas.responseFor(500) != null)
+    assert(operation.responseSchemas.responseFor(200) === operation.responseSchemas.responseFor(500))
+  }
+
   // --- Helpers ---
 
   private fun loadSingleOperation(yamlFile: String) =

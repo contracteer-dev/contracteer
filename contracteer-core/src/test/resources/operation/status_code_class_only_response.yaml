@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: Product API
+  version: '1.0'
+paths:
+  /products/{id}:
+    get:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
