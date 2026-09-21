@@ -61,20 +61,7 @@
 
     
     
-  
-<meta property="og:type" content="website" />
-<meta property="og:title" content="CLI - Contracteer" />
-<meta property="og:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
-<meta property="og:image" content="https://contracteer.dev/dev/assets/images/social/getting-started/cli.png" />
-<meta property="og:image:type" content="image/png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:url" content="https://contracteer.dev/dev/getting-started/cli/" />
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="CLI - Contracteer" />
-<meta property="twitter:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
-<meta property="twitter:image" content="https://contracteer.dev/dev/assets/images/social/getting-started/cli.png" />
-</head>
+  </head>
   
   
     
@@ -1318,9 +1305,9 @@ The CLI exits with code <code>0</code> when all cases pass and <code>1</code> wh
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>   ✅ GET /musketeers -&gt; 200 (application/json) (generated)
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>   ✅ GET /musketeers/{id} -&gt; 200 (application/json) with scenario 'ATHOS'
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>   ✅ GET /musketeers/{id} -&gt; 404 with scenario '404_UNKNOWN_MUSKETEER'
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>   ✅ GET /musketeers/{id} -&gt; 400 (auto: path 'id' type mismatch)
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>   ✅ GET /musketeers/{id} -&gt; 400|404 (auto: path 'id' type mismatch)
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>   ❌ POST /musketeers (application/json) -&gt; 400 (auto: body type mismatch)
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>     ↳ 'status code': expected &lt;400&gt; but was &lt;500&gt;
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>     ↳ Status code does not match. Expected: 400, Actual: 500
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>Result Summary:
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>   ⚠️ 1 errors found during verification.

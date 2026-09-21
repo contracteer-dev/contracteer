@@ -61,20 +61,7 @@
 
     
     
-  
-<meta property="og:type" content="website" />
-<meta property="og:title" content="Verifier with JUnit 5 - Contracteer" />
-<meta property="og:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
-<meta property="og:image" content="https://contracteer.dev/dev/assets/images/social/getting-started/verifier-junit.png" />
-<meta property="og:image:type" content="image/png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:url" content="https://contracteer.dev/dev/getting-started/verifier-junit/" />
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="Verifier with JUnit 5 - Contracteer" />
-<meta property="twitter:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
-<meta property="twitter:image" content="https://contracteer.dev/dev/assets/images/social/getting-started/verifier-junit.png" />
-</head>
+  </head>
   
   
     
@@ -1581,7 +1568,7 @@ A mission that references musketeers by name, for example, requires those musket
 <ul>
 <li><strong>Named scenarios</strong> -- from OpenAPI example keys shared between request and response (e.g., <code>ATHOS</code>, <code>PORTHOS</code>).</li>
 <li><strong>Status-code-prefixed scenarios</strong> -- from keys like <code>404_UNKNOWN_MUSKETEER</code> that target a specific status code.</li>
-<li><strong>Automatic type-mismatch</strong> -- Contracteer sends a wrong type (e.g., a string for an integer parameter) and expects a <code>400</code>.</li>
+<li><strong>Automatic type-mismatch</strong> -- Contracteer sends a wrong type (e.g., a string for an integer parameter) and expects the server to reject it with a <code>400</code>, <code>422</code>, or <code>404</code> the OpenAPI document declares.</li>
 <li><strong>Schema-only</strong> -- when no examples exist, Contracteer generates random values and validates the response structure.</li>
 </ul>
 <p>For each case, the verifier checks the status code, required headers, and response body structure.

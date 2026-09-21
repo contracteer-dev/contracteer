@@ -59,20 +59,7 @@
 
     
     
-  
-<meta property="og:type" content="website" />
-<meta property="og:title" content="Troubleshooting - Contracteer" />
-<meta property="og:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
-<meta property="og:image" content="https://contracteer.dev/dev/assets/images/social/guides/troubleshooting.png" />
-<meta property="og:image:type" content="image/png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:url" content="https://contracteer.dev/dev/guides/troubleshooting/" />
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="Troubleshooting - Contracteer" />
-<meta property="twitter:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
-<meta property="twitter:image" content="https://contracteer.dev/dev/assets/images/social/guides/troubleshooting.png" />
-</head>
+  </head>
   
   
     
@@ -1061,6 +1048,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#type-mismatch-case-fails-although-the-server-rejected-the-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type-mismatch case fails although the server rejected the request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#response-body-validation-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1616,6 +1614,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#type-mismatch-case-fails-although-the-server-rejected-the-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type-mismatch case fails although the server rejected the request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#response-body-validation-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2134,6 +2143,13 @@ See <a href="../../getting-started/verifier-junit/#prepare-test-data">Prepare Te
 <p><strong>Fix:</strong> Add input validation to your server.
 For Spring Boot, ensure type-mismatch exceptions are mapped to <code>400</code> responses.
 The response must use the content type and schema declared in your OpenAPI document (e.g., <code>application/problem+json</code> with a ProblemDetail body).</p>
+<h3 id="type-mismatch-case-fails-although-the-server-rejected-the-request">Type-mismatch case fails although the server rejected the request<a class="headerlink" href="#type-mismatch-case-fails-although-the-server-rejected-the-request" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The case reports <code>Status code does not match. Expected: 400, Actual: 422</code>, even though <code>422</code> is a sensible rejection.</p>
+<p><strong>Cause:</strong> The verifier accepts <code>400</code>, <code>422</code>, or <code>404</code>, but only when the OpenAPI document covers that status.
+Here the document declares <code>400</code> and says nothing about <code>422</code>.</p>
+<p><strong>Fix:</strong> Declare the status your server actually returns.
+Add a <code>422</code> response to the operation, or cover it with a <code>4XX</code> class response or a <code>default</code> response.
+The document then describes what clients will really receive.</p>
 <h3 id="response-body-validation-fails">Response body validation fails<a class="headerlink" href="#response-body-validation-fails" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The verification case reports errors like <code>'name': expected type 'string' but got 'integer'</code> or <code>'email': required field missing</code>.</p>
 <p><strong>Cause:</strong> The server's response does not conform to the schema declared in the OpenAPI document.</p>
