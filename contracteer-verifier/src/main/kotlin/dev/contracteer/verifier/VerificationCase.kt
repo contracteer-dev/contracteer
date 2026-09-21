@@ -12,7 +12,7 @@ import dev.contracteer.core.operation.Scenario
  * Each subtype represents a different verification strategy:
  * - [ScenarioBased]: driven by a named scenario from the OpenAPI document
  * - [SchemaBased]: generated from the schema when no 2xx scenario exists
- * - [TypeMismatch]: sends an intentionally malformed request to verify 400 handling
+ * - [TypeMismatch]: sends an intentionally malformed request to verify the server rejects it
  */
 sealed class VerificationCase {
   /** A human-readable description of this verification case, suitable for test output. */
@@ -59,14 +59,22 @@ sealed class VerificationCase {
       }
   }
 
-  /** A verification case that sends a type-mismatched value to verify 400 Bad Request handling. */
+  /**
+   * A verification case that sends a type-mismatched value to verify the server rejects it.
+   *
+   * [expectedResponses] maps each status code accepted as a rejection to the response schema the
+   * document declares for it, in ascending order. The candidates are `400` and `422`, plus `404` when
+   * the mutated element is a path or query parameter, since both are part of the target URI. A candidate
+   * is kept only when the document covers it: exactly, through a class response such as `4XX`, or
+   * through `default`. The factory always includes `400`.
+   */
   data class TypeMismatch(
     val path: String,
     val method: String,
     val requestContentType: ContentType?,
     val responseContentType: ContentType?,
     val requestSchema: RequestSchema,
-    val responseSchema: ResponseSchema,
+    val expectedResponses: Map<Int, ResponseSchema>,
     val mutatedElement: MutatedElement,
     val mutatedValue: String
   ): VerificationCase() {
@@ -84,7 +92,7 @@ sealed class VerificationCase {
           }
           is MutatedElement.Body      -> "body"
         }
-        return "${method.uppercase()} $path -> 400 (auto: $elementLabel type mismatch)"
+        return "${method.uppercase()} $path -> ${expectedResponses.keys.joinToString("|")} (auto: $elementLabel type mismatch)"
       }
   }
 }

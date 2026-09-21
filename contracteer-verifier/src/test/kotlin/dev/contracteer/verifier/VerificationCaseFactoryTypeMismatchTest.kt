@@ -183,7 +183,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
     assert(typeMismatchCases[0].mutatedValue == "<<not a object>>")
     assert(typeMismatchCases[0].requestContentType == ContentType("application/json"))
-    assert(typeMismatchCases[0].responseSchema == apiOperation.responseSchemas.badRequestResponse())
+    assert(typeMismatchCases[0].expectedResponses == mapOf(400 to apiOperation.responseSchemas.badRequestResponse()))
     assert(typeMismatchCases[0].path == "/users")
     assert(typeMismatchCases[0].method == "POST")
   }
@@ -535,6 +535,125 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     assert(typeMismatchCases.size == 1)
     assert(typeMismatchCases[0].mutatedElement == MutatedElement.Parameter(QueryParam("filter")))
+  }
+
+  @Test
+  fun `expects only 400 when the document covers no other rejection status`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        pathParam("id", integerType())
+      }
+    }
+
+    // When
+    val typeMismatchCase = VerificationCaseFactory.create(apiOperation).filterIsInstance<TypeMismatch>().single()
+
+    // Then
+    assert(typeMismatchCase.expectedResponses.keys.toList() == listOf(400))
+  }
+
+  @Test
+  fun `expects a covered 404 for path and query mutations`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        pathParam("id", integerType())
+        queryParam("page", integerType())
+      }
+      response(404) {}
+    }
+
+    // When
+    val typeMismatchCases = VerificationCaseFactory.create(apiOperation).filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 2)
+    assert(typeMismatchCases.all { it.expectedResponses.keys.toList() == listOf(400, 404) })
+    assert(typeMismatchCases.all { it.expectedResponses[404] == apiOperation.responseSchemas.responseFor(404) })
+  }
+
+  @Test
+  fun `does not expect 404 for header cookie and body mutations`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        header("X-Count", integerType(), isRequired = true)
+        cookie("session_ttl", integerType())
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(404) {}
+    }
+
+    // When
+    val typeMismatchCases = VerificationCaseFactory.create(apiOperation).filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 3)
+    assert(typeMismatchCases.all { it.expectedResponses.keys.toList() == listOf(400) })
+  }
+
+  @Test
+  fun `expects a covered 422`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(422) {
+        jsonBody(objectType { properties { "detail" to stringType() } })
+      }
+    }
+
+    // When
+    val typeMismatchCase = VerificationCaseFactory.create(apiOperation).filterIsInstance<TypeMismatch>().single()
+
+    // Then
+    assert(typeMismatchCase.expectedResponses == mapOf(
+      400 to apiOperation.responseSchemas.responseFor(400),
+      422 to apiOperation.responseSchemas.responseFor(422)
+    ))
+  }
+
+  @Test
+  fun `expects every rejection status a class response covers in ascending order`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request {
+        pathParam("id", integerType())
+      }
+      response(200) {}
+      classResponse(4) {
+        jsonBody(objectType { properties { "title" to stringType() } })
+      }
+    }
+
+    // When
+    val typeMismatchCase = VerificationCaseFactory.create(apiOperation).filterIsInstance<TypeMismatch>().single()
+
+    // Then
+    assert(typeMismatchCase.expectedResponses.keys.toList() == listOf(400, 404, 422))
+    assert(typeMismatchCase.expectedResponses.values.all { it == apiOperation.responseSchemas.responseFor(400) })
+  }
+
+  @Test
+  fun `expects every rejection status a default response covers`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/users") {
+      request {
+        queryParam("page", integerType())
+      }
+      response(200) {}
+      defaultResponse {
+        jsonBody(objectType { properties { "message" to stringType() } })
+      }
+    }
+
+    // When
+    val typeMismatchCase = VerificationCaseFactory.create(apiOperation).filterIsInstance<TypeMismatch>().single()
+
+    // Then
+    assert(typeMismatchCase.expectedResponses.keys.toList() == listOf(400, 404, 422))
   }
 
   private fun apiOperationWith400(

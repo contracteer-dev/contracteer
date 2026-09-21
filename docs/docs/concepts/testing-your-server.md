@@ -63,7 +63,8 @@ The verifier sends `GET /musketeers/1` and validates that the response has statu
 The verifier sends `GET /musketeers/999` and validates that the response has status `404`.
 
 **Type-mismatch** -- The `id` parameter has `type: integer` and a `400` response is defined.
-Contracteer generates this verification case automatically: it sends `GET /musketeers/<<not a integer>>` -- a string where an integer is expected -- and validates that the response has status `400` with a body matching the ProblemDetail schema.
+Contracteer generates this verification case automatically: it sends `GET /musketeers/<<not a integer>>` -- a string where an integer is expected -- and validates that the server rejects it.
+This operation declares `400` and `404`, so either is accepted, and the body is validated against the schema declared for whichever status came back.
 
 ---
 
@@ -95,11 +96,11 @@ That turns a contract test into a functional test.
 When an operation defines a `400` response, Contracteer generates **type-mismatch verification cases** automatically.
 
 For each request parameter or request body whose type can be meaningfully violated, the verifier sends a value of the wrong type.
-It expects the server to respond with `400`.
+It expects the server to reject the request with `400`, `422`, or `404` -- and only with a status the OpenAPI document covers.
 
 In the Musketeer API, the `id` parameter is `type: integer`.
 The verifier sends the string `<<not a integer>>` where an integer is expected.
-A server that validates its inputs rejects this with a `400` response.
+A server that validates its inputs rejects this with a `400` response, or with the `404` this operation also declares.
 
 ### What triggers automatic 400 testing
 
@@ -110,6 +111,22 @@ Two conditions must be met:
 
 Contracteer resolves the 400 response schema using the following priority: exact `400` → `4XX` class → `default`.
 Many real-world APIs define error responses via `4XX` or `default` instead of listing each error status code explicitly.
+
+### Which status codes the verifier accepts
+
+A malformed request settles the class of the response -- the client erred -- but not the exact status code.
+Frameworks disagree: Spring and ASP.NET answer `400`, FastAPI and Laravel answer `422`, and Jakarta RESTful Web Services requires `404` for a path or query parameter it cannot convert.
+
+The verifier accepts all three, under two conditions:
+
+1. `404` counts only when the mutated element is a path or query parameter, because that is the only place a framework produces it.
+2. The status must be covered by the OpenAPI document -- declared exactly, through a class response such as `4XX`, or through `default`.
+
+Any other status fails the case, `401`, `403`, and `429` included.
+Those mean the request was refused before the input was judged, so accepting them would let the case pass without testing validation at all.
+
+The response body is validated against the schema declared for the status the server returned.
+The case name lists the accepted codes: `GET /musketeers/{id} -> 400|404 (auto: path 'id' type mismatch)`.
 
 ### Which types can be mutated
 

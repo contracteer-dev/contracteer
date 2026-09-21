@@ -51,6 +51,17 @@ See [Prepare Test Data](../getting-started/verifier-junit.md#prepare-test-data) 
 For Spring Boot, ensure type-mismatch exceptions are mapped to `400` responses.
 The response must use the content type and schema declared in your OpenAPI document (e.g., `application/problem+json` with a ProblemDetail body).
 
+### Type-mismatch case fails although the server rejected the request
+
+**Symptom:** The case reports `Status code does not match. Expected: 400, Actual: 422`, even though `422` is a sensible rejection.
+
+**Cause:** The verifier accepts `400`, `422`, or `404`, but only when the OpenAPI document covers that status.
+Here the document declares `400` and says nothing about `422`.
+
+**Fix:** Declare the status your server actually returns.
+Add a `422` response to the operation, or cover it with a `4XX` class response or a `default` response.
+The document then describes what clients will really receive.
+
 ### Response body validation fails
 
 **Symptom:** The verification case reports errors like `'name': expected type 'string' but got 'integer'` or `'email': required field missing`.

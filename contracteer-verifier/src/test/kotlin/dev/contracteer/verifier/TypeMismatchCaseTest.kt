@@ -98,11 +98,30 @@ class TypeMismatchCaseTest {
     assert(displayName == "GET /users -> 400 (auto: cookie 'session_ttl' type mismatch)")
   }
 
+  @Test
+  fun `display name lists every expected status`() {
+    // Given
+    val case = typeMismatchCase(
+      path = "/users/{id}",
+      method = "GET",
+      mutatedElement = MutatedElement.Parameter(PathParam("id")),
+      mutatedValue = "<<not a integer>>",
+      expectedStatusCodes = listOf(400, 404)
+    )
+
+    // When
+    val displayName = case.displayName
+
+    // Then
+    assert(displayName == "GET /users/{id} -> 400|404 (auto: path 'id' type mismatch)")
+  }
+
   private fun typeMismatchCase(
     path: String = "/users",
     method: String = "POST",
     mutatedElement: MutatedElement,
-    mutatedValue: String
+    mutatedValue: String,
+    expectedStatusCodes: List<Int> = listOf(400)
   ): VerificationCase.TypeMismatch {
     val op = apiOperation(method, path) {
       request {
@@ -112,6 +131,7 @@ class TypeMismatchCaseTest {
       response(400) {
         jsonBody(objectType { properties { "error" to stringType() } })
       }
+      response(404) {}
     }
     return VerificationCase.TypeMismatch(
       path = path,
@@ -119,7 +139,7 @@ class TypeMismatchCaseTest {
       requestContentType = ContentType("application/json"),
       responseContentType = ContentType("application/json"),
       requestSchema = op.requestSchema,
-      responseSchema = op.responseSchemas.responseFor(400)!!,
+      expectedResponses = expectedStatusCodes.associateWith { op.responseSchemas.responseFor(it)!! },
       mutatedElement = mutatedElement,
       mutatedValue = mutatedValue
     )

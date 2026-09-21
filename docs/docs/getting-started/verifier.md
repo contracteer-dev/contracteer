@@ -171,7 +171,7 @@ The verifier generates four kinds of verification cases from each operation:
 
 - **Named scenarios** -- from OpenAPI example keys shared between request and response (e.g., `ATHOS`, `PORTHOS`).
 - **Status-code-prefixed scenarios** -- from keys like `404_UNKNOWN_MUSKETEER` that target a specific status code.
-- **Automatic type-mismatch** -- Contracteer sends a wrong type (e.g., a string for an integer parameter) and expects a `400`.
+- **Automatic type-mismatch** -- Contracteer sends a wrong type (e.g., a string for an integer parameter) and expects the server to reject it with a `400`, `422`, or `404` the OpenAPI document declares.
 - **Schema-only** -- when no examples exist, Contracteer generates random values and validates the response structure.
 
 For each case, the verifier checks the status code, required headers, and response body structure.

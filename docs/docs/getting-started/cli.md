@@ -79,9 +79,9 @@ OpenAPI document: openapi.yaml
    ✅ GET /musketeers -> 200 (application/json) (generated)
    ✅ GET /musketeers/{id} -> 200 (application/json) with scenario 'ATHOS'
    ✅ GET /musketeers/{id} -> 404 with scenario '404_UNKNOWN_MUSKETEER'
-   ✅ GET /musketeers/{id} -> 400 (auto: path 'id' type mismatch)
+   ✅ GET /musketeers/{id} -> 400|404 (auto: path 'id' type mismatch)
    ❌ POST /musketeers (application/json) -> 400 (auto: body type mismatch)
-     ↳ 'status code': expected <400> but was <500>
+     ↳ Status code does not match. Expected: 400, Actual: 500
 
 Result Summary:
    ⚠️ 1 errors found during verification.

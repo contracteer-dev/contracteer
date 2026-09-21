@@ -26,28 +26,31 @@ internal object ResponseValidator {
     return when (case) {
       is ScenarioBased -> validateResponse(case.scenario.statusCode, case.responseSchema, response)
       is SchemaBased   -> validateResponse(case.statusCode, case.responseSchema, response)
-      is TypeMismatch  -> validateResponse(400, case.responseSchema, response)
+      is TypeMismatch  -> validateTypeMismatchResponse(case.expectedResponses, response)
     }
   }
 
   private fun validateResponse(expectedStatusCode: Int,
                                responseSchema: ResponseSchema,
-                               response: Response): Result<Unit> {
-    val statusCodeResult = validateStatusCode(expectedStatusCode, response.status.code)
-    return when {
-      statusCodeResult.isFailure() -> statusCodeResult
-      else                         ->
-        validateHeaders(responseSchema.headers, response.headers)
-          .andThen { validateBody(responseSchema.bodies, response) }
+                               response: Response): Result<Unit> =
+    when (response.status.code) {
+      expectedStatusCode -> validateHeadersAndBody(responseSchema, response)
+      else               -> statusCodeMismatch(expectedStatusCode.toString(), response.status.code)
     }
-  }
 
-  private fun validateStatusCode(expected: Int, actual: Int): Result<Unit> {
-    return when (expected) {
-      actual -> success()
-      else   -> failure("Status code does not match. Expected: $expected, Actual: $actual")
+  private fun validateTypeMismatchResponse(expectedResponses: Map<Int, ResponseSchema>,
+                                           response: Response): Result<Unit> =
+    when (val responseSchema = expectedResponses[response.status.code]) {
+      null -> statusCodeMismatch(expectedResponses.keys.joinToString("|"), response.status.code)
+      else -> validateHeadersAndBody(responseSchema, response)
     }
-  }
+
+  private fun statusCodeMismatch(expected: String, actual: Int): Result<Unit> =
+    failure("Status code does not match. Expected: $expected, Actual: $actual")
+
+  private fun validateHeadersAndBody(responseSchema: ResponseSchema, response: Response): Result<Unit> =
+    validateHeaders(responseSchema.headers, response.headers)
+      .andThen { validateBody(responseSchema.bodies, response) }
 
   private fun validateHeaders(headerSchemas: List<ParameterSchema>, responseHeaders: Headers): Result<Unit> =
     headerSchemas.accumulate { paramSchema ->

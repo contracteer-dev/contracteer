@@ -331,6 +331,85 @@ class ResponseValidatorTest {
     assert(result.isSuccess())
   }
 
+  @Test
+  fun `validates type mismatch response against the schema of the status the server answered`() {
+    // Given
+    val target = typeMismatchCase(expectedStatusCodes = listOf(400, 422)) {
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+          required("error")
+        })
+      }
+      response(422) {
+        jsonBody(objectType {
+          properties { "detail" to stringType() }
+          required("detail")
+        })
+      }
+    }
+    val response = mockResponse(
+      status = Status.UNPROCESSABLE_ENTITY,
+      headers = listOf("Content-Type" to "application/json"),
+      contentType = "application/json",
+      body = """{"detail": "invalid body"}"""
+    )
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isSuccess()) { "Expected success but got: ${result.errors()}" }
+  }
+
+  @Test
+  fun `fails type mismatch when body does not match the schema of the status the server answered`() {
+    // Given
+    val target = typeMismatchCase(expectedStatusCodes = listOf(400, 422)) {
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+          required("error")
+        })
+      }
+      response(422) {
+        jsonBody(objectType {
+          properties { "detail" to stringType() }
+          required("detail")
+        })
+      }
+    }
+    val response = mockResponse(
+      status = Status.UNPROCESSABLE_ENTITY,
+      headers = listOf("Content-Type" to "application/json"),
+      contentType = "application/json",
+      body = """{"error": "invalid body"}"""
+    )
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    val errors = result.assertFailure()
+    assert(errors.single().contains("detail")) { "Expected a failure on 'detail' but got: $errors" }
+  }
+
+  @Test
+  fun `fails type mismatch when status is not expected and lists every expected status`() {
+    // Given
+    val target = typeMismatchCase(expectedStatusCodes = listOf(400, 422)) {
+      classResponse(4) {}
+    }
+    val response = mockResponse(Status.UNAUTHORIZED)
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    val errors = result.assertFailure()
+    assert(errors.single() == "Status code does not match. Expected: 400|422, Actual: 401")
+  }
+
   // --- helpers ---
 
   private fun schemaBasedCase(method: String = "GET",
@@ -349,6 +428,21 @@ class ResponseValidatorTest {
       requestSchema = op.requestSchema,
       responseSchema = op.responseSchemas.responseFor(statusCode)
                        ?: ResponseSchema(headers = emptyList(), bodies = emptyList())
+    )
+  }
+
+  private fun typeMismatchCase(expectedStatusCodes: List<Int>,
+                               block: ApiOperationBuilder.() -> Unit): VerificationCase.TypeMismatch {
+    val op = apiOperation("POST", "/users", block)
+    return VerificationCase.TypeMismatch(
+      path = "/users",
+      method = "POST",
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = op.requestSchema,
+      expectedResponses = expectedStatusCodes.associateWith { op.responseSchemas.responseFor(it)!! },
+      mutatedElement = MutatedElement.Body,
+      mutatedValue = "<<not a object>>"
     )
   }
 

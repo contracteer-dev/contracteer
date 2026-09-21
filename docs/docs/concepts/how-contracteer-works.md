@@ -72,7 +72,8 @@ Two scenarios come from this operation:
 A **verification case** is what Contracteer actually executes.
 Every scenario produces a verification case, but Contracteer also generates verification cases automatically.
 Here, the OpenAPI document declares that `id` is an integer and that a `400` response exists.
-Contracteer creates an automatic **type-mismatch verification case**: it sends an invalid type (a string instead of an integer) and expects a `400` with a response matching the ProblemDetail schema.
+Contracteer creates an automatic **type-mismatch verification case**: it sends an invalid type (a string instead of an integer) and expects the server to reject it.
+This operation declares `400` and `404`, so either is accepted, and the response is validated against the schema declared for it.
 
 Three verification cases from one operation, covering the happy path, a not-found case, and input validation -- all derived from the OpenAPI document.
 

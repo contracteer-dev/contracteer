@@ -13,7 +13,7 @@ import dev.contracteer.verifier.VerificationCase.*
  * Produces three kinds of verification cases:
  * - [VerificationCase.ScenarioBased]: one per scenario defined in the operation
  * - [VerificationCase.SchemaBased]: generated from the schema when no 2xx scenario exists
- * - [VerificationCase.TypeMismatch]: generated for 400 Bad Request validation when a 400 response is defined
+ * - [VerificationCase.TypeMismatch]: generated when the document covers status `400`, exactly or through `4XX` or `default`
  */
 object VerificationCaseFactory {
   private val logger = KotlinLogging.logger {}
@@ -22,7 +22,7 @@ object VerificationCaseFactory {
   fun create(apiOperation: ApiOperation): List<VerificationCase> {
     val scenarioCases = createScenarioBasedCases(apiOperation)
     val schemaBasedCases = createSchemaBasedCasesIfNeeded(apiOperation)
-    val typeMismatchCases = createTypeMismatchs(apiOperation)
+    val typeMismatchCases = createTypeMismatchCases(apiOperation)
 
     return scenarioCases + schemaBasedCases + typeMismatchCases
   }
@@ -79,17 +79,17 @@ object VerificationCaseFactory {
     return statusCode in 200..299
   }
 
-  private fun createTypeMismatchs(apiOperation: ApiOperation): List<TypeMismatch> {
-    val responseSchema = apiOperation.responseSchemas.badRequestResponse() ?: return emptyList()
-    val responseContentType = responseSchema.bodies.firstOrNull()?.contentType
+  private fun createTypeMismatchCases(apiOperation: ApiOperation): List<TypeMismatch> {
+    val badRequestResponse = apiOperation.responseSchemas.badRequestResponse() ?: return emptyList()
+    val responseContentType = badRequestResponse.bodies.firstOrNull()?.contentType
     val requestSchema = apiOperation.requestSchema
 
     val cases = listOfNotNull(
-      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.pathParameters),
-      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.queryParameters),
-      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.headers),
-      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.cookies),
-      createBodyTypeMismatch(apiOperation, responseSchema, responseContentType)
+      createParameterTypeMismatch(apiOperation, responseContentType, requestSchema.pathParameters),
+      createParameterTypeMismatch(apiOperation, responseContentType, requestSchema.queryParameters),
+      createParameterTypeMismatch(apiOperation, responseContentType, requestSchema.headers),
+      createParameterTypeMismatch(apiOperation, responseContentType, requestSchema.cookies),
+      createBodyTypeMismatch(apiOperation, responseContentType)
     )
 
     if (cases.isEmpty()) {
@@ -104,11 +104,11 @@ object VerificationCaseFactory {
 
   private fun createParameterTypeMismatch(
     apiOperation: ApiOperation,
-    responseSchema: ResponseSchema,
     responseContentType: ContentType?,
     parameters: List<ParameterSchema>
   ): TypeMismatch? {
     val (param, mutatedValue) = findFirstMutableParameter(parameters) ?: return null
+    val mutatedElement = MutatedElement.Parameter(param.element)
 
     return TypeMismatch(
       path = apiOperation.path,
@@ -116,8 +116,8 @@ object VerificationCaseFactory {
       requestContentType = null,
       responseContentType = responseContentType,
       requestSchema = apiOperation.requestSchema,
-      responseSchema = responseSchema,
-      mutatedElement = MutatedElement.Parameter(param.element),
+      expectedResponses = expectedResponsesFor(mutatedElement, apiOperation.responseSchemas),
+      mutatedElement = mutatedElement,
       mutatedValue = mutatedValue
     )
   }
@@ -131,7 +131,6 @@ object VerificationCaseFactory {
 
   private fun createBodyTypeMismatch(
     apiOperation: ApiOperation,
-    responseSchema: ResponseSchema,
     responseContentType: ContentType?
   ): TypeMismatch? {
     val mutableBody = findFirstMutableBody(apiOperation.requestSchema.bodies) ?: return null
@@ -142,11 +141,23 @@ object VerificationCaseFactory {
       requestContentType = mutableBody.first.contentType,
       responseContentType = responseContentType,
       requestSchema = apiOperation.requestSchema,
-      responseSchema = responseSchema,
+      expectedResponses = expectedResponsesFor(MutatedElement.Body, apiOperation.responseSchemas),
       mutatedElement = MutatedElement.Body,
       mutatedValue = mutableBody.second
     )
   }
+
+  private fun expectedResponsesFor(mutatedElement: MutatedElement,
+                                   responseSchemas: ResponseSchemas): Map<Int, ResponseSchema> =
+    rejectionStatusCodesFor(mutatedElement)
+      .mapNotNull { statusCode -> responseSchemas.responseFor(statusCode)?.let { statusCode to it } }
+      .toMap()
+
+  private fun rejectionStatusCodesFor(mutatedElement: MutatedElement): List<Int> =
+    if (mutatedElement.isPartOfTargetUri()) listOf(400, 404, 422) else listOf(400, 422)
+
+  private fun MutatedElement.isPartOfTargetUri(): Boolean =
+    this is MutatedElement.Parameter && (element is ParameterElement.PathParam || element is ParameterElement.QueryParam)
 
   private fun findFirstMutableBody(bodies: List<BodySchema>): Pair<BodySchema, String>? =
     bodies

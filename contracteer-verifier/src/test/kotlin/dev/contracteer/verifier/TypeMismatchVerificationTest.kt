@@ -4,7 +4,10 @@ import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
+import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.UNAUTHORIZED
+import org.http4k.core.Status.Companion.UNPROCESSABLE_ENTITY
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
@@ -184,6 +187,132 @@ class TypeMismatchVerificationTest {
       response(400) {
         jsonBody(objectType {
           properties { "error" to stringType() }
+        })
+      }
+    }
+
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
+
+    // When
+    val outcome = verifier.verify(typeMismatchCase)
+
+    // Then
+    server.stop()
+    assert(outcome.result.isFailure())
+    assert(outcome.result.errors().any { it.contains("Status code") })
+  }
+
+  @Test
+  fun `verification passes when server rejects type mismatch with a declared 422`() {
+    // Given
+    val app = routes(
+      "/users" bind POST to {
+        Response(UNPROCESSABLE_ENTITY)
+          .header("Content-Type", "application/json")
+          .body("""{"detail": "invalid body"}""")
+      }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        jsonBody(objectType {
+          properties { "name" to stringType() }
+        })
+      }
+
+      response(200) {}
+
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+          required("error")
+        })
+      }
+
+      response(422) {
+        jsonBody(objectType {
+          properties { "detail" to stringType() }
+          required("detail")
+        })
+      }
+    }
+
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
+
+    // When
+    val outcome = verifier.verify(typeMismatchCase)
+
+    // Then
+    server.stop()
+    assert(outcome.result.isSuccess()) { "Expected success but got: ${outcome.result.errors()}" }
+  }
+
+  @Test
+  fun `verification passes when server rejects path type mismatch with a declared bodyless 404`() {
+    // Given
+    val app = routes(
+      "/users/{id}" bind GET to { Response(NOT_FOUND) }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request {
+        pathParam("id", integerType())
+      }
+
+      response(200) {}
+
+      response(404) {}
+
+      classResponse(4) {
+        jsonBody(objectType {
+          properties { "title" to stringType() }
+          required("title")
+        })
+      }
+    }
+
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
+
+    // When
+    val outcome = verifier.verify(typeMismatchCase)
+
+    // Then
+    server.stop()
+    assert(outcome.result.isSuccess()) { "Expected success but got: ${outcome.result.errors()}" }
+  }
+
+  @Test
+  fun `verification fails when server answers type mismatch with a covered status that does not signal a rejected input`() {
+    // Given
+    val app = routes(
+      "/users" bind POST to {
+        Response(UNAUTHORIZED)
+          .header("Content-Type", "application/json")
+          .body("""{"title": "missing credentials"}""")
+      }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        jsonBody(objectType {
+          properties { "name" to stringType() }
+        })
+      }
+
+      response(200) {}
+
+      classResponse(4) {
+        jsonBody(objectType {
+          properties { "title" to stringType() }
         })
       }
     }
