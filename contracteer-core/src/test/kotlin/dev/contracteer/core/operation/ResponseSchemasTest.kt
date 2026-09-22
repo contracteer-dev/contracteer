@@ -70,10 +70,10 @@ class ResponseSchemasTest {
   }
 
   @Test
-  fun `hasResponses checks byStatusCode only`() {
+  fun `hasResponses covers exact status codes and class and default responses`() {
     assert(ResponseSchemas(byStatusCode = mapOf(200 to ok)).hasResponses())
+    assert(ResponseSchemas(byClass = mapOf(4 to class4xx)).hasResponses())
+    assert(ResponseSchemas(defaultResponse = default).hasResponses())
     assert(!ResponseSchemas().hasResponses())
-    assert(!ResponseSchemas(byClass = mapOf(4 to class4xx)).hasResponses())
-    assert(!ResponseSchemas(defaultResponse = default).hasResponses())
   }
 }

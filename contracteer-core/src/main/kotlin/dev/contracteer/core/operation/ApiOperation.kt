@@ -54,7 +54,8 @@ data class ResponseSchemas(
 
   fun badRequestResponse(): ResponseSchema? = responseFor(400)
 
-  fun hasResponses(): Boolean = byStatusCode.isNotEmpty()
+  internal fun hasResponses(): Boolean =
+    byStatusCode.isNotEmpty() || byClass.isNotEmpty() || defaultResponse != null
 
   internal fun summary(): String {
     val parts = byStatusCode.keys.sorted().map { it.toString() } +

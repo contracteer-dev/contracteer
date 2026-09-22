@@ -61,6 +61,16 @@ class UnsupportedOperationFilterTest {
   }
 
   @Test
+  fun `excludes operation whose only class response has an XML-only body`() {
+    // when
+    val result = loadResult("xml_class_response.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    assert(operations.isEmpty())
+  }
+
+  @Test
   fun `excludes operations with null or empty schema on parameter content`() {
     // when
     val result = loadResult("schemaless_parameter_content.yaml")
