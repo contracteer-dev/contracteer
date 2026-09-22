@@ -5,6 +5,10 @@ import dev.contracteer.core.datatype.AllOfDataType
 import dev.contracteer.core.datatype.DataType
 import dev.contracteer.core.datatype.ObjectDataType
 import dev.contracteer.core.operation.*
+import dev.contracteer.core.operation.PrimaryResponse.Resolved
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.Ambiguous
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoResponsesDeclared
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoSelectableResponse
 import dev.contracteer.verifier.VerificationCase.*
 
 /**
@@ -12,7 +16,7 @@ import dev.contracteer.verifier.VerificationCase.*
  *
  * Produces three kinds of verification cases:
  * - [VerificationCase.ScenarioBased]: one per scenario defined in the operation
- * - [VerificationCase.SchemaBased]: generated from the schema when no 2xx scenario exists
+ * - [VerificationCase.SchemaBased]: generated from the schema when no scenario targets the operation's primary response
  * - [VerificationCase.TypeMismatch]: generated when the document covers status `400`, exactly or through `4XX` or `default`
  */
 object VerificationCaseFactory {
@@ -49,34 +53,29 @@ object VerificationCaseFactory {
     return if (requiredBodies.isEmpty()) listOf(null) else requiredBodies.map { it.contentType }
   }
 
-  private fun createSchemaBasedCasesIfNeeded(apiOperation: ApiOperation): List<SchemaBased> {
-    if (hasSuccessScenario(apiOperation)) return emptyList()
-
-    val successResponses = apiOperation.responseSchemas.successResponses()
-
-    return when {
-      successResponses.isEmpty() -> emptyList()
-      successResponses.size > 1  -> {
-        logger.warn {
-          "Operation ${apiOperation.method} ${apiOperation.path} has multiple 2xx responses " +
-          "(${successResponses.keys.sorted().joinToString(", ")}) but no scenario. " +
-          "Skipping schema-based verification generation."
-        }
+  private fun createSchemaBasedCasesIfNeeded(apiOperation: ApiOperation): List<SchemaBased> =
+    when (val primaryResponse = apiOperation.responseSchemas.primaryResponse()) {
+      is Resolved             -> createSchemaBasedCasesUnlessScenarioCovers(apiOperation, primaryResponse)
+      is Ambiguous            -> {
+        warnAmbiguityWithoutScenario(apiOperation, primaryResponse.declared)
         emptyList()
       }
-      else                       -> {
-        val (statusCode, responseSchema) = successResponses.entries.first()
-        createSchemaBasedCases(apiOperation, statusCode, responseSchema)
-      }
+      is NoSelectableResponse,
+      NoResponsesDeclared     -> emptyList()
     }
-  }
 
-  private fun hasSuccessScenario(apiOperation: ApiOperation): Boolean {
-    return apiOperation.scenarios.any { isSuccessStatusCode(it.statusCode) }
-  }
+  private fun createSchemaBasedCasesUnlessScenarioCovers(apiOperation: ApiOperation,
+                                                         primaryResponse: Resolved): List<SchemaBased> =
+    if (apiOperation.scenarios.any { it.statusCode == primaryResponse.statusCode }) emptyList()
+    else createSchemaBasedCases(apiOperation, primaryResponse.statusCode, primaryResponse.schema)
 
-  private fun isSuccessStatusCode(statusCode: Int): Boolean {
-    return statusCode in 200..299
+  private fun warnAmbiguityWithoutScenario(apiOperation: ApiOperation, declared: List<String>) {
+    if (apiOperation.scenarios.isNotEmpty()) return
+    logger.warn {
+      "Operation ${apiOperation.method} ${apiOperation.path} declares ${declared.joinToString(", ")} " +
+      "and none of them is the response to verify. " +
+      "Skipping schema-based verification generation; add a scenario to disambiguate."
+    }
   }
 
   private fun createTypeMismatchCases(apiOperation: ApiOperation): List<TypeMismatch> {

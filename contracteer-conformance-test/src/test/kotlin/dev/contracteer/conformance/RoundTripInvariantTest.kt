@@ -123,9 +123,9 @@ class RoundTripInvariantTest {
         operation = apiOperation("get", "/single-302") {
           response(302) { jsonBody(responseBody()) }
         },
-        expectedCaseCount = 0,
-        expectedMockStatus = I_M_A_TEAPOT.code,
-        invariant = VIOLATED
+        expectedCaseCount = 1,
+        expectedMockStatus = 302,
+        invariant = HOLDS
       ),
       ConformanceRow(
         declaredResponses = "302 + 404",
@@ -133,9 +133,9 @@ class RoundTripInvariantTest {
           response(302) { jsonBody(responseBody()) }
           response(404) { jsonBody(responseBody()) }
         },
-        expectedCaseCount = 0,
-        expectedMockStatus = I_M_A_TEAPOT.code,
-        invariant = VIOLATED
+        expectedCaseCount = 1,
+        expectedMockStatus = 302,
+        invariant = HOLDS
       ),
       ConformanceRow(
         declaredResponses = "2XX",

@@ -449,13 +449,15 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 
 ### Responses
 
-| Feature                                  | Notes                                                                                 |
-|------------------------------------------|---------------------------------------------------------------------------------------|
-| Exact status codes (`200`, `404`, etc.)  | Supported                                                                             |
-| Status code ranges (`2XX`, `4XX`, `5XX`) | Used as fallback when exact status code is not defined                                |
-| `default` response                       | Used as fallback when neither an exact status code nor a status code range is defined |
-| Response headers                         | Supported                                                                             |
-| Response body                            | Supported                                                                             |
+| Feature                                  | Notes                                                                                                                                                                                                           |
+|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Exact status codes (`200`, `404`, etc.)  | Supported                                                                                                                                                                                                       |
+| Status code ranges (`2XX`, `4XX`, `5XX`) | Used as fallback when the exact status code is not defined. Never resolves an operation's [primary response](how-contracteer-works.md#the-primary-response); a `4XX` still drives the type-mismatch expectation |
+| `default` response                       | Used as fallback when neither an exact status code nor a status code range is defined. Never resolves an operation's primary response                                                                           |
+| `100`-`199` and `304` responses          | Loaded, but never the primary response -- no ordinary request produces them. A scenario can still target `304`                                                                                                  |
+| Body on a bodyless status code           | Rejected at load. HTTP forbids a message body for `100`-`199`, `204`, `205` and `304`                                                                                                                           |
+| Response headers                         | Supported                                                                                                                                                                                                       |
+| Response body                            | Supported                                                                                                                                                                                                       |
 
 ---
 

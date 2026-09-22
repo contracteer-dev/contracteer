@@ -258,7 +258,7 @@ If the mock server cannot determine the correct response, it returns `418` with 
 The 418 is not a status code from your API -- it is Contracteer telling you that something is ambiguous or undefined.
 
 This happens when multiple scenarios match the same request.
-It also occurs when multiple 2xx response codes exist without a scenario to disambiguate.
+It also occurs when no single response can be served -- several declared success codes, or only status code ranges (`2XX`, `4XX`) and `default` -- and no scenario disambiguates.
 An invalid request with no `400`, `4XX`, or `default` response defined also triggers a 418.
 
 The 418 body explains what went wrong.

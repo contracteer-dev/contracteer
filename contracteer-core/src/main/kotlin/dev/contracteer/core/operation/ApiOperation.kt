@@ -2,6 +2,10 @@ package dev.contracteer.core.operation
 
 import dev.contracteer.core.codec.ParameterCodec
 import dev.contracteer.core.datatype.DataType
+import dev.contracteer.core.operation.PrimaryResponse.Resolved
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.Ambiguous
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoResponsesDeclared
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoSelectableResponse
 import dev.contracteer.core.serde.Serde
 
 /**
@@ -49,20 +53,47 @@ data class ResponseSchemas(
   fun responseFor(statusCode: Int): ResponseSchema? =
     byStatusCode[statusCode] ?: byClass[statusCode / 100] ?: defaultResponse
 
-  fun successResponses(): Map<Int, ResponseSchema> =
-    byStatusCode.filterKeys { it in 200..299 }
-
   fun badRequestResponse(): ResponseSchema? = responseFor(400)
+
+  /**
+   * Resolves the one response Contracteer generates against and asserts when no scenario applies.
+   *
+   * A lone declared response is the primary whatever its status code, as the Responses Object
+   * says a single declared response is expected to be the successful one. Otherwise the single
+   * exact `2xx` wins, or — when the document declares no exact `2xx` at all — the single exact
+   * `3xx`. Class responses such as `4XX` and `default` never resolve a primary, and neither do
+   * `1xx` and `304`, which no unconditional request can elicit.
+   */
+  fun primaryResponse(): PrimaryResponse {
+    val elicitable = byStatusCode.filterKeys { it.isElicitable() }
+    return when {
+      !hasResponses()              -> NoResponsesDeclared
+      elicitable.isEmpty()         -> NoSelectableResponse(declaredResponses())
+      declaresExactlyOneResponse() -> elicitable.entries.first().toResolved()
+      else                         -> preferredCandidate(elicitable)?.toResolved()
+                                      ?: Ambiguous(declaredResponses())
+    }
+  }
+
+  private fun declaresExactlyOneResponse(): Boolean =
+    byStatusCode.size == 1 && byClass.isEmpty() && defaultResponse == null
+
+  /** The single exact `2xx`, or — when no exact `2xx` is declared — the single elicitable `3xx`. */
+  private fun preferredCandidate(elicitable: Map<Int, ResponseSchema>): Map.Entry<Int, ResponseSchema>? {
+    val successes = elicitable.filterKeys { it in 200..299 }
+    return if (successes.isNotEmpty()) successes.entries.singleOrNull()
+           else elicitable.filterKeys { it in 300..399 }.entries.singleOrNull()
+  }
+
+  private fun declaredResponses(): List<String> =
+    byStatusCode.keys.sorted().map { it.toString() } +
+    byClass.keys.sorted().map { "${it}XX" } +
+    listOfNotNull(defaultResponse?.let { "default" })
 
   internal fun hasResponses(): Boolean =
     byStatusCode.isNotEmpty() || byClass.isNotEmpty() || defaultResponse != null
 
-  internal fun summary(): String {
-    val parts = byStatusCode.keys.sorted().map { it.toString() } +
-                byClass.keys.sorted().map { "${it}XX" } +
-                (if (defaultResponse != null) listOf("default") else emptyList())
-    return parts.joinToString(", ")
-  }
+  internal fun summary(): String = declaredResponses().joinToString(", ")
 
   internal fun hasAnyBody(): Boolean =
     byStatusCode.values.any { it.bodies.isNotEmpty() }
@@ -82,6 +113,15 @@ data class ResponseSchemas(
     )
   }
 }
+
+/**
+ * A `1xx` is an interim response a client never observes as the final one, and a `304` is
+ * answered only to a conditional request whose validator still matches. Neither can be elicited
+ * by a request built from the schema alone.
+ */
+private fun Int.isElicitable(): Boolean = this !in 100..199 && this != 304
+
+private fun Map.Entry<Int, ResponseSchema>.toResolved() = Resolved(key, value)
 
 /**
  * Structural definition of what an API operation returns for a given status code:

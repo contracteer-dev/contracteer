@@ -2,6 +2,7 @@ package dev.contracteer.mockserver
 
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
+import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.Matchers.emptyOrNullString
@@ -165,5 +166,86 @@ class ResponseGenerationTest {
       .assertThat()
       .statusCode(200)
       .contentType("application/json")
+  }
+
+  @Test
+  fun `serves the only declared response whatever its status code`() {
+    // Given
+    val redirect = apiOperation("GET", "/v1/artifacts/{id}") {
+      request { pathParam("id", integerType()) }
+      response(302) {
+        jsonBody(objectType { properties { "location" to stringType() } })
+      }
+    }
+    val forbidden = apiOperation("GET", "/v1/admin") {
+      response(403) {
+        jsonBody(objectType { properties { "message" to stringType() } })
+      }
+    }
+    mockServer = MockServer(listOf(redirect, forbidden))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("application/json")
+      .redirects().follow(false)
+      .get("/v1/artifacts/7")
+      .then()
+      .assertThat()
+      .statusCode(302)
+
+    given()
+      .accept("application/json")
+      .get("/v1/admin")
+      .then()
+      .assertThat()
+      .statusCode(403)
+  }
+
+  @Test
+  fun `serves a single 3xx when no 2xx is declared`() {
+    // Given
+    val operation = apiOperation("GET", "/v1/downloads/{id}") {
+      request { pathParam("id", integerType()) }
+      response(302) {
+        jsonBody(objectType { properties { "location" to stringType() } })
+      }
+      response(404) {}
+    }
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("application/json")
+      .redirects().follow(false)
+      .get("/v1/downloads/7")
+      .then()
+      .assertThat()
+      .statusCode(302)
+  }
+
+  @Test
+  fun `responds with 418 and names the declared responses when none can be served`() {
+    // Given
+    val operation = apiOperation("GET", "/v1/reports") {
+      classResponse(2) {
+        jsonBody(objectType { properties { "data" to stringType() } })
+      }
+    }
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("application/json")
+      .get("/v1/reports")
+      .then()
+      .assertThat()
+      .statusCode(418)
+      .body(containsString("2XX"))
   }
 }

@@ -22,13 +22,12 @@ private fun Response.contentType(): String? =
   header("Content-Type")
 
 internal object ResponseValidator {
-  fun validate(case: VerificationCase, response: Response): Result<Unit> {
-    return when (case) {
+  fun validate(case: VerificationCase, response: Response): Result<Unit> =
+    when (case) {
       is ScenarioBased -> validateResponse(case.scenario.statusCode, case.responseSchema, response)
-      is SchemaBased   -> validateResponse(case.statusCode, case.responseSchema, response)
+      is SchemaBased   -> validateSchemaBasedResponse(case, response)
       is TypeMismatch  -> validateTypeMismatchResponse(case.expectedResponses, response)
     }
-  }
 
   private fun validateResponse(expectedStatusCode: Int,
                                responseSchema: ResponseSchema,
@@ -38,6 +37,21 @@ internal object ResponseValidator {
       else               -> statusCodeMismatch(expectedStatusCode.toString(), response.status.code)
     }
 
+  private fun validateSchemaBasedResponse(case: SchemaBased, response: Response): Result<Unit> =
+    when (response.status.code) {
+      case.statusCode -> validateHeadersAndBody(case.responseSchema, response)
+      else            -> failure(statusCodeMismatchMessage(case.statusCode.toString(), response.status.code) +
+                                 authoringHintFor(case.statusCode))
+    }
+
+  /**
+   * A 4xx or 5xx primary response resolves only when it is the operation's sole declared response,
+   * so another status points at an incomplete document rather than at a misbehaving server.
+   */
+  private fun authoringHintFor(expectedStatusCode: Int): String =
+    if (expectedStatusCode < 400) ""
+    else " $expectedStatusCode is the only response this operation declares; the document is likely incomplete."
+
   private fun validateTypeMismatchResponse(expectedResponses: Map<Int, ResponseSchema>,
                                            response: Response): Result<Unit> =
     when (val responseSchema = expectedResponses[response.status.code]) {
@@ -46,7 +60,10 @@ internal object ResponseValidator {
     }
 
   private fun statusCodeMismatch(expected: String, actual: Int): Result<Unit> =
-    failure("Status code does not match. Expected: $expected, Actual: $actual")
+    failure(statusCodeMismatchMessage(expected, actual))
+
+  private fun statusCodeMismatchMessage(expected: String, actual: Int): String =
+    "Status code does not match. Expected: $expected, Actual: $actual"
 
   private fun validateHeadersAndBody(responseSchema: ResponseSchema, response: Response): Result<Unit> =
     validateHeaders(responseSchema.headers, response.headers)

@@ -51,7 +51,7 @@ class VerificationCaseFactoryTest {
   }
 
   @Test
-  fun `generates schema based case when no 2xx scenario exists`() {
+  fun `generates schema based case when no scenario targets the primary response`() {
     // Given
     val apiOperation = apiOperation("GET", "/products") {
       response(200) {
@@ -99,7 +99,7 @@ class VerificationCaseFactoryTest {
   }
 
   @Test
-  fun `does not generate schema based case when 2xx scenario exists`() {
+  fun `does not generate schema based case when a scenario targets the primary response`() {
     // Given
     val apiOperation = apiOperation("POST", "/orders") {
       request {
@@ -218,7 +218,7 @@ class VerificationCaseFactoryTest {
   }
 
   @Test
-  fun `does not generate schema based case when multiple 2xx responses exist without scenarios`() {
+  fun `does not generate schema based case when several declared responses compete`() {
     // Given
     val apiOperation = apiOperation("GET", "/resources") {
       response(200) {
@@ -238,5 +238,107 @@ class VerificationCaseFactoryTest {
 
     // Then
     assert(cases.isEmpty())
+  }
+
+  @Test
+  fun `generates schema based case for the only declared response whatever its status code`() {
+    // Given
+    val redirect = apiOperation("GET", "/artifacts/{id}") {
+      request { pathParam("id", integerType()) }
+      response(302) {
+        jsonBody(objectType { properties { "location" to stringType() } })
+      }
+    }
+    val forbidden = apiOperation("GET", "/admin") {
+      response(403) {
+        jsonBody(objectType { properties { "message" to stringType() } })
+      }
+    }
+
+    // When
+    val redirectCase = VerificationCaseFactory.create(redirect).single()
+    val forbiddenCase = VerificationCaseFactory.create(forbidden).single()
+
+    // Then
+    assert(redirectCase is SchemaBased && redirectCase.statusCode == 302)
+    assert(forbiddenCase is SchemaBased && forbiddenCase.statusCode == 403)
+  }
+
+  @Test
+  fun `generates schema based case for a single 3xx when no 2xx is declared`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/downloads/{id}") {
+      request { pathParam("id", integerType()) }
+      response(302) {
+        jsonBody(objectType { properties { "location" to stringType() } })
+      }
+      response(404) {}
+    }
+
+    // When
+    val case = VerificationCaseFactory.create(apiOperation).single()
+
+    // Then
+    assert(case is SchemaBased && case.statusCode == 302)
+  }
+
+  @Test
+  fun `does not generate schema based case when no declared response can be targeted`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/reports") {
+      classResponse(2) {
+        jsonBody(objectType { properties { "data" to stringType() } })
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.isEmpty())
+  }
+
+  @Test
+  fun `does not generate schema based case when a scenario targets a non 2xx primary response`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/artifacts/{id}") {
+      request { pathParam("id", integerType()) }
+      response(302) {
+        jsonBody(objectType { properties { "location" to stringType() } })
+      }
+      scenario("redirects", status = 302) {
+        request { pathParam["id"] = 1 }
+        response { jsonBody { "location" to "/elsewhere" } }
+      }
+    }
+
+    // When
+    val case = VerificationCaseFactory.create(apiOperation).single()
+
+    // Then
+    assert(case is ScenarioBased)
+  }
+
+  @Test
+  fun `generates schema based case when a scenario targets a response other than the primary`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(404) {}
+      scenario("notFound", status = 404) {
+        request { pathParam["id"] = 999 }
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.size == 2)
+    assert(cases.any { it is ScenarioBased })
+    assert(cases.any { it is SchemaBased && it.statusCode == 200 })
   }
 }

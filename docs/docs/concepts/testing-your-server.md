@@ -170,17 +170,22 @@ Type mismatch is also skipped in the following cases:
 ## Schema-Only Verification
 
 Not every operation needs scenarios.
-When an operation has no 2xx scenario, the verifier generates a fully random request from the schema.
+When no scenario targets an operation's [primary response](how-contracteer-works.md#the-primary-response), the verifier generates a fully random request from the schema.
 Parameter values satisfy the type and format constraints, and a random request body is included if one is defined.
-It sends this request and validates that the response matches the 2xx response schema.
+It sends this request and validates the response against the primary response's schema.
 
 This is the right choice when request values do not affect which response the server returns.
 A `GET /health` endpoint, a `POST` that creates a resource from any valid body -- these operations need no examples in the OpenAPI document.
 Contracteer generates valid requests and verifies the contract, keeping the OpenAPI document lean.
 
-Schema-only verification has one constraint: the operation must define exactly one 2xx response status code.
-If multiple 2xx responses exist and no scenario disambiguates which one to expect, the verifier cannot determine the correct status code.
-It skips the operation.
+Schema-only verification has one constraint: a primary response must resolve.
+When none does -- two declared codes between 200 and 299, say, or only a `4XX` -- the verifier cannot tell which response to expect and generates no schema-only case.
+The operation's other cases are unaffected: scenarios still run, and so does automatic type-mismatch testing.
+Write a scenario to say which response to expect.
+
+The primary response is not always a success code.
+An operation declaring only an error response is verified against that error.
+If the server answers anything else, the failure message says so: the document is likely incomplete rather than the server wrong.
 
 When multiple request or response content types exist, the verifier generates one verification case per combination -- a cartesian product.
 
@@ -214,12 +219,15 @@ For a broader discussion of what contract tests do and do not catch, see [What I
 
 ## Key Takeaways
 
-- The verifier creates verification cases from your OpenAPI document: scenario-based (from your examples), status-code-prefixed (from keys like `404_NOT_FOUND`), automatic type-mismatch (when a 400 response is defined), and schema-only (when no examples exist).
+- The verifier creates verification cases from your OpenAPI document.
+  Scenario-based cases come from your examples, and status-code-prefixed keys like `404_NOT_FOUND` target a specific response.
+  Automatic type-mismatch cases appear when the document covers `400` -- exactly, through `4XX`, or through `default`.
+  Schema-only cases appear when no scenario targets the operation's primary response.
 - It checks status code, required headers, and response body structure -- not response values.
 - Automatic 400 testing sends intentionally wrong types and expects the server to reject them.
   It covers types that can be meaningfully violated (integers, booleans, dates, objects, arrays) but not plain strings.
 - Schema-only verification handles operations where request values do not matter.
-  It generates random requests and requires exactly one 2xx response.
+  It generates random requests and targets the operation's primary response, which is not always a success code.
   Define scenarios only when specific request values affect the expected response.
 - The verifier follows Postel's Law: it validates what the OpenAPI document defines and ignores additional fields.
 

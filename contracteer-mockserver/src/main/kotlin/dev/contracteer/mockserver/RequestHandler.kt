@@ -11,6 +11,8 @@ import dev.contracteer.core.Result.Failure
 import dev.contracteer.core.Result.Success
 import dev.contracteer.core.operation.ApiOperation
 import dev.contracteer.core.operation.BodySchema
+import dev.contracteer.core.operation.PrimaryResponse.Resolved
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved
 import dev.contracteer.core.operation.ResponseSchema
 import dev.contracteer.core.operation.Scenario
 import dev.contracteer.mockserver.ScenarioMatchResult.*
@@ -27,7 +29,7 @@ internal object RequestHandler {
       is Ambiguous   ->
         teapotResponse(
           "Ambiguous: multiple scenarios (${matchResult.scenarios.joinToString(", ") { it.key }}) " +
-          "matched the request for ${operation.method.uppercase()} ${operation.path}")
+          "matched the request for ${operation.describe()}")
     }
   }
 
@@ -49,10 +51,10 @@ internal object RequestHandler {
   }
 
   private fun handleSchemaOnlyResponse(request: Request, operation: ApiOperation): Response {
-    val unique2xxResult = findUnique2xxResponse(operation)
-    if (unique2xxResult !is Success) return teapotResponse(unique2xxResult.errors().first())
+    val primaryResult = findPrimaryResponse(operation)
+    if (primaryResult !is Success) return teapotResponse(primaryResult.errors().first())
 
-    val (statusCode, responseSchema) = unique2xxResult.value
+    val (statusCode, responseSchema) = primaryResult.value
     val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
     if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
 
@@ -67,20 +69,22 @@ internal object RequestHandler {
     is Failure -> teapotResponse(errors().joinToString(System.lineSeparator()))
   }
 
-  private fun findUnique2xxResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> {
-    val successResponses = operation.responseSchemas.successResponses()
-    return when {
-      successResponses.isEmpty() ->
-        failure("No 2xx response schema defined for ${operation.method.uppercase()} ${operation.path}")
+  private fun findPrimaryResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> =
+    when (val primaryResponse = operation.responseSchemas.primaryResponse()) {
+      is Resolved                         -> success(primaryResponse.statusCode to primaryResponse.schema)
 
-      successResponses.size > 1  ->
+      Unresolved.NoResponsesDeclared      -> failure("No response schema defined for ${operation.describe()}")
+
+      is Unresolved.NoSelectableResponse  ->
         failure(
-          "Ambiguous: multiple 2xx response codes (${successResponses.keys.sorted().joinToString(", ")}) " +
-          "for ${operation.method.uppercase()} ${operation.path}. Use scenarios to disambiguate.")
+          "No response that a request can elicit is defined for ${operation.describe()}: " +
+          "${primaryResponse.declared.joinToString(", ")}. Declare an explicit status code.")
 
-      else                       -> success(successResponses.entries.first().toPair())
+      is Unresolved.Ambiguous             ->
+        failure(
+          "Ambiguous: multiple response codes (${primaryResponse.declared.joinToString(", ")}) " +
+          "for ${operation.describe()}. Use scenarios to disambiguate.")
     }
-  }
 
   private fun verifyAcceptHeader(acceptHeader: String?, responseSchema: ResponseSchema): Result<Unit> {
     val accept = AcceptHeader.parse(acceptHeader)
@@ -103,7 +107,7 @@ internal object RequestHandler {
 
     val accept = AcceptHeader.parse(acceptHeader)
     if (accept.acceptsAny())
-      return failure("Multiple response content types for ${operation.method.uppercase()} ${operation.path}. " +
+      return failure("Multiple response content types for ${operation.describe()}. " +
                      "Use Accept header to disambiguate: ${responseSchema.bodies.joinToString(", ") { it.contentType.value }}")
 
     val bestMatch = accept.bestMatch(responseSchema.bodies.map { it.contentType })
@@ -116,8 +120,10 @@ internal object RequestHandler {
 
   private fun validationErrorResponse(operation: ApiOperation, errors: List<String>): Response =
     teapotResponse(
-      "Request validation failed for ${operation.method.uppercase()} ${operation.path}:${System.lineSeparator()}" +
+      "Request validation failed for ${operation.describe()}:${System.lineSeparator()}" +
       errors.joinToString(System.lineSeparator()) { "  * $it" })
+
+  private fun ApiOperation.describe(): String = "${method.uppercase()} $path"
 
   private fun teapotResponse(message: String): Response =
     Response(I_M_A_TEAPOT)

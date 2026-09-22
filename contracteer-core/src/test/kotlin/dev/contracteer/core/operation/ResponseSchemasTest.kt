@@ -59,17 +59,6 @@ class ResponseSchemasTest {
   }
 
   @Test
-  fun `successResponses returns only 2xx from byStatusCode`() {
-    val schemas = ResponseSchemas(
-      byStatusCode = mapOf(200 to ok, 400 to badRequest),
-      byClass = mapOf(2 to class4xx),
-      defaultResponse = default
-    )
-
-    assert(schemas.successResponses() == mapOf(200 to ok))
-  }
-
-  @Test
   fun `hasResponses covers exact status codes and class and default responses`() {
     assert(ResponseSchemas(byStatusCode = mapOf(200 to ok)).hasResponses())
     assert(ResponseSchemas(byClass = mapOf(4 to class4xx)).hasResponses())

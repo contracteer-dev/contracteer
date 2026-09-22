@@ -92,9 +92,13 @@ The request is valid but matches no scenario.
 The mock server returns `200` with a body generated from the Musketeer schema.
 The values are random but satisfy the type and format constraints.
 
-This step requires exactly one 2xx response status code.
-If the operation defines multiple 2xx responses, the mock server returns `418`.
-It cannot determine which status code to use.
+This step serves the operation's [primary response](how-contracteer-works.md#the-primary-response).
+When no primary response resolves -- several declared codes between 200 and 299, say, or only status code ranges (`2XX`, `4XX`) and `default` -- the mock server returns `418`.
+It cannot determine which response to serve.
+
+!!! note "One scenario does not cover every request"
+    An operation declaring `200` and `201` resolves no primary response.
+    A scenario on `201` makes the mock server answer that scenario's request with `201` -- every other valid request still gets `418`, because nothing says which of the two to serve.
 
 When the operation defines multiple response content types, the mock server uses the `Accept` header to select one.
 If the `Accept` header is absent or `*/*` and multiple content types exist, it returns `418`.
@@ -110,13 +114,14 @@ The 418 is not a client error.
 It is the mock server telling you that something is ambiguous or undefined.
 The response body explains what went wrong.
 
-The mock server returns 418 in four situations:
+The mock server returns 418 in five situations:
 
 | Situation | What the 418 body tells you |
 |-----------|----------------------------|
 | Request is invalid, no `400`, `4XX`, or `default` response defined | Which validation rules the request violated |
 | Multiple scenarios match the request | Which scenarios matched, so you can make your examples more specific |
-| Multiple 2xx response status codes, no scenario to disambiguate | Which status codes are defined, and that you need scenarios |
+| Several responses could be served, and no scenario chooses between them | Which status codes are declared, so you can add a scenario for the one you expect |
+| No declared response can be served on its own -- only status code ranges (`2XX`, `4XX`), `default`, or no response at all | Which responses the operation declares, and that an explicit status code is missing |
 | Multiple response content types, no `Accept` header to disambiguate | Which content types are available |
 
 !!! tip

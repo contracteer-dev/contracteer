@@ -59,7 +59,11 @@ paths:
 # Musketeer and ProblemDetail schemas omitted — see full spec
 ```
 
-From this single operation, Contracteer derives two **scenarios** and one automatic **verification case**.
+---
+
+## From Document to Test Cases
+
+From that one `GET /musketeers/{id}` operation, Contracteer derives two **scenarios** and one automatic **verification case**.
 
 A **scenario** is a named pairing of specific request values with an expected response for a given status code, derived from OpenAPI examples.
 Two scenarios come from this operation:
@@ -77,11 +81,39 @@ This operation declares `400` and `404`, so either is accepted, and the response
 
 Three verification cases from one operation, covering the happy path, a not-found case, and input validation -- all derived from the OpenAPI document.
 
-!!! warning
-    Contracteer requires every operation to define at least one 2xx response.
-    If any operation lacks a 2xx response, Contracteer rejects the OpenAPI document.
+Contracteer generates a second kind of automatic case -- a **schema-only** case -- when no scenario targets the response an operation is expected to answer with.
+`GET /musketeers/{id}` produces none, because the `ATHOS` scenario already covers its `200`.
 
 The full mechanics of how scenarios are created are covered in [Creating Scenarios](scenarios.md).
+
+---
+
+## The Primary Response
+
+The **primary response** is the single response Contracteer targets for an operation when no scenario applies -- the one the verifier asserts and the mock server serves.
+For `GET /musketeers/{id}` it is the `200`: of the three declared responses, the only one between 200 and 299.
+
+For any operation, it resolves from the declared responses alone.
+Some of them can never be the primary response.
+Status code ranges (`2XX`, `4XX`) and `default` cannot: they describe a class of outcomes, not the one response the operation answers with.
+Codes between 100 and 199 and `304` cannot either: no ordinary request produces them.
+
+The primary response is chosen among the rest:
+
+- When the operation declares one of them and nothing else at all, it is the primary response, whatever its status code.
+  A lone `302` or `403` is treated exactly like a lone `200`.
+- Otherwise, it is the single remaining code between 200 and 299.
+  When none of the remaining codes falls between 200 and 299, it is the single remaining code between 300 and 399.
+
+When a primary response resolves, the operation needs no scenario.
+The verifier sends a request generated from the schema and validates the answer against the primary response's schema.
+The mock server serves that same response, with values generated the same way.
+Write a scenario only when specific request values decide which response comes back.
+
+When nothing resolves, the document still loads -- Contracteer rejects nothing.
+The verifier generates no schema-only case for that operation, and the mock server answers `418` to any request no scenario matches.
+Here a scenario is the fix, and it lands differently on each tool.
+The verifier gains a case for the operation, while the mock server serves the requests the scenario matches and still answers `418` to the rest.
 
 ---
 

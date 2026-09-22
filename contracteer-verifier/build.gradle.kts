@@ -9,6 +9,5 @@ dependencies {
   implementation(libs.http4k.core)
 
   testImplementation(testFixtures(project(":contracteer-core")))
-  testImplementation(libs.mockserver.netty)
   testImplementation(libs.mockk)
 }

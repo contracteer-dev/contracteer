@@ -43,6 +43,38 @@ class ResponseValidatorTest {
   }
 
   @Test
+  fun `names the likely authoring cause when a 4xx or 5xx primary response does not match`() {
+    // Given
+    val forbidden = schemaBasedCase(statusCode = 403)
+    val serverError = schemaBasedCase(statusCode = 500)
+    val response = mockResponse(Status.OK)
+
+    // When
+    val forbiddenResult = ResponseValidator.validate(forbidden, response)
+    val serverErrorResult = ResponseValidator.validate(serverError, response)
+
+    // Then
+    assert(forbiddenResult.errors().first().contains("403 is the only response this operation declares"))
+    assert(serverErrorResult.errors().first().contains("500 is the only response this operation declares"))
+  }
+
+  @Test
+  fun `does not name an authoring cause when a 2xx or 3xx primary response does not match`() {
+    // Given
+    val ok = schemaBasedCase(statusCode = 200)
+    val found = schemaBasedCase(statusCode = 302)
+    val response = mockResponse(Status.CREATED)
+
+    // When
+    val okResult = ResponseValidator.validate(ok, response)
+    val foundResult = ResponseValidator.validate(found, response)
+
+    // Then
+    assert(okResult.errors().first() == "Status code does not match. Expected: 200, Actual: 201")
+    assert(foundResult.errors().first() == "Status code does not match. Expected: 302, Actual: 201")
+  }
+
+  @Test
   fun `validates successfully with required headers using serde deserialization`() {
     // Given
     val target = schemaBasedCase(statusCode = 200) {

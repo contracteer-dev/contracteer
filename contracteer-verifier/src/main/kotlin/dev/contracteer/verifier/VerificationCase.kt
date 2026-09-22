@@ -11,7 +11,7 @@ import dev.contracteer.core.operation.Scenario
  *
  * Each subtype represents a different verification strategy:
  * - [ScenarioBased]: driven by a named scenario from the OpenAPI document
- * - [SchemaBased]: generated from the schema when no 2xx scenario exists
+ * - [SchemaBased]: generated from the schema when no scenario targets the operation's primary response
  * - [TypeMismatch]: sends an intentionally malformed request to verify the server rejects it
  */
 sealed class VerificationCase {
@@ -41,7 +41,13 @@ sealed class VerificationCase {
       }
   }
 
-  /** A verification case generated from the schema with random values, used when no 2xx scenario exists. */
+  /**
+   * A verification case generated from the schema with random values, used when no scenario
+   * targets the operation's primary response.
+   *
+   * [statusCode] is the primary response's status code, which is not necessarily a 2xx: an
+   * operation declaring a lone `302` or `403` is verified against that code.
+   */
   data class SchemaBased(
     val path: String,
     val method: String,

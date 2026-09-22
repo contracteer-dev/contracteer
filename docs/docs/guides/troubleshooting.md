@@ -94,6 +94,19 @@ Contracteer needs at least one shared key between request and response elements.
 **Fix:** Ensure the same example key appears on both a request element (parameter or request body) and a response element (header or response body).
 See [Common Mistakes](../concepts/scenarios.md#common-mistakes) for details.
 
+### Operation not verified against the expected response
+
+**Symptom:** An operation loads without error, but the verifier never checks the response you expect.
+It runs only the cases your scenarios define, or only an automatic type-mismatch case, or nothing at all.
+
+**Cause:** No [primary response](../concepts/how-contracteer-works.md#the-primary-response) resolves, and no scenario targets one.
+This happens when several declared responses could be verified and nothing chooses between them -- two codes between 200 and 299, say.
+It also happens when none of them can be verified on its own: only status code ranges (`2XX`, `4XX`), `default`, or codes no ordinary request produces.
+The first case logs a warning naming the declared responses, but only when the operation defines no scenario at all.
+The second is silent.
+
+**Fix:** Add a scenario targeting the response you expect, or declare the exact status code the operation answers with.
+
 ### "Ambiguous match for oneOf"
 
 **Symptom:** The verifier or mock server rejects a request or response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."
@@ -140,8 +153,8 @@ Common causes:
   Check that your request sends the exact values from the OpenAPI examples.
 - **Multiple scenarios match.** The request matches more than one scenario.
   Make your example values more specific to distinguish them.
-- **Multiple 2xx response codes.** The operation defines more than one success status code and no scenario disambiguates.
-  Add scenarios to target specific status codes.
+- **No primary response resolves.** The operation declares no single response to serve -- several success codes, say, or only status code ranges (`2XX`, `4XX`) and `default`, which are never served on their own.
+  Add a scenario to target a specific status code, or declare the exact status code the operation answers with.
 
 See [The 418 Diagnostic Response](../concepts/testing-your-client.md#the-418-diagnostic-response) for a full explanation.
 

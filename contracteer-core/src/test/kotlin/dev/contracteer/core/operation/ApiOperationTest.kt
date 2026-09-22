@@ -138,30 +138,6 @@ class ApiOperationTest {
     assert(operation.responseSchemas.badRequestResponse() === classResponse4xx)
   }
 
-  @Test
-  fun `successResponses does not include class responses`() {
-    // given
-    val operation = apiOperation(
-      responses = mapOf(200 to successResponse),
-      classResponses = mapOf(2 to classResponse4xx)
-    )
-
-    // then
-    assert(operation.responseSchemas.successResponses() == mapOf(200 to successResponse))
-  }
-
-  @Test
-  fun `successResponses does not include default`() {
-    // given
-    val operation = apiOperation(
-      responses = mapOf(200 to successResponse),
-      defaultResponse = defaultResponse
-    )
-
-    // then
-    assert(operation.responseSchemas.successResponses() == mapOf(200 to successResponse))
-  }
-
   private fun apiOperation(
     responses: Map<Int, ResponseSchema> = emptyMap(),
     classResponses: Map<Int, ResponseSchema> = emptyMap(),
