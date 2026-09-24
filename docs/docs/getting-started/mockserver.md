@@ -49,13 +49,11 @@ Three steps: load the OpenAPI document, create the mock server, start it.
     ```kotlin
     // 1. Load the OpenAPI document
     val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
-    if (result.isFailure()) {
-        fail("Failed to load OpenAPI document: ${result.errors()}")
-    }
+    check(result is Result.Success) { "Failed to load OpenAPI document: ${result.errors()}" }
 
     // 2. Create the mock server
     val mockServer = MockServer(
-        operations = result.value!!,
+        operations = result.value,
         port = 0 // 0 for random port, or a fixed port
     )
 
@@ -73,12 +71,12 @@ Three steps: load the OpenAPI document, create the mock server, start it.
     ```java
     // 1. Load the OpenAPI document
     var result = OpenApiLoader.loadOperations("classpath:openapi.yaml");
-    if (result.isFailure()) {
-        fail("Failed to load OpenAPI document: " + result.errors());
+    if (!(result instanceof Result.Success<List<ApiOperation>> success)) {
+        throw new IllegalStateException("Failed to load OpenAPI document: " + result.errors());
     }
 
     // 2. Create the mock server
-    var mockServer = new MockServer(result.getValue(), 0);
+    var mockServer = new MockServer(success.getValue(), 0);
 
     // 3. Start and use
     mockServer.start();

@@ -30,11 +30,9 @@ Maven:
 
 ```kotlin
 val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
-if (result.isFailure()) {
-    fail("Failed to load OpenAPI document: ${result.errors()}")
-}
+check(result is Result.Success) { "Failed to load OpenAPI document: ${result.errors()}" }
 
-val plans = result.value!!.map { VerificationCaseFactory.plan(it) }
+val plans = result.value.map { VerificationCaseFactory.plan(it) }
 plans.mapNotNull { it.unverifiedPrimaryResponse }.forEach { println(it.message) }
 val cases = plans.flatMap { it.cases }
 

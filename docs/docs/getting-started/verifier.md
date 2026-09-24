@@ -49,12 +49,10 @@ Three steps: load the OpenAPI document, plan each operation, run the verificatio
     ```kotlin
     // 1. Load the OpenAPI document
     val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
-    if (result.isFailure()) {
-        fail("Failed to load OpenAPI document: ${result.errors()}")
-    }
+    check(result is Result.Success) { "Failed to load OpenAPI document: ${result.errors()}" }
 
     // 2. Plan each operation, and report primary responses no case can verify
-    val plans = result.value!!.map { VerificationCaseFactory.plan(it) }
+    val plans = result.value.map { VerificationCaseFactory.plan(it) }
     plans.mapNotNull { it.unverifiedPrimaryResponse }.forEach { println(it.message) }
     val cases = plans.flatMap { it.cases }
 
@@ -81,12 +79,12 @@ Three steps: load the OpenAPI document, plan each operation, run the verificatio
     ```java
     // 1. Load the OpenAPI document
     var result = OpenApiLoader.loadOperations("classpath:openapi.yaml");
-    if (result.isFailure()) {
-        fail("Failed to load OpenAPI document: " + result.errors());
+    if (!(result instanceof Result.Success<List<ApiOperation>> success)) {
+        throw new IllegalStateException("Failed to load OpenAPI document: " + result.errors());
     }
 
     // 2. Plan each operation, and report primary responses no case can verify
-    var plans = result.getValue().stream()
+    var plans = success.getValue().stream()
         .map(VerificationCaseFactory::plan)
         .toList();
     plans.stream()

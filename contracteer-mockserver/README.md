@@ -30,12 +30,10 @@ Maven:
 
 ```kotlin
 val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
-if (result.isFailure()) {
-    fail("Failed to load OpenAPI document: ${result.errors()}")
-}
+check(result is Result.Success) { "Failed to load OpenAPI document: ${result.errors()}" }
 
 val mockServer = MockServer(
-    operations = result.value!!,
+    operations = result.value,
     port = 0 // 0 for random port, or a fixed port
 )
 
