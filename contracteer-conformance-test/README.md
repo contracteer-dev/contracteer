@@ -11,6 +11,11 @@ A response shape is supported by both consumers or by neither -- never one alone
 asserting a response the mock refuses to emit is a defect even when each side is internally
 consistent.
 
+When neither consumer supports an operation's primary response (a `2XX`-only operation, or `200`
+and `201` with nothing to choose between them), the round trip still has one correct outcome: the
+verifier reports the primary response unverified, and the mock server answers 418. If one side is
+silent while the other refuses, that is a defect.
+
 ## Why it is a module of its own
 
 The invariant is a property of the verifier/mock *pair*, not of either one, and the two are
@@ -33,20 +38,31 @@ applies `kotlin-conventions` only, and must keep doing so.
 Fixtures come from the `contracteer-core` test-fixtures DSL -- one `apiOperation(...)` per row.
 No OpenAPI document is parsed here; loader behaviour is covered in `contracteer-core`.
 
-Each row asserts three things:
+Each row asserts four things:
 
-- the number of verification cases `VerificationCaseFactory.create(...)` produces,
+- the number of verification cases `VerificationCaseFactory.plan(...)` produces,
 - the outcome of each of those cases, run against the mock server started from the same operation,
-- the status code the mock emits for a direct request to the operation.
+- the status code the mock emits for a direct request to the operation,
+- whether the plan reports the operation's primary response unverified.
 
 The case count is the load-bearing assertion. A harness checking only "nothing failed" goes green
 when no case is generated at all, which is the failure mode this module exists to catch. The
 direct mock probe matters for the same reason: rows generating zero cases would otherwise never
 exercise the mock.
 
-Rows that violate the invariant today are marked as such. They are characterization tests: they
-pass, because they assert the behaviour that currently exists, and their expectations change when
-the behaviour is fixed.
+The last assertion runs in both directions. Reporting an operation the mock answers is as wrong as
+staying silent about one it refuses.
+
+From these, each row derives the state of the round trip:
+
+- `HOLDS`: at least one case, none fails, no report, and the mock answers the probe.
+- `REPORTED`: the plan reports the primary response unverified, no case fails, and the mock
+  answers 418.
+- `VIOLATED`: anything else.
+
+No row is `VIOLATED` today. A row marked `VIOLATED` is a characterization test: it passes because
+it asserts the behaviour that currently exists, and its expectations change when that behaviour is
+fixed.
 
 ## Not a corpus round trip
 

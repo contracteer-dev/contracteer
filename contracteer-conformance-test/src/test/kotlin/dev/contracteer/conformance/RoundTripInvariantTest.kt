@@ -1,6 +1,7 @@
 package dev.contracteer.conformance
 
 import dev.contracteer.conformance.Invariant.HOLDS
+import dev.contracteer.conformance.Invariant.REPORTED
 import dev.contracteer.conformance.Invariant.VIOLATED
 import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.integerType
@@ -17,6 +18,7 @@ import org.http4k.core.Request
 import org.http4k.core.Status.Companion.I_M_A_TEAPOT
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 
 /**
  * Encodes the round-trip invariant: for any OpenAPI document Contracteer accepts, running the
@@ -42,6 +44,9 @@ class RoundTripInvariantTest {
     assert(observed.mockStatus == row.expectedMockStatus) {
       "Expected the mock server to answer ${row.expectedMockStatus} but got ${observed.mockStatus}"
     }
+    assert(observed.unverifiedPrimaryResponse == row.expectedUnverifiedPrimaryResponse) {
+      "Expected the verifier ${if (row.expectedUnverifiedPrimaryResponse) "to" else "not to"} report the primary response unverified"
+    }
     assert(observed.invariant == row.invariant) {
       "Expected the round trip to be ${row.invariant} but it is ${observed.invariant}: ${observed.describeFailures()}"
     }
@@ -49,11 +54,12 @@ class RoundTripInvariantTest {
 
   private fun observe(row: ConformanceRow, port: Int): Observation {
     val baseUrl = "http://localhost:$port"
-    val cases = VerificationCaseFactory.create(row.operation)
+    val plan = VerificationCaseFactory.plan(row.operation)
     val verifier = OpenApiVerifier(VerifierConfiguration(baseUrl))
     return Observation(
-      caseCount = cases.size,
-      failures = cases.map { verifier.verify(it) }.filter { it.result.isFailure() },
+      caseCount = plan.cases.size,
+      failures = plan.cases.map { verifier.verify(it) }.filter { it.result.isFailure() },
+      unverifiedPrimaryResponse = plan.unverifiedPrimaryResponse != null,
       mockStatus = probeMock(baseUrl + row.probePath)
     )
   }
@@ -73,10 +79,16 @@ class RoundTripInvariantTest {
   private data class Observation(
     val caseCount: Int,
     val failures: List<VerificationOutcome>,
+    val unverifiedPrimaryResponse: Boolean,
     val mockStatus: Int
   ) {
     val invariant: Invariant
-      get() = if (caseCount > 0 && failures.isEmpty() && !mockRefusedToRespond) HOLDS else VIOLATED
+      get() = when {
+        failures.isNotEmpty()                                                -> VIOLATED
+        !unverifiedPrimaryResponse && caseCount > 0 && !mockRefusedToRespond -> HOLDS
+        unverifiedPrimaryResponse && mockRefusedToRespond                    -> REPORTED
+        else                                                                 -> VIOLATED
+      }
 
     private val mockRefusedToRespond get() = mockStatus == I_M_A_TEAPOT.code
 
@@ -144,7 +156,8 @@ class RoundTripInvariantTest {
         },
         expectedCaseCount = 0,
         expectedMockStatus = I_M_A_TEAPOT.code,
-        invariant = VIOLATED
+        expectedUnverifiedPrimaryResponse = true,
+        invariant = REPORTED
       ),
       ConformanceRow(
         declaredResponses = "4XX",
@@ -153,7 +166,8 @@ class RoundTripInvariantTest {
         },
         expectedCaseCount = 0,
         expectedMockStatus = I_M_A_TEAPOT.code,
-        invariant = VIOLATED
+        expectedUnverifiedPrimaryResponse = true,
+        invariant = REPORTED
       ),
       ConformanceRow(
         declaredResponses = "default",
@@ -162,7 +176,8 @@ class RoundTripInvariantTest {
         },
         expectedCaseCount = 0,
         expectedMockStatus = I_M_A_TEAPOT.code,
-        invariant = VIOLATED
+        expectedUnverifiedPrimaryResponse = true,
+        invariant = REPORTED
       ),
       ConformanceRow(
         declaredResponses = "200 + 201",
@@ -172,7 +187,28 @@ class RoundTripInvariantTest {
         },
         expectedCaseCount = 0,
         expectedMockStatus = I_M_A_TEAPOT.code,
-        invariant = VIOLATED
+        expectedUnverifiedPrimaryResponse = true,
+        invariant = REPORTED
+      ),
+      ConformanceRow(
+        declaredResponses = "200 + 201 with a scenario on each",
+        operation = apiOperation("get", "/two-success-responses-with-scenarios/{id}") {
+          request { pathParam("id", integerType()) }
+          response(200) { jsonBody(responseBody()) }
+          response(201) { jsonBody(responseBody()) }
+          scenario("ok", status = 200) {
+            request { pathParam["id"] = BigDecimal(1) }
+            response { jsonBody { "id" to 1 } }
+          }
+          scenario("created", status = 201) {
+            request { pathParam["id"] = BigDecimal(2) }
+            response { jsonBody { "id" to 2 } }
+          }
+        },
+        expectedCaseCount = 2,
+        expectedMockStatus = 200,
+        invariant = HOLDS,
+        probePath = "/two-success-responses-with-scenarios/1"
       ),
       ConformanceRow(
         declaredResponses = "4XX with a query parameter",
@@ -182,7 +218,8 @@ class RoundTripInvariantTest {
         },
         expectedCaseCount = 1,
         expectedMockStatus = I_M_A_TEAPOT.code,
-        invariant = VIOLATED,
+        expectedUnverifiedPrimaryResponse = true,
+        invariant = REPORTED,
         probePath = "/class-4xx-with-parameter?limit=1"
       ),
       ConformanceRow(
