@@ -2645,11 +2645,19 @@ This matches the OpenAPI rule: "The <code>allOf</code> form of <code>discriminat
 </tr>
 <tr>
 <td>Status code ranges (<code>2XX</code>, <code>4XX</code>, <code>5XX</code>)</td>
-<td>Used as fallback when exact status code is not defined</td>
+<td>Used as fallback when the exact status code is not defined. Never resolves an operation's <a href="../how-contracteer-works/#the-primary-response">primary response</a>; a <code>4XX</code> still drives the type-mismatch expectation</td>
 </tr>
 <tr>
 <td><code>default</code> response</td>
-<td>Used as fallback when neither an exact status code nor a status code range is defined</td>
+<td>Used as fallback when neither an exact status code nor a status code range is defined. Never resolves an operation's primary response</td>
+</tr>
+<tr>
+<td><code>100</code>-<code>199</code> and <code>304</code> responses</td>
+<td>Loaded, but never the primary response -- no ordinary request produces them. A scenario can still target <code>304</code></td>
+</tr>
+<tr>
+<td>Body on a bodyless status code</td>
+<td>Rejected at load. HTTP forbids a message body for <code>100</code>-<code>199</code>, <code>204</code>, <code>205</code> and <code>304</code></td>
 </tr>
 <tr>
 <td>Response headers</td>

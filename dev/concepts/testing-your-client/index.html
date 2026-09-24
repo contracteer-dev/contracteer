@@ -1393,9 +1393,14 @@ If no scenario matches, the mock server proceeds to step 3.</p>
 <p><code>GET /musketeers/42</code> passes validation (42 is a valid integer) but does not match any scenario.
 The mock server returns <code>200</code> with a body generated from the Musketeer schema.
 The values are random but satisfy the type and format constraints.</p>
-<p>This step requires exactly one 2xx response status code.
-If the operation defines multiple 2xx responses, the mock server returns <code>418</code>.
-It cannot determine which status code to use.</p>
+<p>This step serves the operation's <a href="../how-contracteer-works/#the-primary-response">primary response</a>.
+When no primary response resolves -- several declared codes between 200 and 299, say, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code> -- the mock server returns <code>418</code>.
+It cannot determine which response to serve.</p>
+<div class="admonition note">
+<p class="admonition-title">One scenario does not cover every request</p>
+<p>An operation declaring <code>200</code> and <code>201</code> resolves no primary response.
+A scenario on <code>201</code> makes the mock server answer that scenario's request with <code>201</code> -- every other valid request still gets <code>418</code>, because nothing says which of the two to serve.</p>
+</div>
 <p>When the operation defines multiple response content types, the mock server uses the <code>Accept</code> header to select one.
 If the <code>Accept</code> header is absent or <code>*/*</code> and multiple content types exist, it returns <code>418</code>.</p>
 <hr />
@@ -1405,7 +1410,7 @@ It means: "I received your request, but I cannot determine the correct response.
 <p>The 418 is not a client error.
 It is the mock server telling you that something is ambiguous or undefined.
 The response body explains what went wrong.</p>
-<p>The mock server returns 418 in four situations:</p>
+<p>The mock server returns 418 in five situations:</p>
 <table>
 <thead>
 <tr>
@@ -1423,8 +1428,12 @@ The response body explains what went wrong.</p>
 <td>Which scenarios matched, so you can make your examples more specific</td>
 </tr>
 <tr>
-<td>Multiple 2xx response status codes, no scenario to disambiguate</td>
-<td>Which status codes are defined, and that you need scenarios</td>
+<td>Several responses could be served, and no scenario chooses between them</td>
+<td>Which status codes are declared, so you can add a scenario for the one you expect</td>
+</tr>
+<tr>
+<td>No declared response can be served on its own -- only status code ranges (<code>2XX</code>, <code>4XX</code>), <code>default</code>, or no response at all</td>
+<td>Which responses the operation declares, and that an explicit status code is missing</td>
 </tr>
 <tr>
 <td>Multiple response content types, no <code>Accept</code> header to disambiguate</td>

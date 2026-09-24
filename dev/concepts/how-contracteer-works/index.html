@@ -559,6 +559,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#from-document-to-test-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Document to Test Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-primary-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Primary Response
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-verifier-testing-your-server" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1146,6 +1168,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#from-document-to-test-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Document to Test Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-primary-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Primary Response
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-verifier-testing-your-server" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1296,7 +1340,9 @@ Both derive their behavior entirely from the document -- no handwritten mocks, n
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="w">                </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/ProblemDetail'</span>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="c1"># Musketeer and ProblemDetail schemas omitted — see full spec</span>
 </code></pre></div>
-<p>From this single operation, Contracteer derives two <strong>scenarios</strong> and one automatic <strong>verification case</strong>.</p>
+<hr />
+<h2 id="from-document-to-test-cases">From Document to Test Cases<a class="headerlink" href="#from-document-to-test-cases" title="Permanent link">&para;</a></h2>
+<p>From that one <code>GET /musketeers/{id}</code> operation, Contracteer derives two <strong>scenarios</strong> and one automatic <strong>verification case</strong>.</p>
 <p>A <strong>scenario</strong> is a named pairing of specific request values with an expected response for a given status code, derived from OpenAPI examples.
 Two scenarios come from this operation:</p>
 <ul>
@@ -1311,12 +1357,32 @@ Here, the OpenAPI document declares that <code>id</code> is an integer and that 
 Contracteer creates an automatic <strong>type-mismatch verification case</strong>: it sends an invalid type (a string instead of an integer) and expects the server to reject it.
 This operation declares <code>400</code> and <code>404</code>, so either is accepted, and the response is validated against the schema declared for it.</p>
 <p>Three verification cases from one operation, covering the happy path, a not-found case, and input validation -- all derived from the OpenAPI document.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Contracteer requires every operation to define at least one 2xx response.
-If any operation lacks a 2xx response, Contracteer rejects the OpenAPI document.</p>
-</div>
+<p>Contracteer generates a second kind of automatic case -- a <strong>schema-only</strong> case -- when no scenario targets the response an operation is expected to answer with.
+<code>GET /musketeers/{id}</code> produces none, because the <code>ATHOS</code> scenario already covers its <code>200</code>.</p>
 <p>The full mechanics of how scenarios are created are covered in <a href="../scenarios/">Creating Scenarios</a>.</p>
+<hr />
+<h2 id="the-primary-response">The Primary Response<a class="headerlink" href="#the-primary-response" title="Permanent link">&para;</a></h2>
+<p>The <strong>primary response</strong> is the single response Contracteer targets for an operation when no scenario applies -- the one the verifier asserts and the mock server serves.
+For <code>GET /musketeers/{id}</code> it is the <code>200</code>: of the three declared responses, the only one between 200 and 299.</p>
+<p>For any operation, it resolves from the declared responses alone.
+Some of them can never be the primary response.
+Status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code> cannot: they describe a class of outcomes, not the one response the operation answers with.
+Codes between 100 and 199 and <code>304</code> cannot either: no ordinary request produces them.</p>
+<p>The primary response is chosen among the rest:</p>
+<ul>
+<li>When the operation declares one of them and nothing else at all, it is the primary response, whatever its status code.
+  A lone <code>302</code> or <code>403</code> is treated exactly like a lone <code>200</code>.</li>
+<li>Otherwise, it is the single remaining code between 200 and 299.
+  When none of the remaining codes falls between 200 and 299, it is the single remaining code between 300 and 399.</li>
+</ul>
+<p>When a primary response resolves, the operation needs no scenario.
+The verifier sends a request generated from the schema and validates the answer against the primary response's schema.
+The mock server serves that same response, with values generated the same way.
+Write a scenario only when specific request values decide which response comes back.</p>
+<p>When nothing resolves, the document still loads -- Contracteer rejects nothing.
+The verifier generates no schema-only case for that operation, and the mock server answers <code>418</code> to any request no scenario matches.
+Here a scenario is the fix, and it lands differently on each tool.
+The verifier gains a case for the operation, while the mock server serves the requests the scenario matches and still answers <code>418</code> to the rest.</p>
 <hr />
 <h2 id="the-verifier-testing-your-server">The Verifier: Testing Your Server<a class="headerlink" href="#the-verifier-testing-your-server" title="Permanent link">&para;</a></h2>
 <p>For each verification case, the verifier builds a request, sends it to your real, running server, and validates the response.

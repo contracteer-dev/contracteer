@@ -1092,6 +1092,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#operation-not-verified-against-the-expected-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operation not verified against the expected response
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ambiguous-match-for-oneof" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1658,6 +1669,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#operation-not-verified-against-the-expected-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operation not verified against the expected response
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ambiguous-match-for-oneof" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2171,6 +2193,15 @@ Either add the field to the schema's <code>properties</code>, or remove <code>ad
 Contracteer needs at least one shared key between request and response elements.</p>
 <p><strong>Fix:</strong> Ensure the same example key appears on both a request element (parameter or request body) and a response element (header or response body).
 See <a href="../../concepts/scenarios/#common-mistakes">Common Mistakes</a> for details.</p>
+<h3 id="operation-not-verified-against-the-expected-response">Operation not verified against the expected response<a class="headerlink" href="#operation-not-verified-against-the-expected-response" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> An operation loads without error, but the verifier never checks the response you expect.
+It runs only the cases your scenarios define, or only an automatic type-mismatch case, or nothing at all.</p>
+<p><strong>Cause:</strong> No <a href="../../concepts/how-contracteer-works/#the-primary-response">primary response</a> resolves, and no scenario targets one.
+This happens when several declared responses could be verified and nothing chooses between them -- two codes between 200 and 299, say.
+It also happens when none of them can be verified on its own: only status code ranges (<code>2XX</code>, <code>4XX</code>), <code>default</code>, or codes no ordinary request produces.
+The first case logs a warning naming the declared responses, but only when the operation defines no scenario at all.
+The second is silent.</p>
+<p><strong>Fix:</strong> Add a scenario targeting the response you expect, or declare the exact status code the operation answers with.</p>
 <h3 id="ambiguous-match-for-oneof">"Ambiguous match for oneOf"<a class="headerlink" href="#ambiguous-match-for-oneof" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The verifier or mock server rejects a request or response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."</p>
 <p><strong>Cause:</strong> The <code>oneOf</code> variants have overlapping structures.
@@ -2200,8 +2231,8 @@ Common causes:</p>
   Check that your request sends the exact values from the OpenAPI examples.</li>
 <li><strong>Multiple scenarios match.</strong> The request matches more than one scenario.
   Make your example values more specific to distinguish them.</li>
-<li><strong>Multiple 2xx response codes.</strong> The operation defines more than one success status code and no scenario disambiguates.
-  Add scenarios to target specific status codes.</li>
+<li><strong>No primary response resolves.</strong> The operation declares no single response to serve -- several success codes, say, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code>, which are never served on their own.
+  Add a scenario to target a specific status code, or declare the exact status code the operation answers with.</li>
 </ul>
 <p>See <a href="../../concepts/testing-your-client/#the-418-diagnostic-response">The 418 Diagnostic Response</a> for a full explanation.</p>
 <h3 id="getting-400-when-expecting-200">Getting 400 when expecting 200<a class="headerlink" href="#getting-400-when-expecting-200" title="Permanent link">&para;</a></h3>
