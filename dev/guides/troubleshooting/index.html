@@ -2228,9 +2228,9 @@ It runs only the cases your scenarios define, or only an automatic type-mismatch
 <p><strong>Cause:</strong> No <a href="../../concepts/how-contracteer-works/#the-primary-response">primary response</a> resolves, and no scenario targets one.
 This happens when several declared responses could be verified and nothing chooses between them -- two codes between 200 and 299, say.
 It also happens when none of them can be verified on its own: only status code ranges (<code>2XX</code>, <code>4XX</code>), <code>default</code>, or codes no ordinary request produces.
-The first case logs a warning naming the declared responses, but only when the operation defines no scenario at all.
-The second is silent.</p>
-<p><strong>Fix:</strong> Add a scenario targeting the response you expect, or declare the exact status code the operation answers with.</p>
+The <a href="../../getting-started/verifier/#interpret-the-results">programmatic verifier</a> reports the operation as an unverified primary response, naming the reason.</p>
+<p><strong>Fix:</strong> Declare the exact status code the operation answers with.
+When several codes between 200 and 299 compete, you can instead add a scenario for each of them.</p>
 <h3 id="ambiguous-match-for-oneof">"Ambiguous match for oneOf"<a class="headerlink" href="#ambiguous-match-for-oneof" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The verifier or mock server rejects a request or response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."</p>
 <p><strong>Cause:</strong> The <code>oneOf</code> variants have overlapping structures.
