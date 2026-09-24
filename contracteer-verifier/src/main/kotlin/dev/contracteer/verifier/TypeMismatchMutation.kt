@@ -11,6 +11,6 @@ internal object TypeMismatchMutation {
       is AnyDataType                                            -> null
       is NullDataType                                           -> null
       is ArrayDataType if mutate(dataType.itemDataType) == null -> null
-      else                                                      -> "<<not a ${dataType.openApiType}>>"
+      else                                                      -> "<<not-a-${dataType.openApiType.substringAfter('/')}>>"
     }
 }

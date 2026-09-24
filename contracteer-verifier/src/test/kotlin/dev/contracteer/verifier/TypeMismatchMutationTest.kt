@@ -23,42 +23,42 @@ class TypeMismatchMutationTest {
 
   @Test
   fun `produces invalid value for IntegerDataType`() {
-    assert(TypeMismatchMutation.mutate(integerType()) == "<<not a integer>>")
+    assert(TypeMismatchMutation.mutate(integerType()) == "<<not-a-integer>>")
   }
 
   @Test
   fun `produces invalid value for NumberDataType`() {
-    assert(TypeMismatchMutation.mutate(numberType()) == "<<not a number>>")
+    assert(TypeMismatchMutation.mutate(numberType()) == "<<not-a-number>>")
   }
 
   @Test
   fun `produces invalid value for BooleanDataType`() {
-    assert(TypeMismatchMutation.mutate(booleanType()) == "<<not a boolean>>")
+    assert(TypeMismatchMutation.mutate(booleanType()) == "<<not-a-boolean>>")
   }
 
   @Test
   fun `produces invalid value for DateDataType`() {
-    assert(TypeMismatchMutation.mutate(dateType()) == "<<not a string/date>>")
+    assert(TypeMismatchMutation.mutate(dateType()) == "<<not-a-date>>")
   }
 
   @Test
   fun `produces invalid value for DateTimeDataType`() {
-    assert(TypeMismatchMutation.mutate(dateTimeType()) == "<<not a string/date-time>>")
+    assert(TypeMismatchMutation.mutate(dateTimeType()) == "<<not-a-date-time>>")
   }
 
   @Test
   fun `produces invalid value for UuidDataType`() {
-    assert(TypeMismatchMutation.mutate(uuidType()) == "<<not a string/uuid>>")
+    assert(TypeMismatchMutation.mutate(uuidType()) == "<<not-a-uuid>>")
   }
 
   @Test
   fun `produces invalid value for EmailDataType`() {
-    assert(TypeMismatchMutation.mutate(emailType()) == "<<not a string/email>>")
+    assert(TypeMismatchMutation.mutate(emailType()) == "<<not-a-email>>")
   }
 
   @Test
   fun `produces invalid value for Base64DataType`() {
-    assert(TypeMismatchMutation.mutate(base64Type()) == "<<not a string/byte>>")
+    assert(TypeMismatchMutation.mutate(base64Type()) == "<<not-a-byte>>")
   }
 
   @Test
@@ -70,12 +70,12 @@ class TypeMismatchMutationTest {
     val result = TypeMismatchMutation.mutate(dataType)
 
     // Then
-    assert(result == "<<not a object>>")
+    assert(result == "<<not-a-object>>")
   }
 
   @Test
   fun `produces invalid value for ArrayDataType with non-string items`() {
-    assert(TypeMismatchMutation.mutate(arrayType(items = integerType())) == "<<not a array>>")
+    assert(TypeMismatchMutation.mutate(arrayType(items = integerType())) == "<<not-a-array>>")
   }
 
   @Test
@@ -102,7 +102,7 @@ class TypeMismatchMutationTest {
     val result = TypeMismatchMutation.mutate(dataType)
 
     // Then
-    assert(result == "<<not a oneOf>>")
+    assert(result == "<<not-a-oneOf>>")
   }
 
   @Test
@@ -117,7 +117,7 @@ class TypeMismatchMutationTest {
     val result = TypeMismatchMutation.mutate(dataType)
 
     // Then
-    assert(result == "<<not a anyOf>>")
+    assert(result == "<<not-a-anyOf>>")
   }
 
   @Test
@@ -132,7 +132,7 @@ class TypeMismatchMutationTest {
     val result = TypeMismatchMutation.mutate(dataType)
 
     // Then
-    assert(result == "<<not a allOf>>")
+    assert(result == "<<not-a-allOf>>")
   }
 
   @Test

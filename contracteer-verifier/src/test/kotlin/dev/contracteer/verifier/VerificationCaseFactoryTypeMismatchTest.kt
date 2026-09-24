@@ -36,7 +36,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     val pathCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(PathParam("id")) }
     assert(pathCase != null)
-    assert(pathCase!!.mutatedValue == "<<not a integer>>")
+    assert(pathCase!!.mutatedValue == "<<not-a-integer>>")
   }
 
   @Test
@@ -55,7 +55,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     val queryCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(QueryParam("page")) }
     assert(queryCase != null)
-    assert(queryCase!!.mutatedValue == "<<not a integer>>")
+    assert(queryCase!!.mutatedValue == "<<not-a-integer>>")
   }
 
   @Test
@@ -74,7 +74,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     val headerCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(Header("X-Request-Id")) }
     assert(headerCase != null)
-    assert(headerCase!!.mutatedValue == "<<not a integer>>")
+    assert(headerCase!!.mutatedValue == "<<not-a-integer>>")
   }
 
   @Test
@@ -93,7 +93,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     val cookieCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(Cookie("session_ttl")) }
     assert(cookieCase != null)
-    assert(cookieCase!!.mutatedValue == "<<not a integer>>")
+    assert(cookieCase!!.mutatedValue == "<<not-a-integer>>")
   }
 
   @Test
@@ -181,7 +181,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     assert(typeMismatchCases.size == 1)
     assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
-    assert(typeMismatchCases[0].mutatedValue == "<<not a object>>")
+    assert(typeMismatchCases[0].mutatedValue == "<<not-a-object>>")
     assert(typeMismatchCases[0].requestContentType == ContentType("application/json"))
     assert(typeMismatchCases[0].expectedResponses == mapOf(400 to apiOperation.responseSchemas.badRequestResponse()))
     assert(typeMismatchCases[0].path == "/users")
@@ -267,7 +267,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     assert(typeMismatchCases.size == 1)
     assert(typeMismatchCases[0].requestContentType == ContentType("application/json"))
-    assert(typeMismatchCases[0].mutatedValue == "<<not a object>>")
+    assert(typeMismatchCases[0].mutatedValue == "<<not-a-object>>")
   }
 
   @Test

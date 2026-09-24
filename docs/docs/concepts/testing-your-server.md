@@ -63,7 +63,7 @@ The verifier sends `GET /musketeers/1` and validates that the response has statu
 The verifier sends `GET /musketeers/999` and validates that the response has status `404`.
 
 **Type-mismatch** -- The `id` parameter has `type: integer` and a `400` response is defined.
-Contracteer generates this verification case automatically: it sends `GET /musketeers/<<not a integer>>` -- a string where an integer is expected -- and validates that the server rejects it.
+Contracteer generates this verification case automatically: it sends `GET /musketeers/<<not-a-integer>>` -- a string where an integer is expected -- and validates that the server rejects it.
 This operation declares `400` and `404`, so either is accepted, and the body is validated against the schema declared for whichever status came back.
 
 ---
@@ -99,7 +99,7 @@ For each request parameter or request body whose type can be meaningfully violat
 It expects the server to reject the request with `400`, `422`, or `404` -- and only with a status the OpenAPI document covers.
 
 In the Musketeer API, the `id` parameter is `type: integer`.
-The verifier sends the string `<<not a integer>>` where an integer is expected.
+The verifier sends the string `<<not-a-integer>>` where an integer is expected.
 A server that validates its inputs rejects this with a `400` response, or with the `404` this operation also declares.
 
 ### What triggers automatic 400 testing

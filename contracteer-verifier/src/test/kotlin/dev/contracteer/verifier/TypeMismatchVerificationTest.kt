@@ -66,7 +66,7 @@ class TypeMismatchVerificationTest {
     // Then
     server.stop()
     assert(outcome.result.isSuccess())
-    assert(capturedBody == "<<not a object>>")
+    assert(capturedBody == "<<not-a-object>>")
     assert(capturedContentType?.contains("application/json") == true)
   }
 
@@ -109,7 +109,7 @@ class TypeMismatchVerificationTest {
     // Then
     server.stop()
     assert(outcome.result.isSuccess())
-    assert(capturedId == "<<not a integer>>")
+    assert(capturedId == "<<not-a-integer>>")
   }
 
   @Test
@@ -157,7 +157,7 @@ class TypeMismatchVerificationTest {
     // Then
     server.stop()
     assert(outcome.result.isSuccess())
-    assert(capturedId == "<<not a integer>>")
+    assert(capturedId == "<<not-a-integer>>")
     // The non-mutated query param should have a valid integer value
     assert(capturedPage != null)
     assert(capturedPage!!.matches(Regex("-?\\d+")))

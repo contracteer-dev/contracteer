@@ -20,7 +20,7 @@ class TypeMismatchCaseTest {
       path = "/users",
       method = "POST",
       mutatedElement = MutatedElement.Body,
-      mutatedValue = "<<not a object>>"
+      mutatedValue = "<<not-a-object>>"
     )
 
     // When
@@ -37,7 +37,7 @@ class TypeMismatchCaseTest {
       path = "/users/{id}",
       method = "GET",
       mutatedElement = MutatedElement.Parameter(PathParam("id")),
-      mutatedValue = "<<not a integer>>"
+      mutatedValue = "<<not-a-integer>>"
     )
 
     // When
@@ -54,7 +54,7 @@ class TypeMismatchCaseTest {
       path = "/users",
       method = "GET",
       mutatedElement = MutatedElement.Parameter(QueryParam("page")),
-      mutatedValue = "<<not a integer>>"
+      mutatedValue = "<<not-a-integer>>"
     )
 
     // When
@@ -71,7 +71,7 @@ class TypeMismatchCaseTest {
       path = "/users",
       method = "GET",
       mutatedElement = MutatedElement.Parameter(Header("X-Request-Id")),
-      mutatedValue = "<<not a string/uuid>>"
+      mutatedValue = "<<not-a-uuid>>"
     )
 
     // When
@@ -88,7 +88,7 @@ class TypeMismatchCaseTest {
       path = "/users",
       method = "GET",
       mutatedElement = MutatedElement.Parameter(Cookie("session_ttl")),
-      mutatedValue = "<<not a integer>>"
+      mutatedValue = "<<not-a-integer>>"
     )
 
     // When
@@ -105,7 +105,7 @@ class TypeMismatchCaseTest {
       path = "/users/{id}",
       method = "GET",
       mutatedElement = MutatedElement.Parameter(PathParam("id")),
-      mutatedValue = "<<not a integer>>",
+      mutatedValue = "<<not-a-integer>>",
       expectedStatusCodes = listOf(400, 404)
     )
 

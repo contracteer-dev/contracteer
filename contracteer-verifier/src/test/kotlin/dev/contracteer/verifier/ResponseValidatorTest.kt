@@ -474,7 +474,7 @@ class ResponseValidatorTest {
       requestSchema = op.requestSchema,
       expectedResponses = expectedStatusCodes.associateWith { op.responseSchemas.responseFor(it)!! },
       mutatedElement = MutatedElement.Body,
-      mutatedValue = "<<not a object>>"
+      mutatedValue = "<<not-a-object>>"
     )
   }
 
