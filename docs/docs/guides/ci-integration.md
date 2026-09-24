@@ -60,7 +60,7 @@ jobs:
           timeout 30 bash -c 'until curl -s http://localhost:8080/health; do sleep 1; done'
 
       - name: Verify contracts
-        run: contracteer verify openapi.yaml -u http://localhost -p 8080
+        run: contracteer verify openapi.yaml -u http://localhost:8080
 ```
 
 The `contracteer verify` command exits with code `0` when all cases pass and `1` when any case fails.
