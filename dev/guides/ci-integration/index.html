@@ -1260,7 +1260,7 @@ Your existing test step already runs contract tests.</p>
 <a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">          </span><span class="no">timeout 30 bash -c 'until curl -s http://localhost:8080/health; do sleep 1; done'</span>
 <a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
 <a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Verify contracts</span>
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">contracteer verify openapi.yaml -u http://localhost -p 8080</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">contracteer verify openapi.yaml -u http://localhost:8080</span>
 </code></pre></div>
 <p>The <code>contracteer verify</code> command exits with code <code>0</code> when all cases pass and <code>1</code> when any case fails.
 GitHub Actions treats a non-zero exit code as a failed step.</p>
