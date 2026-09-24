@@ -1374,7 +1374,7 @@ The verifier sends <code>GET /musketeers/1</code> and validates that the respons
 <p><strong>404_UNKNOWN_MUSKETEER</strong> -- The key starts with <code>404_</code>, creating a scenario that targets the 404 response directly.
 The verifier sends <code>GET /musketeers/999</code> and validates that the response has status <code>404</code>.</p>
 <p><strong>Type-mismatch</strong> -- The <code>id</code> parameter has <code>type: integer</code> and a <code>400</code> response is defined.
-Contracteer generates this verification case automatically: it sends <code>GET /musketeers/&lt;&lt;not a integer&gt;&gt;</code> -- a string where an integer is expected -- and validates that the server rejects it.
+Contracteer generates this verification case automatically: it sends <code>GET /musketeers/&lt;&lt;not-a-integer&gt;&gt;</code> -- a string where an integer is expected -- and validates that the server rejects it.
 This operation declares <code>400</code> and <code>404</code>, so either is accepted, and the body is validated against the schema declared for whichever status came back.</p>
 <hr />
 <h2 id="shape-not-values">Shape, Not Values<a class="headerlink" href="#shape-not-values" title="Permanent link">&para;</a></h2>
@@ -1422,7 +1422,7 @@ That turns a contract test into a functional test.</p>
 <p>For each request parameter or request body whose type can be meaningfully violated, the verifier sends a value of the wrong type.
 It expects the server to reject the request with <code>400</code>, <code>422</code>, or <code>404</code> -- and only with a status the OpenAPI document covers.</p>
 <p>In the Musketeer API, the <code>id</code> parameter is <code>type: integer</code>.
-The verifier sends the string <code>&lt;&lt;not a integer&gt;&gt;</code> where an integer is expected.
+The verifier sends the string <code>&lt;&lt;not-a-integer&gt;&gt;</code> where an integer is expected.
 A server that validates its inputs rejects this with a <code>400</code> response, or with the <code>404</code> this operation also declares.</p>
 <h3 id="what-triggers-automatic-400-testing">What triggers automatic 400 testing<a class="headerlink" href="#what-triggers-automatic-400-testing" title="Permanent link">&para;</a></h3>
 <p>Two conditions must be met:</p>
