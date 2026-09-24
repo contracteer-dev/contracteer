@@ -1059,6 +1059,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cookie-values-arrive-truncated-on-undertow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookie values arrive truncated on Undertow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#response-body-validation-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1636,6 +1647,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cookie-values-arrive-truncated-on-undertow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookie values arrive truncated on Undertow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#response-body-validation-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2172,6 +2194,13 @@ Here the document declares <code>400</code> and says nothing about <code>422</co
 <p><strong>Fix:</strong> Declare the status your server actually returns.
 Add a <code>422</code> response to the operation, or cover it with a <code>4XX</code> class response or a <code>default</code> response.
 The document then describes what clients will really receive.</p>
+<h3 id="cookie-values-arrive-truncated-on-undertow">Cookie values arrive truncated on Undertow<a class="headerlink" href="#cookie-values-arrive-truncated-on-undertow" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> A case with a cookie parameter fails on a server running Undertow (for example WildFly), and the server received only the start of the cookie value.
+A type-mismatch case on an optional cookie fails with <code>Expected: 400, Actual: 200</code>.</p>
+<p><strong>Cause:</strong> The verifier sends cookie values unquoted, as RFC 6265 defines them.
+Undertow cuts an unquoted value at the first character it treats as a separator, such as <code>&lt;</code>, <code>=</code>, <code>@</code> or <code>?</code>, although RFC 6265 allows them in a cookie value.
+The type-mismatch value <code>&lt;&lt;not-a-integer&gt;&gt;</code> arrives empty.</p>
+<p><strong>Fix:</strong> Start the server with <code>-Dio.undertow.legacy.cookie.ALLOW_HTTP_SEPARATORS_IN_V0=true</code>.</p>
 <h3 id="response-body-validation-fails">Response body validation fails<a class="headerlink" href="#response-body-validation-fails" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The verification case reports errors like <code>'name': expected type 'string' but got 'integer'</code> or <code>'email': required field missing</code>.</p>
 <p><strong>Cause:</strong> The server's response does not conform to the schema declared in the OpenAPI document.</p>
