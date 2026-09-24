@@ -4,7 +4,6 @@ import org.http4k.client.JavaHttpClient
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.cookie.cookie
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -159,7 +158,7 @@ internal class VerificationHttpClient(serverUrl: String) {
         is QueryParam if (param.codec.allowReserved) -> request.appendRawQueryEntry(key, value)
         is QueryParam                                -> request.query(key, value)
         is Header                                    -> request.header(key, HttpHeaderValue.requireValid(key, value))
-        is Cookie                                    -> request.cookie(key, value)
+        is Cookie                                    -> request.withCookie(key, value)
         else                                         -> request
       }
     }
@@ -169,9 +168,15 @@ internal class VerificationHttpClient(serverUrl: String) {
       is QueryParam if (param.codec.allowReserved) -> appendRawQueryEntry(param.element.name, value)
       is QueryParam                                -> query(param.element.name, value)
       is Header                                    -> header(param.element.name, HttpHeaderValue.requireValid(param.element.name, value))
-      is Cookie                                    -> cookie(param.element.name, value)
+      is Cookie                                    -> withCookie(param.element.name, value)
       else                                         -> this
     }
+
+  // http4k's Request.cookie wraps the value in DQUOTEs, which RFC 6265bis treats as part of the value.
+  private fun Request.withCookie(name: String, value: String): Request {
+    val cookiePair = "$name=$value"
+    return replaceHeader("Cookie", header("Cookie")?.let { "$it; $cookiePair" } ?: cookiePair)
+  }
 
   private fun Request.appendRawQueryEntry(key: String, value: String): Request {
     val encodedEntry = "${UrlEncoding.encode(key, false)}=${UrlEncoding.encode(value, true)}"

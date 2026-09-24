@@ -62,6 +62,17 @@ Here the document declares `400` and says nothing about `422`.
 Add a `422` response to the operation, or cover it with a `4XX` class response or a `default` response.
 The document then describes what clients will really receive.
 
+### Cookie values arrive truncated on Undertow
+
+**Symptom:** A case with a cookie parameter fails on a server running Undertow (for example WildFly), and the server received only the start of the cookie value.
+A type-mismatch case on an optional cookie fails with `Expected: 400, Actual: 200`.
+
+**Cause:** The verifier sends cookie values unquoted, as RFC 6265 defines them.
+Undertow cuts an unquoted value at the first character it treats as a separator, such as `<`, `=`, `@` or `?`, although RFC 6265 allows them in a cookie value.
+The type-mismatch value `<<not-a-integer>>` arrives empty.
+
+**Fix:** Start the server with `-Dio.undertow.legacy.cookie.ALLOW_HTTP_SEPARATORS_IN_V0=true`.
+
 ### Response body validation fails
 
 **Symptom:** The verification case reports errors like `'name': expected type 'string' but got 'integer'` or `'email': required field missing`.

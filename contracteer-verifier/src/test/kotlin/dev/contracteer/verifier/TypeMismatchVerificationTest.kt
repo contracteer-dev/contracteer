@@ -164,6 +164,89 @@ class TypeMismatchVerificationTest {
   }
 
   @Test
+  fun `sends mutated cookie value without quotes`() {
+    // Given
+    var capturedCookieHeader: String? = null
+
+    val app = routes(
+      "/users" bind GET to { request ->
+        capturedCookieHeader = request.header("Cookie")
+        Response(BAD_REQUEST)
+          .header("Content-Type", "application/json")
+          .body("""{"error": "invalid"}""")
+      }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+
+    val apiOperation = apiOperation("GET", "/users") {
+      request {
+        cookie("session_ttl", integerType())
+      }
+
+      response(200) {}
+
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+        })
+      }
+    }
+
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
+
+    // When
+    verifier.verify(typeMismatchCase)
+
+    // Then
+    server.stop()
+    assert(capturedCookieHeader == "session_ttl=<<not-a-integer>>")
+  }
+
+  @Test
+  fun `sends non-mutated cookie values without quotes alongside mutated one`() {
+    // Given
+    var capturedCookieHeader: String? = null
+
+    val app = routes(
+      "/users" bind GET to { request ->
+        capturedCookieHeader = request.header("Cookie")
+        Response(BAD_REQUEST)
+          .header("Content-Type", "application/json")
+          .body("""{"error": "invalid"}""")
+      }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+
+    val apiOperation = apiOperation("GET", "/users") {
+      request {
+        cookie("session_ttl", integerType())
+        cookie("theme", stringType())
+      }
+
+      response(200) {}
+
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+        })
+      }
+    }
+
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
+
+    // When
+    verifier.verify(typeMismatchCase)
+
+    // Then
+    server.stop()
+    assert(capturedCookieHeader!!.matches(Regex("session_ttl=<<not-a-integer>>; theme=[a-z0-9]*")))
+  }
+
+  @Test
   fun `verification fails when server does not return 400`() {
     // Given
     val app = routes(
