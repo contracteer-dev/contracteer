@@ -6,13 +6,13 @@ import dev.contracteer.core.datatype.DataType
 import dev.contracteer.core.datatype.ObjectDataType
 import dev.contracteer.core.operation.*
 import dev.contracteer.core.operation.PrimaryResponse.Resolved
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved
 import dev.contracteer.core.operation.PrimaryResponse.Unresolved.Ambiguous
-import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoResponsesDeclared
-import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoSelectableResponse
 import dev.contracteer.verifier.VerificationCase.*
 
 /**
- * Generates [VerificationCase] instances from an [ApiOperation].
+ * Plans the verification of an [ApiOperation]: generates its [VerificationCase] instances and
+ * reports an [UnverifiedPrimaryResponse] when no case can assert its primary response.
  *
  * Produces three kinds of verification cases:
  * - [VerificationCase.ScenarioBased]: one per scenario defined in the operation
@@ -22,14 +22,42 @@ import dev.contracteer.verifier.VerificationCase.*
 object VerificationCaseFactory {
   private val logger = KotlinLogging.logger {}
 
-  /** Creates all verification cases for the given [apiOperation]. */
-  fun create(apiOperation: ApiOperation): List<VerificationCase> {
-    val scenarioCases = createScenarioBasedCases(apiOperation)
-    val schemaBasedCases = createSchemaBasedCasesIfNeeded(apiOperation)
-    val typeMismatchCases = createTypeMismatchCases(apiOperation)
-
-    return scenarioCases + schemaBasedCases + typeMismatchCases
+  /**
+   * Plans the verification of [apiOperation]: the cases to run and, when the operation's primary
+   * response cannot be resolved, the report that it goes unverified.
+   *
+   * An ambiguous primary response is not reported when every competing status code has a
+   * scenario: each of them is then asserted.
+   */
+  @JvmStatic
+  fun plan(apiOperation: ApiOperation): VerificationPlan {
+    val primaryResponse = apiOperation.responseSchemas.primaryResponse()
+    return VerificationPlan(
+      cases = createScenarioBasedCases(apiOperation) +
+              createSchemaBasedCasesIfNeeded(apiOperation, primaryResponse) +
+              createTypeMismatchCases(apiOperation),
+      unverifiedPrimaryResponse = unverifiedPrimaryResponse(apiOperation, primaryResponse)
+    )
   }
+
+  /** Creates all verification cases for the given [apiOperation]: the cases of its [plan]. */
+  @JvmStatic
+  fun create(apiOperation: ApiOperation): List<VerificationCase> = plan(apiOperation).cases
+
+  private fun unverifiedPrimaryResponse(apiOperation: ApiOperation,
+                                        primaryResponse: PrimaryResponse): UnverifiedPrimaryResponse? =
+    when (primaryResponse) {
+      is Resolved                                                              -> null
+      is Ambiguous if everyCandidateHasScenario(apiOperation, primaryResponse) -> null
+      is Unresolved                                                            ->
+        UnverifiedPrimaryResponse(apiOperation.method, apiOperation.path, primaryResponse)
+    }
+
+  private fun everyCandidateHasScenario(apiOperation: ApiOperation, ambiguous: Ambiguous): Boolean =
+    ambiguous.candidates.all { apiOperation.hasScenarioFor(it) }
+
+  private fun ApiOperation.hasScenarioFor(statusCode: Int): Boolean =
+    scenarios.any { it.statusCode == statusCode }
 
   private fun createScenarioBasedCases(apiOperation: ApiOperation): List<ScenarioBased> {
     return apiOperation.scenarios.flatMap { scenario ->
@@ -53,30 +81,15 @@ object VerificationCaseFactory {
     return if (requiredBodies.isEmpty()) listOf(null) else requiredBodies.map { it.contentType }
   }
 
-  private fun createSchemaBasedCasesIfNeeded(apiOperation: ApiOperation): List<SchemaBased> =
-    when (val primaryResponse = apiOperation.responseSchemas.primaryResponse()) {
-      is Resolved             -> createSchemaBasedCasesUnlessScenarioCovers(apiOperation, primaryResponse)
-      is Ambiguous            -> {
-        warnAmbiguityWithoutScenario(apiOperation, primaryResponse.declared)
-        emptyList()
-      }
-      is NoSelectableResponse,
-      NoResponsesDeclared     -> emptyList()
-    }
+  private fun createSchemaBasedCasesIfNeeded(apiOperation: ApiOperation,
+                                             primaryResponse: PrimaryResponse): List<SchemaBased> =
+    if (primaryResponse is Resolved) createSchemaBasedCasesUnlessScenarioCovers(apiOperation, primaryResponse)
+    else emptyList()
 
   private fun createSchemaBasedCasesUnlessScenarioCovers(apiOperation: ApiOperation,
                                                          primaryResponse: Resolved): List<SchemaBased> =
-    if (apiOperation.scenarios.any { it.statusCode == primaryResponse.statusCode }) emptyList()
+    if (apiOperation.hasScenarioFor(primaryResponse.statusCode)) emptyList()
     else createSchemaBasedCases(apiOperation, primaryResponse.statusCode, primaryResponse.schema)
-
-  private fun warnAmbiguityWithoutScenario(apiOperation: ApiOperation, declared: List<String>) {
-    if (apiOperation.scenarios.isNotEmpty()) return
-    logger.warn {
-      "Operation ${apiOperation.method} ${apiOperation.path} declares ${declared.joinToString(", ")} " +
-      "and none of them is the response to verify. " +
-      "Skipping schema-based verification generation; add a scenario to disambiguate."
-    }
-  }
 
   private fun createTypeMismatchCases(apiOperation: ApiOperation): List<TypeMismatch> {
     val badRequestResponse = apiOperation.responseSchemas.badRequestResponse() ?: return emptyList()

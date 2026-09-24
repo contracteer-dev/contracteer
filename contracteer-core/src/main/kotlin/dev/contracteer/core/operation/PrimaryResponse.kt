@@ -20,7 +20,7 @@ sealed interface PrimaryResponse {
   data class Resolved(val statusCode: Int, val schema: ResponseSchema): PrimaryResponse
 
   /**
-   * No response can be targeted. Every case is fixed the same way: declare a scenario.
+   * No response can be targeted without a scenario.
    */
   sealed interface Unresolved: PrimaryResponse {
 
@@ -37,10 +37,21 @@ sealed interface PrimaryResponse {
     data class NoSelectableResponse(val declared: List<String>): Unresolved
 
     /**
-     * Several declared responses could be targeted and nothing chooses between them.
+     * Several exact status codes of the preferred class compete and nothing chooses between them:
+     * several exact `2xx`, or — when no exact `2xx` is declared — several targetable exact `3xx`.
+     *
+     * @param declared every declared response key, in the order [ResponseSchemas] lists them
+     * @param candidates the competing status codes, in ascending order
+     */
+    data class Ambiguous(val declared: List<String>, val candidates: List<Int>): Unresolved
+
+    /**
+     * The operation declares several responses and none is an exact `2xx` or a targetable exact
+     * `3xx`, such as `400` and `404`, or `404` and `2XX`. With more than one response declared,
+     * none is presumed to be the successful one.
      *
      * @param declared every declared response key, in the order [ResponseSchemas] lists them
      */
-    data class Ambiguous(val declared: List<String>): Unresolved
+    data class NoPreferredResponse(val declared: List<String>): Unresolved
   }
 }

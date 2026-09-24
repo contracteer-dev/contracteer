@@ -2,6 +2,7 @@ package dev.contracteer.core.operation
 
 import dev.contracteer.core.operation.PrimaryResponse.Resolved
 import dev.contracteer.core.operation.PrimaryResponse.Unresolved.Ambiguous
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoPreferredResponse
 import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoResponsesDeclared
 import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoSelectableResponse
 import org.junit.jupiter.api.Test
@@ -68,17 +69,29 @@ class PrimaryResponseTest {
   }
 
   @Test
-  fun `reports ambiguity when several declared responses compete`() {
+  fun `reports ambiguity and its candidates when several exact 2xx compete`() {
     assert(ResponseSchemas(byStatusCode = mapOf(200 to ok, 201 to created)).primaryResponse()
-           == Ambiguous(listOf("200", "201")))
+           == Ambiguous(declared = listOf("200", "201"), candidates = listOf(200, 201)))
+    assert(ResponseSchemas(byStatusCode = mapOf(200 to ok, 201 to created, 404 to notFound)).primaryResponse()
+           == Ambiguous(declared = listOf("200", "201", "404"), candidates = listOf(200, 201)))
+  }
+
+  @Test
+  fun `reports ambiguity and its candidates when several exact 3xx compete and no exact 2xx is declared`() {
     assert(ResponseSchemas(byStatusCode = mapOf(301 to movedPermanently, 302 to found)).primaryResponse()
-           == Ambiguous(listOf("301", "302")))
+           == Ambiguous(declared = listOf("301", "302"), candidates = listOf(301, 302)))
+    assert(ResponseSchemas(byStatusCode = mapOf(301 to movedPermanently, 302 to found, 304 to notModified)).primaryResponse()
+           == Ambiguous(declared = listOf("301", "302", "304"), candidates = listOf(301, 302)))
+  }
+
+  @Test
+  fun `reports no preferred response when several responses are declared and none is an exact 2xx or 3xx`() {
     assert(ResponseSchemas(byStatusCode = mapOf(400 to badRequest, 404 to notFound)).primaryResponse()
-           == Ambiguous(listOf("400", "404")))
+           == NoPreferredResponse(listOf("400", "404")))
     assert(ResponseSchemas(byStatusCode = mapOf(403 to forbidden), defaultResponse = default).primaryResponse()
-           == Ambiguous(listOf("403", "default")))
+           == NoPreferredResponse(listOf("403", "default")))
     assert(ResponseSchemas(byStatusCode = mapOf(404 to notFound), byClass = mapOf(2 to classResponse)).primaryResponse()
-           == Ambiguous(listOf("404", "2XX")))
+           == NoPreferredResponse(listOf("404", "2XX")))
   }
 
   @Test

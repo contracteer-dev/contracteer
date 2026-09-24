@@ -75,16 +75,20 @@ internal object RequestHandler {
 
       Unresolved.NoResponsesDeclared      -> failure("No response schema defined for ${operation.describe()}")
 
+      is Unresolved.Ambiguous             -> ambiguityFailure(primaryResponse.declared, operation)
+
+      is Unresolved.NoPreferredResponse   -> ambiguityFailure(primaryResponse.declared, operation)
+
       is Unresolved.NoSelectableResponse  ->
         failure(
           "No response that a request can elicit is defined for ${operation.describe()}: " +
           "${primaryResponse.declared.joinToString(", ")}. Declare an explicit status code.")
-
-      is Unresolved.Ambiguous             ->
-        failure(
-          "Ambiguous: multiple response codes (${primaryResponse.declared.joinToString(", ")}) " +
-          "for ${operation.describe()}. Use scenarios to disambiguate.")
     }
+
+  private fun ambiguityFailure(declared: List<String>, operation: ApiOperation): Result<Nothing> =
+    failure(
+      "Ambiguous: multiple response codes (${declared.joinToString(", ")}) " +
+      "for ${operation.describe()}. Use scenarios to disambiguate.")
 
   private fun verifyAcceptHeader(acceptHeader: String?, responseSchema: ResponseSchema): Result<Unit> {
     val accept = AcceptHeader.parse(acceptHeader)

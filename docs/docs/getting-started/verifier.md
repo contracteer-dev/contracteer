@@ -42,7 +42,7 @@ The [contracteer-examples](https://github.com/contracteer-dev/contracteer-exampl
 
 ## Load, Generate, Verify
 
-Three steps: load the OpenAPI document, generate verification cases, run them against your server.
+Three steps: load the OpenAPI document, plan each operation, run the verification cases against your server.
 
 === "Kotlin"
 
@@ -53,8 +53,10 @@ Three steps: load the OpenAPI document, generate verification cases, run them ag
         fail("Failed to load OpenAPI document: ${result.errors()}")
     }
 
-    // 2. Generate verification cases
-    val cases = result.value!!.flatMap { VerificationCaseFactory.create(it) }
+    // 2. Plan each operation, and report primary responses no case can verify
+    val plans = result.value!!.map { VerificationCaseFactory.plan(it) }
+    plans.mapNotNull { it.unverifiedPrimaryResponse }.forEach { println(it.message) }
+    val cases = plans.flatMap { it.cases }
 
     // 3. Verify each case against the server
     val verifier = OpenApiVerifier(VerifierConfiguration(
@@ -83,9 +85,16 @@ Three steps: load the OpenAPI document, generate verification cases, run them ag
         fail("Failed to load OpenAPI document: " + result.errors());
     }
 
-    // 2. Generate verification cases
-    var cases = result.getValue().stream()
-        .flatMap(op -> VerificationCaseFactory.create(op).stream())
+    // 2. Plan each operation, and report primary responses no case can verify
+    var plans = result.getValue().stream()
+        .map(VerificationCaseFactory::plan)
+        .toList();
+    plans.stream()
+        .map(VerificationPlan::getUnverifiedPrimaryResponse)
+        .filter(Objects::nonNull)
+        .forEach(unverified -> System.out.println(unverified.getMessage()));
+    var cases = plans.stream()
+        .flatMap(plan -> plan.getCases().stream())
         .toList();
 
     // 3. Verify each case against the server
@@ -134,6 +143,12 @@ Each call to `verifier.verify()` returns a `VerificationOutcome` with two fields
 `result.isSuccess()` returns `true` if the response matches the expected schema.
 `result.errors()` returns a list of error messages when validation fails.
 
+**Unverified primary responses** -- `plan.unverifiedPrimaryResponse` is set when Contracteer cannot determine an operation's [primary response](../concepts/how-contracteer-works.md#the-primary-response), so no verification case asserts it.
+The operation may still produce cases, from its scenarios or a type mismatch.
+`message` names the operation and the reason:
+`Primary response of POST /orders not verified: 200 and 201 both qualify; declare a scenario for each of them`
+An unverified primary response is not a failure: the OpenAPI document is valid, and the verifier reports what it could not assert.
+
 ---
 
 ## Prepare Test Data
@@ -172,7 +187,7 @@ The verifier generates four kinds of verification cases from each operation:
 - **Named scenarios** -- from OpenAPI example keys shared between request and response (e.g., `ATHOS`, `PORTHOS`).
 - **Status-code-prefixed scenarios** -- from keys like `404_UNKNOWN_MUSKETEER` that target a specific status code.
 - **Automatic type-mismatch** -- Contracteer sends a wrong type (e.g., a string for an integer parameter) and expects the server to reject it with a `400`, `422`, or `404` the OpenAPI document declares.
-- **Schema-only** -- when no examples exist, Contracteer generates random values and validates the response structure.
+- **Schema-only** -- when no scenario targets the operation's primary response, Contracteer generates random values and validates the response structure.
 
 For each case, the verifier checks the status code, required headers, and response body structure.
 It does not check response values.

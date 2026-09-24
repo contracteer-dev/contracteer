@@ -4,6 +4,7 @@ import dev.contracteer.core.codec.ParameterCodec
 import dev.contracteer.core.datatype.DataType
 import dev.contracteer.core.operation.PrimaryResponse.Resolved
 import dev.contracteer.core.operation.PrimaryResponse.Unresolved.Ambiguous
+import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoPreferredResponse
 import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoResponsesDeclared
 import dev.contracteer.core.operation.PrimaryResponse.Unresolved.NoSelectableResponse
 import dev.contracteer.core.serde.Serde
@@ -70,20 +71,24 @@ data class ResponseSchemas(
       !hasResponses()              -> NoResponsesDeclared
       elicitable.isEmpty()         -> NoSelectableResponse(declaredResponses())
       declaresExactlyOneResponse() -> elicitable.entries.first().toResolved()
-      else                         -> preferredCandidate(elicitable)?.toResolved()
-                                      ?: Ambiguous(declaredResponses())
+      else                         -> resolveAmong(preferredCandidates(elicitable))
     }
   }
 
   private fun declaresExactlyOneResponse(): Boolean =
     byStatusCode.size == 1 && byClass.isEmpty() && defaultResponse == null
 
-  /** The single exact `2xx`, or — when no exact `2xx` is declared — the single elicitable `3xx`. */
-  private fun preferredCandidate(elicitable: Map<Int, ResponseSchema>): Map.Entry<Int, ResponseSchema>? {
-    val successes = elicitable.filterKeys { it in 200..299 }
-    return if (successes.isNotEmpty()) successes.entries.singleOrNull()
-           else elicitable.filterKeys { it in 300..399 }.entries.singleOrNull()
-  }
+  /** The exact `2xx`, or — when no exact `2xx` is declared — the elicitable `3xx`. */
+  private fun preferredCandidates(elicitable: Map<Int, ResponseSchema>): Map<Int, ResponseSchema> =
+    elicitable.filterKeys { it in 200..299 }
+      .ifEmpty { elicitable.filterKeys { it in 300..399 } }
+
+  private fun resolveAmong(candidates: Map<Int, ResponseSchema>): PrimaryResponse =
+    when (candidates.size) {
+      0    -> NoPreferredResponse(declaredResponses())
+      1    -> candidates.entries.single().toResolved()
+      else -> Ambiguous(declaredResponses(), candidates.keys.sorted())
+    }
 
   private fun declaredResponses(): List<String> =
     byStatusCode.keys.sorted().map { it.toString() } +

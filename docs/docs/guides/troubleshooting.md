@@ -113,10 +113,10 @@ It runs only the cases your scenarios define, or only an automatic type-mismatch
 **Cause:** No [primary response](../concepts/how-contracteer-works.md#the-primary-response) resolves, and no scenario targets one.
 This happens when several declared responses could be verified and nothing chooses between them -- two codes between 200 and 299, say.
 It also happens when none of them can be verified on its own: only status code ranges (`2XX`, `4XX`), `default`, or codes no ordinary request produces.
-The first case logs a warning naming the declared responses, but only when the operation defines no scenario at all.
-The second is silent.
+The [programmatic verifier](../getting-started/verifier.md#interpret-the-results) reports the operation as an unverified primary response, naming the reason.
 
-**Fix:** Add a scenario targeting the response you expect, or declare the exact status code the operation answers with.
+**Fix:** Declare the exact status code the operation answers with.
+When several codes between 200 and 299 compete, you can instead add a scenario for each of them.
 
 ### "Ambiguous match for oneOf"
 

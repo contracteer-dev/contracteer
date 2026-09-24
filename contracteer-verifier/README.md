@@ -34,7 +34,9 @@ if (result.isFailure()) {
     fail("Failed to load OpenAPI document: ${result.errors()}")
 }
 
-val cases = result.value!!.flatMap { VerificationCaseFactory.create(it) }
+val plans = result.value!!.map { VerificationCaseFactory.plan(it) }
+plans.mapNotNull { it.unverifiedPrimaryResponse }.forEach { println(it.message) }
+val cases = plans.flatMap { it.cases }
 
 val verifier = OpenApiVerifier(VerifierConfiguration(
     baseUrl = "http://localhost:8080"
