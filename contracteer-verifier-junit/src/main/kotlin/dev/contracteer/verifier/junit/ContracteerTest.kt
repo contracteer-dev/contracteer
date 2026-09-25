@@ -17,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith
  * 2. **Verification:** After the method body is executed, the verification case is
  *    automatically verified against the server using the specified connection parameters.
  *
+ * When the primary response of an operation cannot be determined, no verification case asserts it.
+ * The template then adds a skipped invocation after that operation's cases, named after the reason;
+ * the method body does not run for it.
+ *
  * @property serverUrl The base URL where the service under test is running. *Default*: `"http://localhost"`
  *
  * @property serverPort The static port for the service. Use this parameter when the service is started on a fixed port.

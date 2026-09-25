@@ -11,5 +11,11 @@ dependencies {
   testImplementation(libs.http4k.core)
   testImplementation(libs.http4k.jetty)
   testImplementation(libs.logback.classic)
+  testImplementation(libs.junit.platform.testkit)
 }
 
+tasks.test {
+  useJUnitPlatform {
+    excludeTags("engine-test-kit-target")
+  }
+}

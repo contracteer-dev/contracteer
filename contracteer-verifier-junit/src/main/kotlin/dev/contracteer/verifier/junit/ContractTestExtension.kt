@@ -7,6 +7,7 @@ import dev.contracteer.core.Result.Success
 import dev.contracteer.core.swagger.OpenApiLoader
 import dev.contracteer.verifier.OpenApiVerifier
 import dev.contracteer.verifier.VerificationCaseFactory
+import dev.contracteer.verifier.VerificationPlan
 import dev.contracteer.verifier.VerifierConfiguration
 import java.lang.System.lineSeparator
 import java.lang.reflect.Modifier
@@ -31,12 +32,17 @@ internal class ContractTestExtension: TestTemplateInvocationContextProvider {
 
     val verifierProvider = createVerifierProvider(annotation)
 
-    val cases: List<TestTemplateInvocationContext> = operationsResult.value
-      .flatMap { VerificationCaseFactory.create(it) }
-      .map { ContractTestInvocationContext(it, verifierProvider) }
+    val invocations: List<TestTemplateInvocationContext> = operationsResult.value
+      .map { VerificationCaseFactory.plan(it) }
+      .flatMap { invocationsFor(it, verifierProvider) }
 
-    return cases.stream()
+    return invocations.stream()
   }
+
+  private fun invocationsFor(plan: VerificationPlan,
+                             verifierProvider: (ExtensionContext) -> OpenApiVerifier): List<TestTemplateInvocationContext> =
+    plan.cases.map { ContractTestInvocationContext(it, verifierProvider) } +
+    listOfNotNull(plan.unverifiedPrimaryResponse?.let { UnverifiedPrimaryResponseInvocationContext(it) })
 
   private fun createVerifierProvider(annotation: ContracteerTest): (ExtensionContext) -> OpenApiVerifier {
     var cached: OpenApiVerifier? = null

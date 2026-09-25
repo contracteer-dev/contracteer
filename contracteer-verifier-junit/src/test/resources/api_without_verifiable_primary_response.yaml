@@ -1,0 +1,12 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+paths:
+  /orders:
+    post:
+      responses:
+        200:
+          description: Order updated
+        201:
+          description: Order created

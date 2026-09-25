@@ -1,0 +1,31 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+paths:
+  /orders/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Order found
+        201:
+          description: Order created
+        400:
+          description: Bad request
+  /products/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Product found

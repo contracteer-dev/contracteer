@@ -43,6 +43,7 @@ class ContractTest {
 ```
 
 Contracteer reads the OpenAPI document, generates one JUnit test per verification case, and validates that your server responds as documented.
+Operations whose primary response goes unverified appear as skipped tests.
 
 ## Documentation
 

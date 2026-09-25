@@ -43,6 +43,7 @@ The [musketeer-spring-boot-server](https://github.com/contracteer-dev/contractee
 
 Annotate a test method with `@ContracteerTest`.
 Contracteer reads the OpenAPI document, generates verification cases, and runs each as an individual JUnit test.
+Operations whose primary response goes unverified appear as skipped tests.
 
 === "Kotlin"
 
@@ -219,7 +220,7 @@ A mission that references musketeers by name, for example, requires those musket
 
 ## What Happens
 
-Contracteer generates one JUnit test per verification case:
+Contracteer generates one JUnit test per verification case, and one skipped test per unverified primary response:
 
 ![JUnit test results showing verification cases](../assets/images/junit-verifier-test-results.png)
 
@@ -228,10 +229,18 @@ The test tree shows four kinds of verification cases:
 - **Named scenarios** -- from OpenAPI example keys shared between request and response (e.g., `ATHOS`, `PORTHOS`).
 - **Status-code-prefixed scenarios** -- from keys like `404_UNKNOWN_MUSKETEER` that target a specific status code.
 - **Automatic type-mismatch** -- Contracteer sends a wrong type (e.g., a string for an integer parameter) and expects the server to reject it with a `400`, `422`, or `404` the OpenAPI document declares.
-- **Schema-only** -- when no examples exist, Contracteer generates random values and validates the response structure.
+- **Schema-only** -- when no scenario targets the operation's primary response, Contracteer generates random values and validates the response structure.
 
 For each case, the verifier checks the status code, required headers, and response body structure.
 It does not check response values.
+
+When Contracteer cannot determine an operation's [primary response](../concepts/how-contracteer-works.md#the-primary-response), no verification case asserts it.
+Contracteer adds a skipped test after that operation's cases; its name gives the reason:
+`POST /orders -> primary response not verified: 200 and 201 both qualify; declare a scenario for each of them`
+The test method body does not run for it.
+A skipped test does not fail the build: the OpenAPI document is valid, and Contracteer reports what it could not assert.
+
+![JUnit test results showing a skipped test for an unverified primary response](../assets/images/junit-verifier-test-results-no-primary-response-test.png)
 
 See [Testing Your Server](../concepts/testing-your-server.md) for a detailed explanation of what the verifier checks.
 
