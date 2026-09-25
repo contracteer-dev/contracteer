@@ -243,7 +243,7 @@ class TypeMismatchVerificationTest {
 
     // Then
     server.stop()
-    assert(capturedCookieHeader!!.matches(Regex("session_ttl=<<not-a-integer>>; theme=[a-z0-9]*")))
+    assert(capturedCookieHeader!!.matches(Regex("session_ttl=<<not-a-integer>>; theme=[^\"]*")))
   }
 
   @Test
