@@ -37,10 +37,17 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
       .sortedByDescending { literalSegmentLength(it.path) }
       .onEach { logger.info { "Registering route: [${it.method.uppercase()}] ${it.path}" } }
       .map { createRouteHandler(it) }
+    logStartupReport()
 
     logger.info { "Starting Contracteer mock server" }
     http4kServer = routes(*routeHandlers.toTypedArray()).asServer(SunHttp(port)).start()
     logger.info { "Contracteer mock server started on port ${this.port()}" }
+  }
+
+  private fun logStartupReport() {
+    val report = startupReport(operations)
+    report.warnings.forEach { line -> logger.warn { line } }
+    report.details.forEach { line -> logger.debug { line } }
   }
 
   // Sort routes by literal-segment length so concrete paths win over template paths sharing

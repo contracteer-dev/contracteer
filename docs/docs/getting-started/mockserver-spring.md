@@ -258,7 +258,7 @@ If the mock server cannot determine the correct response, it returns `418` with 
 The 418 is not a status code from your API -- it is Contracteer telling you that something is ambiguous or undefined.
 
 This happens when multiple scenarios match the same request.
-It also occurs when no single response can be served -- several declared success codes, or only status code ranges (`2XX`, `4XX`) and `default` -- and no scenario disambiguates.
+It also occurs when no single response can be served -- several declared success codes, or only status code ranges (`2XX`, `4XX`) and `default` -- and the request matches no scenario.
 An invalid request with no `400`, `4XX`, or `default` response defined also triggers a 418.
 
 The 418 body explains what went wrong.
@@ -283,6 +283,29 @@ See [Assert Structure, Not Values](../concepts/testing-your-client.md#assert-str
 
 When the mock server returns a `418` diagnostic response, Contracteer logs the request at WARN level automatically.
 No configuration is needed.
+
+At startup, the mock server logs at WARN every operation that does not answer a valid request with a success when the request matches no scenario: `418` when no single response can be served, or an error status when it is the only response declared.
+
+```
+WARN  POST /orders -> answers 418 to any valid request that matches no scenario: 200 and 201 both qualify
+WARN  GET /health -> answers 500 to any valid request that matches no scenario: 500 is the only response declared
+```
+
+Beyond ten operations, the list ends with a count; set the `dev.contracteer.mockserver` logger to DEBUG to see all of them:
+
+=== "Logback (logback-test.xml)"
+
+    ```xml
+    <logger name="dev.contracteer.mockserver" level="DEBUG"/>
+    ```
+
+=== "application.yaml (Spring Boot)"
+
+    ```yaml
+    logging:
+      level:
+        dev.contracteer.mockserver: DEBUG
+    ```
 
 To see all incoming requests and outgoing responses, set the `dev.contracteer.http` logger to DEBUG:
 

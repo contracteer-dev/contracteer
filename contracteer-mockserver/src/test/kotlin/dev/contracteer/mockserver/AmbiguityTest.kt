@@ -3,6 +3,7 @@ package dev.contracteer.mockserver
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.CoreMatchers.equalTo
 import org.junit.jupiter.api.AfterEach
 import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.integerType
@@ -53,7 +54,7 @@ class AmbiguityTest {
   }
 
   @Test
-  fun `responds with 418 when multiple 2xx status codes exist and no scenario matches`() {
+  fun `responds with 418 naming the competing status codes when multiple 2xx exist and no scenario matches`() {
     // Given
     val operation = apiOperation("GET", "/v1/users/{id}") {
       request { pathParam("id", integerType()) }
@@ -75,7 +76,29 @@ class AmbiguityTest {
       .then()
       .assertThat()
       .statusCode(418)
-      .body(containsString("Ambiguous"))
+      .body(equalTo("GET /v1/users/{id} -> matches no scenario and has no primary response: 200 and 201 both qualify"))
+  }
+
+  @Test
+  fun `responds with 418 explaining why no declared response can be the primary response`() {
+    // Given
+    val operation = apiOperation("GET", "/v1/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(404) {}
+      classResponse(2) {}
+    }
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .get("/v1/users/123")
+      .then()
+      .assertThat()
+      .statusCode(418)
+      .body(equalTo("GET /v1/users/{id} -> matches no scenario and has no primary response: " +
+                    "declares 404 and 2XX; no exact 2xx or 3xx a request can target"))
   }
 
   @Test

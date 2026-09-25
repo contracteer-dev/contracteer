@@ -71,24 +71,10 @@ internal object RequestHandler {
 
   private fun findPrimaryResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> =
     when (val primaryResponse = operation.responseSchemas.primaryResponse()) {
-      is Resolved                         -> success(primaryResponse.statusCode to primaryResponse.schema)
-
-      Unresolved.NoResponsesDeclared      -> failure("No response schema defined for ${operation.describe()}")
-
-      is Unresolved.Ambiguous             -> ambiguityFailure(primaryResponse.declared, operation)
-
-      is Unresolved.NoPreferredResponse   -> ambiguityFailure(primaryResponse.declared, operation)
-
-      is Unresolved.NoSelectableResponse  ->
-        failure(
-          "No response that a request can elicit is defined for ${operation.describe()}: " +
-          "${primaryResponse.declared.joinToString(", ")}. Declare an explicit status code.")
+      is Resolved   -> success(primaryResponse.statusCode to primaryResponse.schema)
+      is Unresolved ->
+        failure("${operation.describe()} -> matches no scenario and has no primary response: ${primaryResponse.explanation()}")
     }
-
-  private fun ambiguityFailure(declared: List<String>, operation: ApiOperation): Result<Nothing> =
-    failure(
-      "Ambiguous: multiple response codes (${declared.joinToString(", ")}) " +
-      "for ${operation.describe()}. Use scenarios to disambiguate.")
 
   private fun verifyAcceptHeader(acceptHeader: String?, responseSchema: ResponseSchema): Result<Unit> {
     val accept = AcceptHeader.parse(acceptHeader)
@@ -126,8 +112,6 @@ internal object RequestHandler {
     teapotResponse(
       "Request validation failed for ${operation.describe()}:${System.lineSeparator()}" +
       errors.joinToString(System.lineSeparator()) { "  * $it" })
-
-  private fun ApiOperation.describe(): String = "${method.uppercase()} $path"
 
   private fun teapotResponse(message: String): Response =
     Response(I_M_A_TEAPOT)
