@@ -11,12 +11,19 @@ dependencies {
   implementation(libs.logback.classic)
 
   kapt(libs.picocli.codegen)
+
+  testImplementation(testFixtures(project(":contracteer-core")))
 }
 
 kapt {
   arguments {
     arg("project", "${project.group}/${project.name}")
   }
+}
+
+// Tests use no annotation processor; kapt would warn that the picocli arguments above go unused.
+tasks.matching { it.name in setOf("kaptGenerateStubsTestKotlin", "kaptTestKotlin") }.configureEach {
+  enabled = false
 }
 
 val isQuickBuild = providers.gradleProperty("quickBuild").map { it.toBoolean() }.orElse(false)

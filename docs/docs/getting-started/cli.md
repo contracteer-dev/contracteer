@@ -50,6 +50,7 @@ contracteer verify openapi.yaml
 The OpenAPI document can be a local file path or an HTTP(S) URL.
 
 The command exits with code `0` if all verification cases pass, `1` if any case fails.
+Unverified primary responses do not change the exit code.
 
 **Options:**
 
@@ -84,12 +85,23 @@ OpenAPI document: openapi.yaml
      ↳ Status code does not match. Expected: 400, Actual: 500
 
 Result Summary:
-   ⚠️ 1 errors found during verification.
+   ❌ 1 error found during verification.
    ✅ 4 verification cases passed.
 ```
 
 Each line shows the verification case and its result.
 Failed cases include the reason -- here, the server returned `500` instead of the expected `400`.
+
+When Contracteer cannot determine an operation's [primary response](../concepts/how-contracteer-works.md#the-primary-response), no verification case asserts it.
+The summary lists the operation with the reason:
+
+```
+Result Summary:
+   ✅ 3 verification cases passed.
+   ⚠️ POST /orders -> primary response not verified: 200 and 201 both qualify; declare a scenario for each of them
+```
+
+An unverified primary response is not a failure: the OpenAPI document is valid, and Contracteer reports what it could not assert.
 
 ---
 

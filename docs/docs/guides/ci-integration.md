@@ -65,6 +65,7 @@ jobs:
 
 The `contracteer verify` command exits with code `0` when all cases pass and `1` when any case fails.
 GitHub Actions treats a non-zero exit code as a failed step.
+Unverified primary responses are [listed in the summary](../getting-started/cli.md#verify-a-server) and do not fail the step.
 
 ### Start a mock server for client tests
 
