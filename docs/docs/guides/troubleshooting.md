@@ -26,6 +26,7 @@ contracteer mock openapi.yaml -t
 ```
 
 Contracteer also logs automatically at WARN level when a verification case fails or the mock server returns a 418.
+At startup, the mock server logs at WARN each operation that answers `418` or an error status to a valid request no scenario matches.
 
 ---
 
@@ -107,16 +108,22 @@ See [Common Mistakes](../concepts/scenarios.md#common-mistakes) for details.
 
 ### Operation not verified against the expected response
 
-**Symptom:** An operation loads without error, but the verifier never checks the response you expect.
-It runs only the cases your scenarios define, or only an automatic type-mismatch case, or nothing at all.
+**Symptom:** An operation loads without error, but its primary response is reported as not verified:
+
+```text
+POST /orders -> primary response not verified: 200 and 201 both qualify; declare a scenario for each of them
+```
+
+The [JUnit extension](../getting-started/verifier-junit.md#what-happens) shows this line as a skipped test, the [CLI](../getting-started/cli.md#verify-a-server) lists it in the result summary, and the [programmatic verifier](../getting-started/verifier.md#interpret-the-results) returns it on the operation's plan.
+The operation runs only the cases your scenarios define, or only an automatic type-mismatch case, or nothing at all.
+The report does not fail the build, and the CLI exit code is unchanged.
 
 **Cause:** No [primary response](../concepts/how-contracteer-works.md#the-primary-response) resolves, and no scenario targets one.
 This happens when several declared responses could be verified and nothing chooses between them -- two codes between 200 and 299, say.
-It also happens when none of them can be verified on its own: only status code ranges (`2XX`, `4XX`), `default`, or codes no ordinary request produces.
-The [programmatic verifier](../getting-started/verifier.md#interpret-the-results) reports the operation as an unverified primary response, naming the reason.
+It also happens when none of them can be verified on its own: only status code ranges (`2XX`, `4XX`), `default`, several error codes such as `400` and `404`, or codes no ordinary request produces.
 
 **Fix:** Declare the exact status code the operation answers with.
-When several codes between 200 and 299 compete, you can instead add a scenario for each of them.
+When several codes compete, you can instead add a scenario for each of them.
 
 ### "Ambiguous match for oneOf"
 
@@ -165,9 +172,24 @@ Common causes:
 - **Multiple scenarios match.** The request matches more than one scenario.
   Make your example values more specific to distinguish them.
 - **No primary response resolves.** The operation declares no single response to serve -- several success codes, say, or only status code ranges (`2XX`, `4XX`) and `default`, which are never served on their own.
-  Add a scenario to target a specific status code, or declare the exact status code the operation answers with.
+  Declare the exact status code the operation answers with.
+  A scenario serves only the requests it matches; every other valid request still gets `418`.
 
 See [The 418 Diagnostic Response](../concepts/testing-your-client.md#the-418-diagnostic-response) for a full explanation.
+
+### Mock server always answers with an error status
+
+**Symptom:** The mock server answers `500`, or another error status, to every valid request that matches no scenario, and logs at startup:
+
+```text
+WARN  GET /health -> answers 500 to any valid request that matches no scenario: 500 is the only response declared
+```
+
+**Cause:** The operation declares a single response, and it is an error.
+A lone response is the [primary response](../concepts/how-contracteer-works.md#the-primary-response) whatever its status code, so the mock server serves it.
+
+**Fix:** Declare the response the operation answers a valid request with.
+If the error is the operation's only real outcome, the mock server is behaving as documented.
 
 ### Getting 400 when expecting 200
 
@@ -681,6 +703,7 @@ Operations are skipped when they use:
 - Parameters using the `content` keyword without a schema.
 
 Contracteer logs a warning for each skipped operation.
+An operation that loads but has no primary response is not skipped: it is reported instead (see [Operation not verified against the expected response](#operation-not-verified-against-the-expected-response)).
 
 **Fix:** Add a schema to the content type declaration, or remove the content type if no schema is needed.
 Check the [OpenAPI Coverage](../concepts/openapi-coverage.md) page for the full list of supported features.

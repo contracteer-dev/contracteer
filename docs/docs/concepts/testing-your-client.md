@@ -95,6 +95,7 @@ The values are random but satisfy the type and format constraints.
 This step serves the operation's [primary response](how-contracteer-works.md#the-primary-response).
 When no primary response resolves -- several declared codes between 200 and 299, say, or only status code ranges (`2XX`, `4XX`) and `default` -- the mock server returns `418`.
 It cannot determine which response to serve.
+The mock server also lists these operations at startup -- see [Debugging](../getting-started/mockserver.md#debugging).
 
 !!! note "One scenario does not cover every request"
     An operation declaring `200` and `201` resolves no primary response.
@@ -120,9 +121,15 @@ The mock server returns 418 in five situations:
 |-----------|----------------------------|
 | Request is invalid, no `400`, `4XX`, or `default` response defined | Which validation rules the request violated |
 | Multiple scenarios match the request | Which scenarios matched, so you can make your examples more specific |
-| Several responses could be served, and no scenario chooses between them | Which status codes are declared, so you can add a scenario for the one you expect |
-| No declared response can be served on its own -- only status code ranges (`2XX`, `4XX`), `default`, or no response at all | Which responses the operation declares, and that an explicit status code is missing |
+| The request matches no scenario, and several status codes qualify -- `200` and `201`, say | Which status codes qualify, so you can declare the one the operation answers with |
+| The request matches no scenario, and no declared response can be served on its own -- only status code ranges (`2XX`, `4XX`) and `default`, several error codes such as `400` and `404`, or no response at all | Which responses the operation declares, and that none is an exact status code a request can target |
 | Multiple response content types, no `Accept` header to disambiguate | Which content types are available |
+
+An operation declaring `200` and `201`, sent a request no scenario matches, gets:
+
+```text
+POST /orders -> matches no scenario and has no primary response: 200 and 201 both qualify
+```
 
 !!! tip
     The 418 response body is your best debugging tool when the mock server does not respond as expected.

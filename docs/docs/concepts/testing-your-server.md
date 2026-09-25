@@ -181,7 +181,14 @@ Contracteer generates valid requests and verifies the contract, keeping the Open
 Schema-only verification has one constraint: a primary response must resolve.
 When none does -- two declared codes between 200 and 299, say, or only a `4XX` -- the verifier cannot tell which response to expect and generates no schema-only case.
 The operation's other cases are unaffected: scenarios still run, and so does automatic type-mismatch testing.
-Write a scenario to say which response to expect.
+The verifier reports the operation instead of skipping it silently -- as a skipped JUnit test, in the CLI result summary, or on the programmatic verification plan:
+
+```text
+GET /orders -> primary response not verified: declares only 4XX; no exact status code a request can target
+```
+
+Declare the exact status code the operation answers with.
+When several codes compete, a scenario for each of them also works.
 
 The primary response is not always a success code.
 An operation declaring only an error response is verified against that error.
@@ -228,6 +235,7 @@ For a broader discussion of what contract tests do and do not catch, see [What I
   It covers types that can be meaningfully violated (integers, booleans, dates, objects, arrays) but not plain strings.
 - Schema-only verification handles operations where request values do not matter.
   It generates random requests and targets the operation's primary response, which is not always a success code.
+  When none resolves, the verifier reports the operation rather than skipping it.
   Define scenarios only when specific request values affect the expected response.
 - The verifier follows Postel's Law: it validates what the OpenAPI document defines and ignores additional fields.
 

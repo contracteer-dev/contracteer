@@ -111,9 +111,10 @@ The mock server serves that same response, with values generated the same way.
 Write a scenario only when specific request values decide which response comes back.
 
 When nothing resolves, the document still loads -- Contracteer rejects nothing.
-The verifier generates no schema-only case for that operation, and the mock server answers `418` to any request no scenario matches.
-Here a scenario is the fix, and it lands differently on each tool.
-The verifier gains a case for the operation, while the mock server serves the requests the scenario matches and still answers `418` to the rest.
+The verifier generates no schema-only case for that operation and reports its primary response as unverified.
+The mock server answers `418` to any request no scenario matches, and lists the operation when it starts.
+Declaring the exact status code the operation answers with fixes both.
+When several codes compete -- `200` and `201`, say -- a scenario for each of them covers the verifier, but the mock server still answers `418` to requests those scenarios do not match.
 
 ---
 
