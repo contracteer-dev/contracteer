@@ -144,7 +144,7 @@ Each call to `verifier.verify()` returns a `VerificationOutcome` with two fields
 **Unverified primary responses** -- `plan.unverifiedPrimaryResponse` is set when Contracteer cannot determine an operation's [primary response](../concepts/how-contracteer-works.md#the-primary-response), so no verification case asserts it.
 The operation may still produce cases, from its scenarios or a type mismatch.
 `message` names the operation and the reason:
-`Primary response of POST /orders not verified: 200 and 201 both qualify; declare a scenario for each of them`
+`POST /orders -> primary response not verified: 200 and 201 both qualify; declare a scenario for each of them`
 An unverified primary response is not a failure: the OpenAPI document is valid, and the verifier reports what it could not assert.
 
 ---

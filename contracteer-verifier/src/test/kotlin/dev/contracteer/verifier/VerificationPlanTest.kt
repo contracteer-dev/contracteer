@@ -161,9 +161,9 @@ class VerificationPlanTest {
 
     // Then
     assert(twoCandidatesMessage ==
-           "Primary response of POST /orders not verified: 200 and 201 both qualify; declare a scenario for each of them")
+           "POST /orders -> primary response not verified: 200 and 201 both qualify; declare a scenario for each of them")
     assert(threeCandidatesMessage ==
-           "Primary response of POST /orders not verified: 200, 201 and 202 all qualify; declare a scenario for each of them")
+           "POST /orders -> primary response not verified: 200, 201 and 202 all qualify; declare a scenario for each of them")
   }
 
   @Test
@@ -186,10 +186,10 @@ class VerificationPlanTest {
 
     // Then
     assert(noSelectableMessage ==
-           "Primary response of GET /reports not verified: declares only 2XX and default; no exact status code a request can target")
+           "GET /reports -> primary response not verified: declares only 2XX and default; no exact status code a request can target")
     assert(noPreferredMessage ==
-           "Primary response of GET /items not verified: declares 404 and 2XX; no exact 2xx or 3xx a request can target")
+           "GET /items -> primary response not verified: declares 404 and 2XX; no exact 2xx or 3xx a request can target")
     assert(noResponsesMessage ==
-           "Primary response of GET /ping not verified: declares no response")
+           "GET /ping -> primary response not verified: declares no response")
   }
 }

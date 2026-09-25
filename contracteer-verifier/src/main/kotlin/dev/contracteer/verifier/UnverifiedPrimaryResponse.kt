@@ -26,7 +26,7 @@ data class UnverifiedPrimaryResponse(
    * It never mentions scenarios: the verification cases already show what was run.
    */
   val message: String
-    get() = "Primary response of ${method.uppercase()} $path not verified: ${explanation()}"
+    get() = "${method.uppercase()} $path -> primary response not verified: ${explanation()}"
 
   private fun explanation(): String = when (reason) {
     is NoSelectableResponse -> "declares only ${reason.declared.joinAsProse()}; no exact status code a request can target"
