@@ -1582,7 +1582,7 @@ The values satisfy the schema but are different on each run.</p>
 <p>If the mock server cannot determine the correct response, it returns <code>418</code> with diagnostic information.
 The 418 is not a status code from your API -- it is Contracteer telling you that something is ambiguous or undefined.</p>
 <p>This happens when multiple scenarios match the same request.
-It also occurs when no single response can be served -- several declared success codes, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code> -- and no scenario disambiguates.
+It also occurs when no single response can be served -- several declared success codes, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code> -- and the request matches no scenario.
 An invalid request with no <code>400</code>, <code>4XX</code>, or <code>default</code> response defined also triggers a 418.</p>
 <p>The 418 body explains what went wrong.
 Read it before investigating further -- it usually points directly to the cause.</p>
@@ -1598,17 +1598,36 @@ Your client must handle any valid response, not just the example data.</p>
 <h2 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
 <p>When the mock server returns a <code>418</code> diagnostic response, Contracteer logs the request at WARN level automatically.
 No configuration is needed.</p>
-<p>To see all incoming requests and outgoing responses, set the <code>dev.contracteer.http</code> logger to DEBUG:</p>
+<p>At startup, the mock server logs at WARN every operation that does not answer a valid request with a success when the request matches no scenario: <code>418</code> when no single response can be served, or an error status when it is the only response declared.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>WARN  POST /orders -&gt; answers 418 to any valid request that matches no scenario: 200 and 201 both qualify
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>WARN  GET /health -&gt; answers 500 to any valid request that matches no scenario: 500 is the only response declared
+</code></pre></div>
+<p>Beyond ten operations, the list ends with a count; set the <code>dev.contracteer.mockserver</code> logger to DEBUG to see all of them:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Logback (logback-test.xml)</label><label for="__tabbed_3_2">application.yaml (Spring Boot)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">&lt;logger</span><span class="w"> </span><span class="na">name=</span><span class="s">"dev.contracteer.http"</span><span class="w"> </span><span class="na">level=</span><span class="s">"DEBUG"</span><span class="nt">/&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">&lt;logger</span><span class="w"> </span><span class="na">name=</span><span class="s">"dev.contracteer.mockserver"</span><span class="w"> </span><span class="na">level=</span><span class="s">"DEBUG"</span><span class="nt">/&gt;</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">logging</span><span class="p">:</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">level</span><span class="p">:</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">dev.contracteer.http</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">logging</span><span class="p">:</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">level</span><span class="p">:</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="nt">dev.contracteer.mockserver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>To see all incoming requests and outgoing responses, set the <code>dev.contracteer.http</code> logger to DEBUG:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Logback (logback-test.xml)</label><label for="__tabbed_4_2">application.yaml (Spring Boot)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">&lt;logger</span><span class="w"> </span><span class="na">name=</span><span class="s">"dev.contracteer.http"</span><span class="w"> </span><span class="na">level=</span><span class="s">"DEBUG"</span><span class="nt">/&gt;</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">logging</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">level</span><span class="p">:</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="nt">dev.contracteer.http</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
 </code></pre></div>
 </div>
 </div>

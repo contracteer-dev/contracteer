@@ -1175,6 +1175,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#mock-server-always-answers-with-an-error-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mock server always answers with an error status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getting-400-when-expecting-200" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1763,6 +1774,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#mock-server-always-answers-with-an-error-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mock server always answers with an error status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getting-400-when-expecting-200" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2172,7 +2194,8 @@ This shows every request and response exchanged between Contracteer and the serv
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>-t
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml<span class="w"> </span>-t
 </code></pre></div>
-<p>Contracteer also logs automatically at WARN level when a verification case fails or the mock server returns a 418.</p>
+<p>Contracteer also logs automatically at WARN level when a verification case fails or the mock server returns a 418.
+At startup, the mock server logs at WARN each operation that answers <code>418</code> or an error status to a valid request no scenario matches.</p>
 <hr />
 <h2 id="verifier-issues">Verifier Issues<a class="headerlink" href="#verifier-issues" title="Permanent link">&para;</a></h2>
 <h3 id="all-verification-cases-fail-with-the-wrong-status-code">All verification cases fail with the wrong status code<a class="headerlink" href="#all-verification-cases-fail-with-the-wrong-status-code" title="Permanent link">&para;</a></h3>
@@ -2223,14 +2246,17 @@ Contracteer needs at least one shared key between request and response elements.
 <p><strong>Fix:</strong> Ensure the same example key appears on both a request element (parameter or request body) and a response element (header or response body).
 See <a href="../../concepts/scenarios/#common-mistakes">Common Mistakes</a> for details.</p>
 <h3 id="operation-not-verified-against-the-expected-response">Operation not verified against the expected response<a class="headerlink" href="#operation-not-verified-against-the-expected-response" title="Permanent link">&para;</a></h3>
-<p><strong>Symptom:</strong> An operation loads without error, but the verifier never checks the response you expect.
-It runs only the cases your scenarios define, or only an automatic type-mismatch case, or nothing at all.</p>
+<p><strong>Symptom:</strong> An operation loads without error, but its primary response is reported as not verified:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>POST /orders -&gt; primary response not verified: 200 and 201 both qualify; declare a scenario for each of them
+</code></pre></div>
+<p>The <a href="../../getting-started/verifier-junit/#what-happens">JUnit extension</a> shows this line as a skipped test, the <a href="../../getting-started/cli/#verify-a-server">CLI</a> lists it in the result summary, and the <a href="../../getting-started/verifier/#interpret-the-results">programmatic verifier</a> returns it on the operation's plan.
+The operation runs only the cases your scenarios define, or only an automatic type-mismatch case, or nothing at all.
+The report does not fail the build, and the CLI exit code is unchanged.</p>
 <p><strong>Cause:</strong> No <a href="../../concepts/how-contracteer-works/#the-primary-response">primary response</a> resolves, and no scenario targets one.
 This happens when several declared responses could be verified and nothing chooses between them -- two codes between 200 and 299, say.
-It also happens when none of them can be verified on its own: only status code ranges (<code>2XX</code>, <code>4XX</code>), <code>default</code>, or codes no ordinary request produces.
-The <a href="../../getting-started/verifier/#interpret-the-results">programmatic verifier</a> reports the operation as an unverified primary response, naming the reason.</p>
+It also happens when none of them can be verified on its own: only status code ranges (<code>2XX</code>, <code>4XX</code>), <code>default</code>, several error codes such as <code>400</code> and <code>404</code>, or codes no ordinary request produces.</p>
 <p><strong>Fix:</strong> Declare the exact status code the operation answers with.
-When several codes between 200 and 299 compete, you can instead add a scenario for each of them.</p>
+When several codes compete, you can instead add a scenario for each of them.</p>
 <h3 id="ambiguous-match-for-oneof">"Ambiguous match for oneOf"<a class="headerlink" href="#ambiguous-match-for-oneof" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The verifier or mock server rejects a request or response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."</p>
 <p><strong>Cause:</strong> The <code>oneOf</code> variants have overlapping structures.
@@ -2261,9 +2287,18 @@ Common causes:</p>
 <li><strong>Multiple scenarios match.</strong> The request matches more than one scenario.
   Make your example values more specific to distinguish them.</li>
 <li><strong>No primary response resolves.</strong> The operation declares no single response to serve -- several success codes, say, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code>, which are never served on their own.
-  Add a scenario to target a specific status code, or declare the exact status code the operation answers with.</li>
+  Declare the exact status code the operation answers with.
+  A scenario serves only the requests it matches; every other valid request still gets <code>418</code>.</li>
 </ul>
 <p>See <a href="../../concepts/testing-your-client/#the-418-diagnostic-response">The 418 Diagnostic Response</a> for a full explanation.</p>
+<h3 id="mock-server-always-answers-with-an-error-status">Mock server always answers with an error status<a class="headerlink" href="#mock-server-always-answers-with-an-error-status" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The mock server answers <code>500</code>, or another error status, to every valid request that matches no scenario, and logs at startup:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>WARN  GET /health -&gt; answers 500 to any valid request that matches no scenario: 500 is the only response declared
+</code></pre></div>
+<p><strong>Cause:</strong> The operation declares a single response, and it is an error.
+A lone response is the <a href="../../concepts/how-contracteer-works/#the-primary-response">primary response</a> whatever its status code, so the mock server serves it.</p>
+<p><strong>Fix:</strong> Declare the response the operation answers a valid request with.
+If the error is the operation's only real outcome, the mock server is behaving as documented.</p>
 <h3 id="getting-400-when-expecting-200">Getting 400 when expecting 200<a class="headerlink" href="#getting-400-when-expecting-200" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The mock server returns <code>400</code> for a request you believe is valid.</p>
 <p><strong>Cause:</strong> The request violates the OpenAPI schema.
@@ -2329,21 +2364,21 @@ Supported siblings cover type, length and numeric bounds, enum and const, requir
 Other keywords are rejected as siblings -- even when Contracteer supports them standalone (for example <code>propertyNames</code>) and even when JSON Schema 2020-12 itself defines them (<code>if</code>/<code>then</code>/<code>else</code>, <code>dependentRequired</code>, JSON Schema applicators, and so on).</p>
 <p><strong>Fix:</strong> Declare the unsupported keyword on the referenced schema, so it applies wherever the schema is used.
 If the constraint must apply only to this usage, factor it into a new component schema and reference that one instead.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Rejected -- propertyNames as a sibling</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">Headers</span><span class="p">:</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/HeaderMap'</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">propertyNames</span><span class="p">:</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="s">'^[A-Z][A-Za-z-]*$'</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Accepted -- propertyNames declared on the referenced schema</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nt">Headers</span><span class="p">:</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/HttpHeaderMap'</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nt">HttpHeaderMap</span><span class="p">:</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">propertyNames</span><span class="p">:</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="s">'^[A-Z][A-Za-z-]*$'</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nt">additionalProperties</span><span class="p">:</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Rejected -- propertyNames as a sibling</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">Headers</span><span class="p">:</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/HeaderMap'</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">propertyNames</span><span class="p">:</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="s">'^[A-Z][A-Za-z-]*$'</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Accepted -- propertyNames declared on the referenced schema</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nt">Headers</span><span class="p">:</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/HttpHeaderMap'</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nt">HttpHeaderMap</span><span class="p">:</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="nt">propertyNames</span><span class="p">:</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="s">'^[A-Z][A-Za-z-]*$'</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">  </span><span class="nt">additionalProperties</span><span class="p">:</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
 </code></pre></div>
 <p>See <a href="../../concepts/openapi-coverage/#ref-with-sibling-keywords"><code>$ref</code> with sibling keywords</a> for the full list of supported siblings.</p>
 <hr />
@@ -2425,18 +2460,18 @@ The size limit is a safety net: schemas that describe pathologically large struc
 The form/explode encoding flattens object properties into top-level query keys (<code>?R=100&amp;G=200</code>), so Contracteer cannot tell whether an undeclared key like <code>?foo=bar</code> is an extra property of the object or an unrelated query parameter.
 Enforcing <code>additionalProperties</code> under that ambiguity would either misvalidate unrelated parameters or silently never reject anything.</p>
 <p><strong>Fix:</strong> Switch the parameter to <code>style: deepObject</code>. Its <code>paramName[key]</code> syntax unambiguously scopes properties, so <code>additionalProperties</code> works correctly.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">parameters</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">query</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">color</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">style</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deepObject</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">explode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">schema</span><span class="p">:</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">        </span><span class="nt">R</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">        </span><span class="nt">G</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">        </span><span class="nt">B</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">      </span><span class="nt">additionalProperties</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">parameters</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">query</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">color</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">style</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deepObject</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">explode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">        </span><span class="nt">R</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="nt">G</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="nt">B</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">      </span><span class="nt">additionalProperties</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </code></pre></div>
 <p>If the constraint isn't load-bearing, set <code>additionalProperties: true</code> (or remove it) to keep <code>style: form</code>.</p>
 <h3 id="composed-schema-has-branches-with-incompatible-kinds">Composed schema has branches with incompatible kinds<a class="headerlink" href="#composed-schema-has-branches-with-incompatible-kinds" title="Permanent link">&para;</a></h3>
@@ -2446,19 +2481,19 @@ The composition is used in a type-blind wire format (<code>application/x-www-for
 For these formats, the wire bytes carry no information about which branch's interpretation applies, so Contracteer cannot decode the value.
 The same composition is accepted in <code>application/json</code> bodies, where the wire format disambiguates.</p>
 <p><strong>Fix:</strong> Either restructure the composition so colliding properties share a kind, split the operation into multiple operations with distinct request bodies, or move the composition into an <code>application/json</code> body.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Rejected on form-urlencoded -- 'value' is primitive in one branch, object in another</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">oneOf</span><span class="p">:</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> enum</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">text</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> enum</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">count</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">        </span><span class="nt">properties</span><span class="p">:</span>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">          </span><span class="nt">n</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Rejected on form-urlencoded -- 'value' is primitive in one branch, object in another</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> enum</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">text</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> enum</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">count</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">          </span><span class="nt">n</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </code></pre></div>
 <p>Use <code>application/json</code> instead, or split the operation so each request body declares only one of the shapes.</p>
 <p>See <a href="../../concepts/openapi-coverage/#composed-schemas-with-incompatible-branches">Composed schemas with incompatible branches</a> for the full rationale.</p>
@@ -2468,21 +2503,21 @@ The same composition is accepted in <code>application/json</code> bodies, where 
 The OpenAPI Specification defaults a multipart part's content type from its schema shape -- <code>text/plain</code> for primitives, <code>application/json</code> for objects and arrays.
 When the branches give different shapes, no single default applies.</p>
 <p><strong>Fix:</strong> Declare the part's content type explicitly on the <code>encoding</code> object.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">requestBody</span><span class="p">:</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">content</span><span class="p">:</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">multipart/form-data</span><span class="p">:</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">      </span><span class="nt">schema</span><span class="p">:</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">        </span><span class="nt">properties</span><span class="p">:</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">          </span><span class="nt">payload</span><span class="p">:</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">            </span><span class="nt">oneOf</span><span class="p">:</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">                </span><span class="nt">properties</span><span class="p">:</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">                  </span><span class="nt">count</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">      </span><span class="nt">encoding</span><span class="p">:</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">        </span><span class="nt">payload</span><span class="p">:</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">          </span><span class="nt">contentType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">application/json</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">requestBody</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">content</span><span class="p">:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">multipart/form-data</span><span class="p">:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">        </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">          </span><span class="nt">payload</span><span class="p">:</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">            </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">                </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">                  </span><span class="nt">count</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="nt">encoding</span><span class="p">:</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">        </span><span class="nt">payload</span><span class="p">:</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">          </span><span class="nt">contentType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">application/json</span>
 </code></pre></div>
 <h3 id="type-null-is-rejected-as-a-body-or-parameter-schema"><code>type: null</code> is rejected as a body or parameter schema<a class="headerlink" href="#type-null-is-rejected-as-a-body-or-parameter-schema" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with <code>standalone 'type: null' is not a meaningful schema. For a nullable value, use 'anyOf: [Type, {type: null}]'. For an empty response, omit the 'content' field and use status code 204.</code></p>
@@ -2490,19 +2525,19 @@ When the branches give different shapes, no single default applies.</p>
 A <code>null</code>-only schema carries no useful constraint: the wire value can never be anything but <code>null</code>, so the schema neither validates a payload nor describes a value to generate.
 The pattern is almost always one of two author mistakes -- modeling "empty response" with <code>type: null</code> instead of HTTP <code>204</code>, or modeling "nullable value" with <code>type: null</code> instead of <code>anyOf: [Type, {type: null}]</code>.</p>
 <p><strong>Fix:</strong> Replace the standalone <code>type: null</code> with the construct that matches your intent:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Empty response: drop the content map and use status 204</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">responses</span><span class="p">:</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="s">'204'</span><span class="p p-Indicator">:</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">No content</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># Nullable value: use anyOf with the actual type and a null branch</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nt">parameters</span><span class="p">:</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tombstone</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">query</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="nt">schema</span><span class="p">:</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">      </span><span class="nt">anyOf</span><span class="p">:</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Empty response: drop the content map and use status 204</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">responses</span><span class="p">:</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="s">'204'</span><span class="p p-Indicator">:</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">No content</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="c1"># Nullable value: use anyOf with the actual type and a null branch</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nt">parameters</span><span class="p">:</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tombstone</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="nt">in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">query</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">      </span><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
 </code></pre></div>
 <p><code>type: null</code> remains valid as a property schema, an array item schema, or an <code>additionalProperties</code> schema -- only the top-level body or parameter use is rejected.
 See <a href="../../concepts/openapi-coverage/#type-null"><code>type: null</code></a> for the full position rules.</p>
@@ -2511,20 +2546,20 @@ See <a href="../../concepts/openapi-coverage/#type-null"><code>type: null</code>
 <p><strong>Cause:</strong> An <code>anyOf</code> or <code>oneOf</code> schema declares both an outer <code>type</code> array (excluding <code>"null"</code>) and a sub-branch that uses <code>type: "null"</code>.
 The two constraints contradict each other: the outer type restricts the value to non-null types, while the null branch claims <code>null</code> is a valid match.</p>
 <p><strong>Fix:</strong> Decide which side of the contradiction reflects the actual contract:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># If null is acceptable: add "null" to the outer type array</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">schema</span><span class="p">:</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"object"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"null"</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">}</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># If null is not acceptable: remove the null branch</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nt">schema</span><span class="p">:</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"object"</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># If null is acceptable: add "null" to the outer type array</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"object"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"null"</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1"># If null is not acceptable: remove the null branch</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"object"</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </code></pre></div>
 <h3 id="allof-includes-a-type-null-branch"><code>allOf</code> includes a <code>type: null</code> branch<a class="headerlink" href="#allof-includes-a-type-null-branch" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with <code>'allOf' includes a 'type: null' branch (#1) which is unsatisfiable: a value cannot match both the null type and any non-null branch. Use 'anyOf' if a nullable union is intended, or remove the null branch.</code></p>
@@ -2533,13 +2568,13 @@ The two constraints contradict each other: the outer type restricts the value to
 A null value satisfies the null branch but cannot satisfy any non-null branch; a non-null value satisfies the non-null branches but cannot satisfy the null branch.
 The schema therefore admits no value, which is almost always an author error.</p>
 <p><strong>Fix:</strong> If the intent is a nullable composition, replace <code>allOf</code> with <code>anyOf</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Nullable composition (any of the branches, including null)</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">schema</span><span class="p">:</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">allOf</span><span class="p">:</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Pet'</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Owned'</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Nullable composition (any of the branches, including null)</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Pet'</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Owned'</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
 </code></pre></div>
 <p>If the null branch was added by mistake, remove it -- <code>allOf</code> of the remaining branches expresses the original intent.</p>
 <h3 id="extraction-fails-with-non-json-content-type-and-structured-schema">Extraction fails with non-JSON content type and structured schema<a class="headerlink" href="#extraction-fails-with-non-json-content-type-and-structured-schema" title="Permanent link">&para;</a></h3>
@@ -2552,13 +2587,13 @@ Contracteer rejects the combination at load time rather than silently applying a
 <p><strong>Symptom:</strong> The OpenAPI document has example values, but Contracteer creates no scenarios.</p>
 <p><strong>Cause:</strong> The examples are defined under <code>schema.properties</code> instead of on the parameter or media type.
 Contracteer reads examples from parameters and media types, not from schema properties.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># This does NOT produce a scenario</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">schema</span><span class="p">:</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nt">properties</span><span class="p">:</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">      </span><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Athos</span><span class="w">    </span><span class="c1"># not used by Contracteer</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># This does NOT produce a scenario</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">      </span><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Athos</span><span class="w">    </span><span class="c1"># not used by Contracteer</span>
 </code></pre></div>
 <p><strong>Fix:</strong> Move examples to the parameter or media type level using the <code>examples</code> or <code>example</code> keyword.
 See <a href="../../concepts/scenarios/">Creating Scenarios</a> for the correct placement.</p>
@@ -2588,9 +2623,9 @@ See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to provid
 Alternatively, simplify the pattern to use standard character classes and quantifiers without lookaround assertions.</p>
 <h3 id="header-pattern-enum-or-example-admits-invalid-http-characters">Header pattern, enum, or example admits invalid HTTP characters<a class="headerlink" href="#header-pattern-enum-or-example-admits-invalid-http-characters" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with an error naming a header and referencing RFC 7230 §3.2.6, for example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>correct example values to exclude control and non-ASCII characters.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>correct example values to exclude control and non-ASCII characters.
 </code></pre></div>
 <p><strong>Cause:</strong> The header schema declares a <code>pattern</code>, <code>enum</code>, or <code>example</code> that admits characters disallowed in HTTP header values.
 RFC 7230 §3.2.6 restricts header field-values to visible ASCII (<code>0x21-0x7E</code>), space (<code>0x20</code>), and horizontal tab (<code>0x09</code>).
@@ -2625,21 +2660,22 @@ Operations are skipped when they use:</p>
 <li>Request or response bodies declared without a schema (e.g., <code>application/json: {}</code>).</li>
 <li>Parameters using the <code>content</code> keyword without a schema.</li>
 </ul>
-<p>Contracteer logs a warning for each skipped operation.</p>
+<p>Contracteer logs a warning for each skipped operation.
+An operation that loads but has no primary response is not skipped: it is reported instead (see <a href="#operation-not-verified-against-the-expected-response">Operation not verified against the expected response</a>).</p>
 <p><strong>Fix:</strong> Add a schema to the content type declaration, or remove the content type if no schema is needed.
 Check the <a href="../../concepts/openapi-coverage/">OpenAPI Coverage</a> page for the full list of supported features.</p>
 <h3 id="confusing-example-and-examples">Confusing <code>example</code> and <code>examples</code><a class="headerlink" href="#confusing-example-and-examples" title="Permanent link">&para;</a></h3>
 <p><code>example</code> provides a single value.
 <code>examples</code> is a named map where each entry has a <code>value</code> field:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Single value</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Named map -- each name is an example key</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nt">examples</span><span class="p">:</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Single value</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># Named map -- each name is an example key</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="nt">examples</span><span class="p">:</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
 </code></pre></div>
 <p>Both are valid.
 Contracteer uses both for scenario creation.

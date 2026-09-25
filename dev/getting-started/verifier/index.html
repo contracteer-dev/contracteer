@@ -1451,7 +1451,7 @@ The <a href="https://github.com/contracteer-dev/contracteer-examples">contractee
 <p><strong>Unverified primary responses</strong> -- <code>plan.unverifiedPrimaryResponse</code> is set when Contracteer cannot determine an operation's <a href="../../concepts/how-contracteer-works/#the-primary-response">primary response</a>, so no verification case asserts it.
 The operation may still produce cases, from its scenarios or a type mismatch.
 <code>message</code> names the operation and the reason:
-<code>Primary response of POST /orders not verified: 200 and 201 both qualify; declare a scenario for each of them</code>
+<code>POST /orders -&gt; primary response not verified: 200 and 201 both qualify; declare a scenario for each of them</code>
 An unverified primary response is not a failure: the OpenAPI document is valid, and the verifier reports what it could not assert.</p>
 <hr />
 <h2 id="prepare-test-data">Prepare Test Data<a class="headerlink" href="#prepare-test-data" title="Permanent link">&para;</a></h2>

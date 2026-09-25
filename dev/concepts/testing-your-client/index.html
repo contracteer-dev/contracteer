@@ -1395,7 +1395,8 @@ The mock server returns <code>200</code> with a body generated from the Musketee
 The values are random but satisfy the type and format constraints.</p>
 <p>This step serves the operation's <a href="../how-contracteer-works/#the-primary-response">primary response</a>.
 When no primary response resolves -- several declared codes between 200 and 299, say, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code> -- the mock server returns <code>418</code>.
-It cannot determine which response to serve.</p>
+It cannot determine which response to serve.
+The mock server also lists these operations at startup -- see <a href="../../getting-started/mockserver/#debugging">Debugging</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">One scenario does not cover every request</p>
 <p>An operation declaring <code>200</code> and <code>201</code> resolves no primary response.
@@ -1428,12 +1429,12 @@ The response body explains what went wrong.</p>
 <td>Which scenarios matched, so you can make your examples more specific</td>
 </tr>
 <tr>
-<td>Several responses could be served, and no scenario chooses between them</td>
-<td>Which status codes are declared, so you can add a scenario for the one you expect</td>
+<td>The request matches no scenario, and several status codes qualify -- <code>200</code> and <code>201</code>, say</td>
+<td>Which status codes qualify, so you can declare the one the operation answers with</td>
 </tr>
 <tr>
-<td>No declared response can be served on its own -- only status code ranges (<code>2XX</code>, <code>4XX</code>), <code>default</code>, or no response at all</td>
-<td>Which responses the operation declares, and that an explicit status code is missing</td>
+<td>The request matches no scenario, and no declared response can be served on its own -- only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code>, several error codes such as <code>400</code> and <code>404</code>, or no response at all</td>
+<td>Which responses the operation declares, and that none is an exact status code a request can target</td>
 </tr>
 <tr>
 <td>Multiple response content types, no <code>Accept</code> header to disambiguate</td>
@@ -1441,6 +1442,9 @@ The response body explains what went wrong.</p>
 </tr>
 </tbody>
 </table>
+<p>An operation declaring <code>200</code> and <code>201</code>, sent a request no scenario matches, gets:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>POST /orders -&gt; matches no scenario and has no primary response: 200 and 201 both qualify
+</code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>The 418 response body is your best debugging tool when the mock server does not respond as expected.
@@ -1499,12 +1503,12 @@ It does not verify that the server returns the right data.
 That is a functional test, and mixing the two defeats the purpose of contract testing.</p>
 <p>When your client receives a response, assert that it correctly parses the structure: fields are present, types are correct, enums are handled.
 Do not assert that specific values match the OpenAPI examples.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Contract test -- asserts structure</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getName</span><span class="p">()).</span><span class="na">isNotNull</span><span class="p">();</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getRank</span><span class="p">()).</span><span class="na">isIn</span><span class="p">(</span><span class="s">"CADET"</span><span class="p">,</span><span class="w"> </span><span class="s">"MUSKETEER"</span><span class="p">,</span><span class="w"> </span><span class="s">"CAPTAIN"</span><span class="p">);</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1">// Functional test -- depends on specific data</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getName</span><span class="p">()).</span><span class="na">isEqualTo</span><span class="p">(</span><span class="s">"Athos"</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Contract test -- asserts structure</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getName</span><span class="p">()).</span><span class="na">isNotNull</span><span class="p">();</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getRank</span><span class="p">()).</span><span class="na">isIn</span><span class="p">(</span><span class="s">"CADET"</span><span class="p">,</span><span class="w"> </span><span class="s">"MUSKETEER"</span><span class="p">,</span><span class="w"> </span><span class="s">"CAPTAIN"</span><span class="p">);</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">// Functional test -- depends on specific data</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getName</span><span class="p">()).</span><span class="na">isEqualTo</span><span class="p">(</span><span class="s">"Athos"</span><span class="p">);</span>
 </code></pre></div>
 <p>If your test asserts <code>"Athos"</code>, it is no longer testing the contract.
 It is testing that the mock server returns the example value -- which is not the client's concern.

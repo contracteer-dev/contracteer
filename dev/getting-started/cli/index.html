@@ -1284,7 +1284,8 @@ The CLI exits with code <code>0</code> when all cases pass and <code>1</code> wh
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml
 </code></pre></div>
 <p>The OpenAPI document can be a local file path or an HTTP(S) URL.</p>
-<p>The command exits with code <code>0</code> if all verification cases pass, <code>1</code> if any case fails.</p>
+<p>The command exits with code <code>0</code> if all verification cases pass, <code>1</code> if any case fails.
+Unverified primary responses do not change the exit code.</p>
 <p><strong>Options:</strong></p>
 <ul>
 <li><strong><code>-u</code>, <code>--base-url</code></strong> <em>(default: <code>http://localhost:8080</code>)</em> -- Absolute base URL of the server (scheme, host, and port).</li>
@@ -1310,16 +1311,23 @@ The CLI exits with code <code>0</code> when all cases pass and <code>1</code> wh
 <a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>     ↳ Status code does not match. Expected: 400, Actual: 500
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>Result Summary:
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>   ⚠️ 1 errors found during verification.
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>   ❌ 1 error found during verification.
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>   ✅ 4 verification cases passed.
 </code></pre></div>
 <p>Each line shows the verification case and its result.
 Failed cases include the reason -- here, the server returned <code>500</code> instead of the expected <code>400</code>.</p>
+<p>When Contracteer cannot determine an operation's <a href="../../concepts/how-contracteer-works/#the-primary-response">primary response</a>, no verification case asserts it.
+The summary lists the operation with the reason:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Result Summary:
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>   ✅ 3 verification cases passed.
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>   ⚠️ POST /orders -&gt; primary response not verified: 200 and 201 both qualify; declare a scenario for each of them
+</code></pre></div>
+<p>An unverified primary response is not a failure: the OpenAPI document is valid, and Contracteer reports what it could not assert.</p>
 <hr />
 <h2 id="start-a-mock-server">Start a Mock Server<a class="headerlink" href="#start-a-mock-server" title="Permanent link">&para;</a></h2>
 <p><code>contracteer mock</code> starts a mock server that validates requests and returns spec-compliant responses.
 It runs until terminated (<code>Ctrl+C</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml
 </code></pre></div>
 <p>The OpenAPI document can be a local file path or an HTTP(S) URL.</p>
 <p><strong>Options:</strong></p>
@@ -1329,7 +1337,7 @@ It runs until terminated (<code>Ctrl+C</code>).</p>
 <li><strong><code>-t</code>, <code>--http-traffic</code></strong> -- Enable HTTP request/response logging.</li>
 </ul>
 <p>Example on a custom port with traffic logging:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span><span class="w"> </span>-t
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span><span class="w"> </span>-t
 </code></pre></div>
 <p>The mock server validates every incoming request against the OpenAPI schema.
 If the request matches a scenario defined in the OpenAPI document, it returns that scenario's response.
@@ -1343,10 +1351,10 @@ The 418 body explains what happened -- read it before investigating further.</p>
 <hr />
 <h2 id="try-it-now">Try It Now<a class="headerlink" href="#try-it-now" title="Permanent link">&para;</a></h2>
 <p>Start a mock server from the <a href="https://github.com/contracteer-dev/contracteer-examples">Musketeer API</a> OpenAPI document without cloning anything:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
 </code></pre></div>
 <p>Then send a request:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>curl<span class="w"> </span>http://localhost:8080/musketeers
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>curl<span class="w"> </span>http://localhost:8080/musketeers
 </code></pre></div>
 <p>The mock server returns a generated response conforming to the Musketeer schema.</p>
 <hr />

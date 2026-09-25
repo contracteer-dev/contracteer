@@ -1263,7 +1263,8 @@ Your existing test step already runs contract tests.</p>
 <a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">contracteer verify openapi.yaml -u http://localhost:8080</span>
 </code></pre></div>
 <p>The <code>contracteer verify</code> command exits with code <code>0</code> when all cases pass and <code>1</code> when any case fails.
-GitHub Actions treats a non-zero exit code as a failed step.</p>
+GitHub Actions treats a non-zero exit code as a failed step.
+Unverified primary responses are <a href="../../getting-started/cli/#verify-a-server">listed in the summary</a> and do not fail the step.</p>
 <h3 id="start-a-mock-server-for-client-tests">Start a mock server for client tests<a class="headerlink" href="#start-a-mock-server-for-client-tests" title="Permanent link">&para;</a></h3>
 <p>For client-side pipelines, start a mock server as a background service and run your client tests against it:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Client Contract Tests</span>

@@ -1515,7 +1515,11 @@ Contracteer generates valid requests and verifies the contract, keeping the Open
 <p>Schema-only verification has one constraint: a primary response must resolve.
 When none does -- two declared codes between 200 and 299, say, or only a <code>4XX</code> -- the verifier cannot tell which response to expect and generates no schema-only case.
 The operation's other cases are unaffected: scenarios still run, and so does automatic type-mismatch testing.
-Write a scenario to say which response to expect.</p>
+The verifier reports the operation instead of skipping it silently -- as a skipped JUnit test, in the CLI result summary, or on the programmatic verification plan:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>GET /orders -&gt; primary response not verified: declares only 4XX; no exact status code a request can target
+</code></pre></div>
+<p>Declare the exact status code the operation answers with.
+When several codes compete, a scenario for each of them also works.</p>
 <p>The primary response is not always a success code.
 An operation declaring only an error response is verified against that error.
 If the server answers anything else, the failure message says so: the document is likely incomplete rather than the server wrong.</p>
@@ -1550,6 +1554,7 @@ Multi-step flows involving tokens, sessions, or permissions are outside the scop
   It covers types that can be meaningfully violated (integers, booleans, dates, objects, arrays) but not plain strings.</li>
 <li>Schema-only verification handles operations where request values do not matter.
   It generates random requests and targets the operation's primary response, which is not always a success code.
+  When none resolves, the verifier reports the operation rather than skipping it.
   Define scenarios only when specific request values affect the expected response.</li>
 <li>The verifier follows Postel's Law: it validates what the OpenAPI document defines and ignores additional fields.</li>
 </ul>

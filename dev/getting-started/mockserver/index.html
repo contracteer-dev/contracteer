@@ -1490,7 +1490,7 @@ The values satisfy the schema but are different on each run.</p>
 <p>If the mock server cannot determine the correct response, it returns <code>418</code> with diagnostic information.
 The 418 is not a status code from your API -- it is Contracteer telling you that something is ambiguous or undefined.</p>
 <p>This happens when multiple scenarios match the same request.
-It also occurs when no single response can be served -- several declared success codes, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code> -- and no scenario disambiguates.
+It also occurs when no single response can be served -- several declared success codes, or only status code ranges (<code>2XX</code>, <code>4XX</code>) and <code>default</code> -- and the request matches no scenario.
 An invalid request with no <code>400</code>, <code>4XX</code>, or <code>default</code> response defined also triggers a 418.</p>
 <p>The 418 body explains what went wrong.
 Read it before investigating further -- it usually points directly to the cause.</p>
@@ -1506,6 +1506,11 @@ Your client must handle any valid response, not just the example data.</p>
 <h2 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
 <p>When the mock server returns a <code>418</code> diagnostic response, Contracteer logs the request at WARN level automatically.
 No configuration is needed.</p>
+<p>At startup, the mock server logs at WARN every operation that does not answer a valid request with a success when the request matches no scenario: <code>418</code> when no single response can be served, or an error status when it is the only response declared.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>WARN  POST /orders -&gt; answers 418 to any valid request that matches no scenario: 200 and 201 both qualify
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>WARN  GET /health -&gt; answers 500 to any valid request that matches no scenario: 500 is the only response declared
+</code></pre></div>
+<p>Beyond ten operations, the list ends with a count; set the <code>dev.contracteer.mockserver</code> logger to DEBUG to see all of them.</p>
 <p>To see all incoming requests and outgoing responses, set the <code>dev.contracteer.http</code> logger to DEBUG.</p>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>

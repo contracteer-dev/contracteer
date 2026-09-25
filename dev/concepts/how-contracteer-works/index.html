@@ -1380,9 +1380,10 @@ The verifier sends a request generated from the schema and validates the answer 
 The mock server serves that same response, with values generated the same way.
 Write a scenario only when specific request values decide which response comes back.</p>
 <p>When nothing resolves, the document still loads -- Contracteer rejects nothing.
-The verifier generates no schema-only case for that operation, and the mock server answers <code>418</code> to any request no scenario matches.
-Here a scenario is the fix, and it lands differently on each tool.
-The verifier gains a case for the operation, while the mock server serves the requests the scenario matches and still answers <code>418</code> to the rest.</p>
+The verifier generates no schema-only case for that operation and reports its primary response as unverified.
+The mock server answers <code>418</code> to any request no scenario matches, and lists the operation when it starts.
+Declaring the exact status code the operation answers with fixes both.
+When several codes compete -- <code>200</code> and <code>201</code>, say -- a scenario for each of them covers the verifier, but the mock server still answers <code>418</code> to requests those scenarios do not match.</p>
 <hr />
 <h2 id="the-verifier-testing-your-server">The Verifier: Testing Your Server<a class="headerlink" href="#the-verifier-testing-your-server" title="Permanent link">&para;</a></h2>
 <p>For each verification case, the verifier builds a request, sends it to your real, running server, and validates the response.
