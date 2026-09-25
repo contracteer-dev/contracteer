@@ -1,0 +1,3122 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies.">
+      
+      
+      
+        <link rel="canonical" href="https://contracteer.dev/4.1.0/concepts/openapi-coverage/">
+      
+      
+        <link rel="prev" href="../testing-your-client/">
+      
+      
+        <link rel="next" href="../../getting-started/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>OpenAPI Coverage - Contracteer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#openapi-coverage" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Contracteer" class="md-header__button md-logo" aria-label="Contracteer" data-md-component="logo">
+      
+  <img src="../../assets/images/contracteer_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Contracteer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              OpenAPI Coverage
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/contracteer-dev/contracteer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    contracteer-dev/contracteer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../contract-testing/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/ci-integration/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Contracteer" class="md-nav__button md-logo" aria-label="Contracteer" data-md-component="logo">
+      
+  <img src="../../assets/images/contracteer_logo.png" alt="logo">
+
+    </a>
+    Contracteer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/contracteer-dev/contracteer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    contracteer-dev/contracteer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contract-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What Is Contract Testing?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-contracteer-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How Contracteer Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scenarios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-your-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Your Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-your-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Your Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI Coverage
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deviations-from-the-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deviations from the Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deviations from the Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#string-constraint-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String constraint precedence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multipart-default-content-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multipart default content types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#allof-with-non-structured-sub-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        allOf with non-structured sub-schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-composition-keywords-on-the-same-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple composition keywords on the same schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#composed-schemas-with-incompatible-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composed schemas with incompatible branches
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Composed schemas with incompatible branches">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cross-kind-property-collisions-on-type-blind-wire-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-kind property collisions on type-blind wire formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multipart-part-default-content-type-for-mixed-shape-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multipart part default content type for mixed-shape branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-applicable-to-contract-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not Applicable to Contract Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Coverage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Coverage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integer-and-number-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integer and number formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema composition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discriminator-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discriminator-on-a-parent-schema-used-via-ref" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator on a parent schema used via $ref
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-and-response-bodies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request and response bodies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#references-ref" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References ($ref)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Responses
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openapi-30-specific-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenAPI 3.0-specific behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenAPI 3.0-specific behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nullable-on-composition-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nullable on composition schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#allowemptyvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        allowEmptyValue
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openapi-31-specific-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenAPI 3.1-specific behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenAPI 3.1-specific behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#type-arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type arrays
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-null" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        type: null
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#const" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        const
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#propertynames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        propertyNames
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contentencoding-and-contentmediatype-for-binary-bodies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        contentEncoding and contentMediaType for binary bodies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ref-with-sibling-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        $ref with sibling keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unsupported-openapi-31-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsupported OpenAPI 3.1 keywords
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specification-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specification references
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/verifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/verifier-junit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifier with JUnit 5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/mockserver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mock Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/mockserver-spring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mock Server with Spring Boot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/ci-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deviations-from-the-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deviations from the Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deviations from the Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#string-constraint-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String constraint precedence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multipart-default-content-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multipart default content types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#allof-with-non-structured-sub-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        allOf with non-structured sub-schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-composition-keywords-on-the-same-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple composition keywords on the same schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#composed-schemas-with-incompatible-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composed schemas with incompatible branches
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Composed schemas with incompatible branches">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cross-kind-property-collisions-on-type-blind-wire-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-kind property collisions on type-blind wire formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multipart-part-default-content-type-for-mixed-shape-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multipart part default content type for mixed-shape branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-applicable-to-contract-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not Applicable to Contract Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Coverage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Coverage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integer-and-number-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integer and number formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema composition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discriminator-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discriminator-on-a-parent-schema-used-via-ref" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator on a parent schema used via $ref
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-and-response-bodies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request and response bodies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#references-ref" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References ($ref)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Responses
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openapi-30-specific-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenAPI 3.0-specific behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenAPI 3.0-specific behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nullable-on-composition-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nullable on composition schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#allowemptyvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        allowEmptyValue
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openapi-31-specific-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenAPI 3.1-specific behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenAPI 3.1-specific behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#type-arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type arrays
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-null" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        type: null
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#const" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        const
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#propertynames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        propertyNames
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contentencoding-and-contentmediatype-for-binary-bodies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        contentEncoding and contentMediaType for binary bodies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ref-with-sibling-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        $ref with sibling keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unsupported-openapi-31-keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsupported OpenAPI 3.1 keywords
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specification-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specification references
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="openapi-coverage">OpenAPI Coverage<a class="headerlink" href="#openapi-coverage" title="Permanent link">&para;</a></h1>
+<p>Contracteer supports OpenAPI 3.0 and 3.1.
+Behavior is the same across both versions except where noted below.</p>
+<ul>
+<li>Using OpenAPI 3.0? Jump to <a href="#openapi-30-specific-behavior">OpenAPI 3.0-specific behavior</a>.</li>
+<li>Using OpenAPI 3.1? Jump to <a href="#openapi-31-specific-behavior">OpenAPI 3.1-specific behavior</a> and <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</li>
+<li>Migrating an OpenAPI 3.0 document to 3.1?
+  See <a href="#openapi-31-specific-behavior">OpenAPI 3.1-specific behavior</a> for what becomes available and <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a> for what Contracteer rejects.
+  For syntax rewrites required by 3.1 itself, consult the <a href="https://spec.openapis.org/oas/v3.1.2">OpenAPI Specification 3.1.2</a>.</li>
+</ul>
+<hr />
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<p>Contracteer handles unsupported features in one of two ways.
+Some are accepted but degraded -- the OpenAPI document still loads, and the table below explains the impact (for example, unsupported content types skip the operation with a warning).
+Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at load with an explanatory message; see <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>application/xml</code></td>
+<td>Operations with XML-only content types are skipped with a warning.</td>
+</tr>
+<tr>
+<td>Missing schema on body or parameter content</td>
+<td>Operations with request/response bodies or parameter <code>content</code> entries that have no schema are skipped with a warning. Exception: bodies declared with a binary content type (<code>application/octet-stream</code>, <code>image/*</code>, etc.) default to binary content.</td>
+</tr>
+<tr>
+<td>Empty schema (<code>schema: {}</code>)</td>
+<td>Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.</td>
+</tr>
+<tr>
+<td><code>externalValue</code> (Example Objects)</td>
+<td>Only inline <code>value</code> is read. External references are not fetched.</td>
+</tr>
+<tr>
+<td>Pattern generation (regex)</td>
+<td>Common Java-specific constructs (POSIX classes, <code>\p{Is...}</code> aliases) are rewritten automatically. Patterns that the generator cannot handle are rejected at load time. See <a href="../../guides/troubleshooting/#pattern-not-supported-for-value-generation">Troubleshooting</a> for details.</td>
+</tr>
+<tr>
+<td>Unknown integer/number formats</td>
+<td>Ignored with a warning. Only <code>int32</code>, <code>int64</code>, <code>float</code>, <code>double</code> apply range constraints.</td>
+</tr>
+</tbody>
+</table>
+<p>If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the OpenAPI document.</p>
+<hr />
+<h2 id="deviations-from-the-specification">Deviations from the Specification<a class="headerlink" href="#deviations-from-the-specification" title="Permanent link">&para;</a></h2>
+<p>The OpenAPI Specification is sometimes ambiguous or impractical for contract testing.
+In these cases, Contracteer makes explicit choices.</p>
+<h3 id="string-constraint-precedence">String constraint precedence<a class="headerlink" href="#string-constraint-precedence" title="Permanent link">&para;</a></h3>
+<p>OpenAPI treats <code>format</code>, <code>pattern</code>, <code>minLength</code>, and <code>maxLength</code> as independent constraints applied simultaneously.
+Contracteer applies them in a strict precedence order:</p>
+<ol>
+<li><strong><code>format</code></strong> (email, uuid, date, date-time, byte, binary) -- the format defines the type entirely.
+   <code>pattern</code> is always ignored with a warning.
+   <code>minLength</code>/<code>maxLength</code> are supported by email, base64, and binary formats, but ignored by uuid, date, and date-time.</li>
+<li><strong><code>pattern</code></strong> -- the regex pattern defines the constraint.
+   <code>minLength</code> and <code>maxLength</code> are ignored with a warning.</li>
+<li><strong><code>minLength</code> / <code>maxLength</code></strong> -- used only when neither <code>format</code> nor <code>pattern</code> is set.</li>
+</ol>
+<p>Generating a random value that satisfies both a regex pattern and a length range is not reliably possible.
+Contracteer uses the same constraint for both validation and generation to ensure consistency.
+What Contracteer validates is what it can generate.</p>
+<p><code>enum</code> is always validated against the active constraint when loading the OpenAPI document.
+If all enum values satisfy the active constraint, the OpenAPI document is accepted.
+If any enum value violates it, the document is rejected.</p>
+<p>Random value generation for patterns uses the <a href="https://github.com/curious-odd-man/rgxgen">RgxGen</a> library.
+RgxGen supports most common regex features, but lookaheads and lookbehinds do not generate correctly.
+If Contracteer generates invalid values for your pattern, use <code>enum</code> values instead, or provide explicit <code>examples</code> in your OpenAPI document.</p>
+<h3 id="multipart-default-content-types">Multipart default content types<a class="headerlink" href="#multipart-default-content-types" title="Permanent link">&para;</a></h3>
+<p>The OpenAPI Specification defaults arrays of primitives to <code>text/plain</code> in multipart parts.
+Contracteer uses <code>application/json</code> for all arrays.
+The OpenAPI Specification does not define how to serialize an array as plain text in a multipart part.</p>
+<table>
+<thead>
+<tr>
+<th>Property type</th>
+<th>Contracteer default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primitive</td>
+<td><code>text/plain</code></td>
+</tr>
+<tr>
+<td>Array of primitives</td>
+<td><code>application/json</code></td>
+</tr>
+<tr>
+<td>Array of <code>format: binary</code> or <code>format: base64</code> items</td>
+<td><code>application/octet-stream</code></td>
+</tr>
+<tr>
+<td>Object or composite</td>
+<td><code>application/json</code></td>
+</tr>
+<tr>
+<td><code>format: binary</code> or <code>format: base64</code></td>
+<td><code>application/octet-stream</code></td>
+</tr>
+</tbody>
+</table>
+<p>Use the <code>encoding</code> object to override the default content type for specific properties.</p>
+<h3 id="allof-with-non-structured-sub-schemas"><code>allOf</code> with non-structured sub-schemas<a class="headerlink" href="#allof-with-non-structured-sub-schemas" title="Permanent link">&para;</a></h3>
+<p>A common real-world pattern wraps a <code>$ref</code> in a single-element <code>allOf</code> for documentation or tooling reasons:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">NonEmptyString</span><span class="p">:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">ProductName</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/NonEmptyString'</span>
+</code></pre></div>
+<p>Contracteer handles single-element <code>allOf</code> with any sub-schema type -- string, integer, object, or composite.</p>
+<p><strong>Multi-element <code>allOf</code></strong> requires all sub-schemas to be structured types (object, <code>allOf</code>, <code>anyOf</code>, or <code>oneOf</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Supported: multi-element allOf with objects</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Pet'</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">huntingSkill</span><span class="p">:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># Not supported: multi-element allOf with primitives</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">maxLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</code></pre></div>
+<p>The OpenAPI Specification allows <code>allOf</code> sub-schemas of any type, but Contracteer generates random values for each sub-schema and merges the results.
+For objects, this works -- different sub-schemas contribute different properties that combine cleanly.
+For primitives, constraints overlap on the same value.
+A <code>minLength: 5</code> from one sub-schema and a <code>maxLength: 10</code> from another would require computing the constraint intersection, which Contracteer does not do.</p>
+<p>If your OpenAPI document uses multi-element <code>allOf</code> with primitives, combine the constraints into a single schema:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Equivalent single schema</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">maxLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</code></pre></div>
+<h3 id="multiple-composition-keywords-on-the-same-schema">Multiple composition keywords on the same schema<a class="headerlink" href="#multiple-composition-keywords-on-the-same-schema" title="Permanent link">&para;</a></h3>
+<p>JSON Schema allows <code>allOf</code>, <code>anyOf</code>, and <code>oneOf</code> to appear on the same schema, with each keyword applying independently:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Valid per the OpenAPI Specification, but rejected by Contracteer</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">ProductOrService</span><span class="p">:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Purchasable'</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Product'</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Service'</span>
+</code></pre></div>
+<p>Contracteer rejects schemas that combine multiple composition keywords.
+Each composition keyword produces a different validation strategy (all must match, exactly one must match, at least one must match).
+Combining them would require a compound validation that Contracteer does not implement.</p>
+<p>This pattern is extremely rare in real-world OpenAPI documents and is almost always a mistake.
+If your OpenAPI document combines composition keywords, restructure it to use a single keyword:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Use allOf to combine the base schema with a oneOf</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">ProductOrService</span><span class="p">:</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Purchasable'</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Product'</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Service'</span>
+</code></pre></div>
+<h3 id="composed-schemas-with-incompatible-branches">Composed schemas with incompatible branches<a class="headerlink" href="#composed-schemas-with-incompatible-branches" title="Permanent link">&para;</a></h3>
+<p>A composition (<code>allOf</code>, <code>oneOf</code>, <code>anyOf</code>) whose branches are all objects or all arrays is accepted wherever a bare object or array schema is accepted -- including request and response bodies in <code>application/x-www-form-urlencoded</code> and <code>multipart/*</code>, and parameter styles <code>deepObject</code>, <code>simple</code>, <code>form</code>, <code>label</code>, <code>matrix</code>, <code>spaceDelimited</code>, and <code>pipeDelimited</code>.</p>
+<p>Two cases are rejected at load time.</p>
+<h4 id="cross-kind-property-collisions-on-type-blind-wire-formats">Cross-kind property collisions on type-blind wire formats<a class="headerlink" href="#cross-kind-property-collisions-on-type-blind-wire-formats" title="Permanent link">&para;</a></h4>
+<p>Two branches of a <code>oneOf</code> or <code>anyOf</code> may declare the same property with different kinds:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">          </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</code></pre></div>
+<p>On JSON, the wire bytes disambiguate -- a string is <code>"foo"</code>, an object is <code>{...}</code>.
+On <code>application/x-www-form-urlencoded</code>, <code>multipart/*</code>, <code>deepObject</code>, and the flat parameter styles, the wire format carries no information about whether <code>value=foo</code> should be decoded as a string or as a serialized object.
+Contracteer rejects this combination at load time:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>composed schemas define incompatible kinds: 'primitive' vs 'object'
+</code></pre></div>
+<p>The OpenAPI Specification permits the composition.
+Contracteer rejects it for type-blind wire formats because silently selecting one branch would break the trust model of contract testing: a green run must mean the whole OpenAPI document was exercised, not one arbitrary interpretation of it.</p>
+<p>The same composition is accepted in <code>application/json</code> request and response bodies, where the wire format disambiguates.</p>
+<h4 id="multipart-part-default-content-type-for-mixed-shape-branches">Multipart part default content type for mixed-shape branches<a class="headerlink" href="#multipart-part-default-content-type-for-mixed-shape-branches" title="Permanent link">&para;</a></h4>
+<p>The OpenAPI Specification defaults a multipart part's content type based on its schema -- <code>text/plain</code> for primitives, <code>application/json</code> for objects and arrays, <code>application/octet-stream</code> for binary.
+When a part's schema is a composition whose branches have incompatible encoding shapes (e.g., a primitive branch and an object branch), no single default applies.</p>
+<p>Contracteer rejects the OpenAPI document at load time.
+The OpenAPI document's author must declare the part's content type explicitly via the <code>encoding</code> object:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">requestBody</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">content</span><span class="p">:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">multipart/form-data</span><span class="p">:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">        </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">          </span><span class="nt">payload</span><span class="p">:</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">            </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">                </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">                  </span><span class="nt">count</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="nt">encoding</span><span class="p">:</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">        </span><span class="nt">payload</span><span class="p">:</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">          </span><span class="nt">contentType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">application/json</span>
+</code></pre></div>
+<p>The OpenAPI Specification does not define what to default to in this case.
+Contracteer chooses explicit declaration over a silent guess.</p>
+<hr />
+<h2 id="not-applicable-to-contract-testing">Not Applicable to Contract Testing<a class="headerlink" href="#not-applicable-to-contract-testing" title="Permanent link">&para;</a></h2>
+<p>These features are defined in the OpenAPI Specification but do not affect the structural contract between client and server.
+Contracteer does not process them.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>servers</code> / server variables</td>
+<td>Connection configuration. The verifier accepts the server URL as external configuration.</td>
+</tr>
+<tr>
+<td><code>security</code> / <code>securitySchemes</code></td>
+<td>Authentication is runtime configuration, not contract structure.</td>
+</tr>
+<tr>
+<td><code>tags</code>, <code>summary</code>, <code>description</code></td>
+<td>Documentation metadata.</td>
+</tr>
+<tr>
+<td><code>operationId</code></td>
+<td>Client code generation hint.</td>
+</tr>
+<tr>
+<td><code>externalDocs</code></td>
+<td>Documentation link.</td>
+</tr>
+<tr>
+<td><code>deprecated</code></td>
+<td>Informational flag. A deprecated operation has the same structural contract.</td>
+</tr>
+<tr>
+<td><code>callbacks</code></td>
+<td>Webhook definitions -- a separate concern from request/response contract testing.</td>
+</tr>
+<tr>
+<td><code>links</code></td>
+<td>Hypermedia navigation hints between operations.</td>
+</tr>
+<tr>
+<td><code>default</code> (property values)</td>
+<td>The verifier always sends values. The mock server validates against the schema, not against assumed defaults.</td>
+</tr>
+<tr>
+<td><code>example</code> on Schema Object</td>
+<td>Contracteer uses the <code>examples</code> keyword on Parameter and Media Type Objects for scenario creation. Schema-level <code>example</code> is not read.</td>
+</tr>
+<tr>
+<td><code>xml</code> (Schema Object)</td>
+<td>XML serialization hints. Only relevant if XML content type were supported.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="detailed-coverage">Detailed Coverage<a class="headerlink" href="#detailed-coverage" title="Permanent link">&para;</a></h2>
+<h3 id="data-types">Data types<a class="headerlink" href="#data-types" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>string</code></td>
+<td>With <code>minLength</code>, <code>maxLength</code>, <code>pattern</code>, <code>enum</code>, <code>nullable</code></td>
+</tr>
+<tr>
+<td><code>integer</code></td>
+<td>With <code>minimum</code>, <code>maximum</code>, <code>exclusiveMinimum</code>, <code>exclusiveMaximum</code>, <code>multipleOf</code>, <code>enum</code>, <code>nullable</code></td>
+</tr>
+<tr>
+<td><code>number</code></td>
+<td>With <code>minimum</code>, <code>maximum</code>, <code>exclusiveMinimum</code>, <code>exclusiveMaximum</code>, <code>multipleOf</code>, <code>enum</code>, <code>nullable</code></td>
+</tr>
+<tr>
+<td><code>boolean</code></td>
+<td>With <code>enum</code>, <code>nullable</code></td>
+</tr>
+<tr>
+<td><code>array</code></td>
+<td>With <code>minItems</code>, <code>maxItems</code>, <code>uniqueItems</code>. Including array parameters with style/explode encoding</td>
+</tr>
+<tr>
+<td><code>object</code></td>
+<td>With <code>minProperties</code>, <code>maxProperties</code>, <code>additionalProperties</code>, <code>readOnly</code>, <code>writeOnly</code>. Including object parameters with style/explode encoding</td>
+</tr>
+</tbody>
+</table>
+<h3 id="string-formats">String formats<a class="headerlink" href="#string-formats" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>date</code></td>
+<td>Supported (ISO 8601 <code>YYYY-MM-DD</code>)</td>
+</tr>
+<tr>
+<td><code>date-time</code></td>
+<td>Supported (ISO 8601 with offset)</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>uuid</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>byte</code> (base64)</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>binary</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>Supported (treated as plain string)</td>
+</tr>
+<tr>
+<td><code>uri</code></td>
+<td>Supported (RFC 3986)</td>
+</tr>
+<tr>
+<td><code>uri-reference</code></td>
+<td>Supported (RFC 3986)</td>
+</tr>
+<tr>
+<td><code>hostname</code></td>
+<td>Supported (RFC 1034)</td>
+</tr>
+<tr>
+<td>Custom formats</td>
+<td>Ignored</td>
+</tr>
+</tbody>
+</table>
+<h3 id="integer-and-number-formats">Integer and number formats<a class="headerlink" href="#integer-and-number-formats" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int32</code></td>
+<td>Supported. Applies 32-bit signed range; rejects explicit min/max outside range</td>
+</tr>
+<tr>
+<td><code>int64</code></td>
+<td>Supported. Applies 64-bit signed range; rejects explicit min/max outside range</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td>Supported. Applies 32-bit float range; rejects explicit min/max outside range</td>
+</tr>
+<tr>
+<td><code>double</code></td>
+<td>Supported. Applies 64-bit double range; rejects explicit min/max outside range</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>Ignored with a warning. No range constraint applied</td>
+</tr>
+</tbody>
+</table>
+<h3 id="schema-keywords">Schema keywords<a class="headerlink" href="#schema-keywords" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nullable</code></td>
+<td>All data types. Both <code>nullable: true</code> (OpenAPI 3.0) and <code>type: [..., "null"]</code> (OpenAPI 3.1) are recognized.</td>
+</tr>
+<tr>
+<td><code>enum</code></td>
+<td>All data types</td>
+</tr>
+<tr>
+<td><code>minimum</code> / <code>maximum</code></td>
+<td>Integer and number types</td>
+</tr>
+<tr>
+<td><code>exclusiveMinimum</code> / <code>exclusiveMaximum</code></td>
+<td>Integer and number types. Accepts the boolean form (OpenAPI 3.0) and the numeric form (OpenAPI 3.1).</td>
+</tr>
+<tr>
+<td><code>minLength</code> / <code>maxLength</code></td>
+<td>String, email, base64, binary types</td>
+</tr>
+<tr>
+<td><code>pattern</code></td>
+<td>Plain strings only. See <a href="#string-constraint-precedence">string constraint precedence</a></td>
+</tr>
+<tr>
+<td><code>multipleOf</code></td>
+<td>Integer and number types</td>
+</tr>
+<tr>
+<td><code>minItems</code> / <code>maxItems</code></td>
+<td>Array types</td>
+</tr>
+<tr>
+<td><code>uniqueItems</code></td>
+<td>Array types</td>
+</tr>
+<tr>
+<td><code>minProperties</code> / <code>maxProperties</code></td>
+<td>Object types</td>
+</tr>
+<tr>
+<td><code>required</code> (properties)</td>
+<td>Object types</td>
+</tr>
+<tr>
+<td><code>additionalProperties</code></td>
+<td>Both boolean and typed schema forms</td>
+</tr>
+<tr>
+<td><code>readOnly</code> / <code>writeOnly</code></td>
+<td>readOnly properties excluded from request schemas, writeOnly from response schemas</td>
+</tr>
+<tr>
+<td><code>discriminator</code></td>
+<td><code>propertyName</code> and <code>mapping</code>. See <a href="#discriminator-validation">Discriminator validation</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Type inference.</strong>
+When a schema declares no <code>type</code> but uses <code>properties</code>, <code>additionalProperties</code>, or <code>items</code>, Contracteer treats it as an object or array schema accordingly.
+This is consistent with the OpenAPI Specification, which permits typeless schemas while defining these keywords only for objects or arrays.</p>
+<h3 id="schema-composition">Schema composition<a class="headerlink" href="#schema-composition" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>allOf</code></td>
+<td>Single-element accepts any sub-schema type; multi-element requires structured types. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are folded in as an implicit sub-schema</td>
+</tr>
+<tr>
+<td><code>oneOf</code></td>
+<td>Validates that exactly one sub-schema matches. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are supported</td>
+</tr>
+<tr>
+<td><code>anyOf</code></td>
+<td>Validates that at least one sub-schema matches. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are supported</td>
+</tr>
+<tr>
+<td><code>discriminator</code></td>
+<td><code>propertyName</code> and <code>mapping</code> on <code>oneOf</code>/<code>anyOf</code>/<code>allOf</code>. See <a href="#discriminator-validation">Discriminator validation</a></td>
+</tr>
+</tbody>
+</table>
+<p>A composition whose branches are all objects is accepted wherever a bare object schema is accepted: request and response bodies, parameter styles, content types.
+The same holds for compositions whose branches are all arrays.
+See <a href="#composed-schemas-with-incompatible-branches">Composed schemas with incompatible branches</a> for the two cases Contracteer rejects at load time.</p>
+<h3 id="discriminator-validation">Discriminator validation<a class="headerlink" href="#discriminator-validation" title="Permanent link">&para;</a></h3>
+<p>Contracteer uses the discriminator as a hint to select which sub-schema in a <code>oneOf</code>, <code>anyOf</code>, or <code>allOf</code> composition validates the body.
+When the discriminator cannot identify a single sub-schema, Contracteer follows the OpenAPI rule that "discriminator MUST NOT change the validation outcome of the schema".</p>
+<p>Three runtime cases:</p>
+<p><strong>Property is absent.</strong>
+When the discriminator property is missing from the body, Contracteer validates the body against every sub-schema as if no discriminator were declared.
+The OpenAPI Specification states: "This property SHOULD be required in the payload schema, as the behavior when the property is absent is undefined."
+The body is accepted if exactly one sub-schema matches (<code>oneOf</code>) or at least one sub-schema matches (<code>anyOf</code>).</p>
+<p><strong>Property is not a string.</strong>
+When the discriminator property is present but not a string value, Contracteer falls back to the same plain composite matching.
+The OpenAPI Specification states: "Mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison."
+Contracteer does not coerce non-string values.
+Sub-schemas usually declare the discriminator property as <code>type: string</code>, so a non-string value fails the string type check within each branch.</p>
+<p><strong>Value does not match any mapping or schema name.</strong>
+When the discriminator property is a string that matches no entry in <code>mapping</code> and no schema name under <code>components/schemas</code>, Contracteer rejects the body with <code>No schema found for discriminator property '&lt;name&gt;' with value: &lt;value&gt;</code>.
+The OpenAPI Specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail".</p>
+<h3 id="discriminator-on-a-parent-schema-used-via-ref">Discriminator on a parent schema used via <code>$ref</code><a class="headerlink" href="#discriminator-on-a-parent-schema-used-via-ref" title="Permanent link">&para;</a></h3>
+<p>A common polymorphic pattern uses a parent schema that declares the discriminator and child schemas that extend the parent with <code>allOf</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nt">Pet</span><span class="p">:</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">      </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">petType</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">        </span><span class="nt">petType</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">      </span><span class="nt">discriminator</span><span class="p">:</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">        </span><span class="nt">propertyName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">petType</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="nt">Cat</span><span class="p">:</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">      </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Pet'</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">          </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">            </span><span class="nt">huntingSkill</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">    </span><span class="nt">Dog</span><span class="p">:</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">      </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Pet'</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">          </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">            </span><span class="nt">packSize</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="nt">paths</span><span class="p">:</span>
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">  </span><span class="nt">/pets</span><span class="p">:</span>
+<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="w">    </span><span class="nt">post</span><span class="p">:</span>
+<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">      </span><span class="nt">requestBody</span><span class="p">:</span>
+<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">        </span><span class="nt">content</span><span class="p">:</span>
+<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="w">          </span><span class="nt">application/json</span><span class="p">:</span>
+<a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="w">            </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a><span class="w">              </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Pet'</span>
+</code></pre></div>
+<p>When <code>Pet</code> is referenced directly via <code>$ref</code> (without wrapping it in <code>oneOf</code> or <code>anyOf</code> at the usage site), Contracteer validates the body against <code>Pet</code> only.
+Child-specific properties (<code>huntingSkill</code>, <code>packSize</code>) are not checked.
+This matches the OpenAPI rule: "The <code>allOf</code> form of <code>discriminator</code> is <em>only</em> useful for non-validation use cases; validation with the parent schema with this form of <code>discriminator</code> <em>does not</em> perform a search for child schemas or use them in validation in any way".</p>
+<p>To get child-specific validation, list the children at the usage site:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">requestBody</span><span class="p">:</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">content</span><span class="p">:</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">application/json</span><span class="p">:</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">      </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">        </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Cat'</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Dog'</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">        </span><span class="nt">discriminator</span><span class="p">:</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">          </span><span class="nt">propertyName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">petType</span>
+</code></pre></div>
+<p>With this form, Contracteer uses the discriminator to select the matching child schema and validates the body against both the parent and the child.</p>
+<h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in: path</code></td>
+<td>Primitive, array, and object types. Styles: <code>simple</code>, <code>label</code>, <code>matrix</code></td>
+</tr>
+<tr>
+<td><code>in: query</code></td>
+<td>Primitive, array, and object types. Styles: <code>form</code>, <code>spaceDelimited</code>, <code>pipeDelimited</code>, <code>deepObject</code>. <code>deepObject</code> only supports flat objects with primitive properties.</td>
+</tr>
+<tr>
+<td><code>in: header</code></td>
+<td>Primitive, array, and object types. Style: <code>simple</code></td>
+</tr>
+<tr>
+<td><code>in: cookie</code></td>
+<td>Primitive, array, and object types. Style: <code>form</code></td>
+</tr>
+<tr>
+<td><code>style</code> / <code>explode</code></td>
+<td>All style/explode combinations with correct defaults per location. Flat styles (<code>simple</code>, <code>form</code>, <code>label</code>, <code>matrix</code>) reject nested non-primitive values -- arrays of objects, arrays of arrays, and objects with object/array properties -- because the OpenAPI Specification leaves their serialization undefined.</td>
+</tr>
+<tr>
+<td>Composed schemas</td>
+<td><code>allOf</code>/<code>oneOf</code>/<code>anyOf</code> whose branches are all objects (or all arrays) are accepted wherever a bare object schema (or array schema) is accepted. The merged shape must still satisfy the per-style restrictions above.</td>
+</tr>
+<tr>
+<td><code>content</code> (instead of <code>schema</code>)</td>
+<td>Parameter value serialized via content type (e.g., JSON-encoded query parameter)</td>
+</tr>
+<tr>
+<td><code>allowReserved</code></td>
+<td>Query parameters and <code>application/x-www-form-urlencoded</code> encoding properties</td>
+</tr>
+</tbody>
+</table>
+<h3 id="request-and-response-bodies">Request and response bodies<a class="headerlink" href="#request-and-response-bodies" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>application/json</code></td>
+<td>Primitive, object, array, and composition schemas.</td>
+</tr>
+<tr>
+<td><code>text/plain</code>, <code>text/html</code>, <code>application/jwt</code></td>
+<td>Primitive schemas only. Object, array, and composition schemas are rejected at load time because no standard defines how to serialize them for these media types.</td>
+</tr>
+<tr>
+<td><code>multipart/*</code> (form-data, mixed, etc.)</td>
+<td>Object schemas and <code>allOf</code>/<code>oneOf</code>/<code>anyOf</code> of objects. Per-part content type via the <code>encoding</code> object.</td>
+</tr>
+<tr>
+<td><code>application/x-www-form-urlencoded</code></td>
+<td>Object schemas and <code>allOf</code>/<code>oneOf</code>/<code>anyOf</code> of objects. Per-property encoding via the <code>encoding</code> object. Only primitive and array-of-primitive properties; nested objects and arrays of objects are rejected.</td>
+</tr>
+<tr>
+<td>Multiple content types</td>
+<td>Produces one verification per content type combination</td>
+</tr>
+<tr>
+<td><code>required</code> (request body)</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td>Content negotiation (Accept header)</td>
+<td>RFC 7231 support with quality factors and wildcard subtypes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>examples</code> map (parameter / media type level)</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td>Single <code>example</code> (parameter / media type level)</td>
+<td>Supported</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../scenarios/">Creating Scenarios</a> for how examples drive scenario creation.</p>
+<h3 id="references-ref">References ($ref)<a class="headerlink" href="#references-ref" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$ref</code> to <code>#/components/schemas</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>$ref</code> to <code>#/components/parameters</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>$ref</code> to <code>#/components/requestBodies</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>$ref</code> to <code>#/components/responses</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>$ref</code> to <code>#/components/headers</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>$ref</code> to <code>#/components/examples</code></td>
+<td>Supported</td>
+</tr>
+<tr>
+<td><code>$ref</code> via JSON Pointer to nested Schema locations</td>
+<td>Resolves pointers into <code>properties</code>, <code>items</code>, <code>additionalProperties</code>, <code>allOf</code>/<code>oneOf</code>/<code>anyOf</code>, and <code>not</code>. Example: <code>#/components/schemas/User/properties/address</code>. Pointers into non-Schema sections (<code>examples</code>, <code>requestBodies</code>) are rejected.</td>
+</tr>
+<tr>
+<td>Recursive / chained <code>$ref</code></td>
+<td>Supported, including circular references. Infinite cycles (all properties in the cycle are required and non-nullable) are rejected at load time</td>
+</tr>
+<tr>
+<td>External <code>$ref</code> (other files)</td>
+<td>Resolved by the OpenAPI parser before Contracteer processes the model</td>
+</tr>
+</tbody>
+</table>
+<h3 id="responses">Responses<a class="headerlink" href="#responses" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exact status codes (<code>200</code>, <code>404</code>, etc.)</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td>Status code ranges (<code>2XX</code>, <code>4XX</code>, <code>5XX</code>)</td>
+<td>Used as fallback when the exact status code is not defined. Never resolves an operation's <a href="../how-contracteer-works/#the-primary-response">primary response</a>; a <code>4XX</code> still drives the type-mismatch expectation</td>
+</tr>
+<tr>
+<td><code>default</code> response</td>
+<td>Used as fallback when neither an exact status code nor a status code range is defined. Never resolves an operation's primary response</td>
+</tr>
+<tr>
+<td><code>100</code>-<code>199</code> and <code>304</code> responses</td>
+<td>Loaded, but never the primary response -- no ordinary request produces them. A scenario can still target <code>304</code></td>
+</tr>
+<tr>
+<td>Body on a bodyless status code</td>
+<td>Rejected at load. HTTP forbids a message body for <code>100</code>-<code>199</code>, <code>204</code>, <code>205</code> and <code>304</code></td>
+</tr>
+<tr>
+<td>Response headers</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td>Response body</td>
+<td>Supported</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="openapi-30-specific-behavior">OpenAPI 3.0-specific behavior<a class="headerlink" href="#openapi-30-specific-behavior" title="Permanent link">&para;</a></h2>
+<p>These behaviors apply only to OpenAPI 3.0 documents.</p>
+<h3 id="nullable-on-composition-schemas"><code>nullable</code> on composition schemas<a class="headerlink" href="#nullable-on-composition-schemas" title="Permanent link">&para;</a></h3>
+<p>The OpenAPI Specification states that <code>nullable</code> only takes effect when <code>type</code> is explicitly defined on the same schema.
+Composition schemas (<code>oneOf</code>, <code>anyOf</code>, <code>allOf</code>) typically do not declare <code>type</code>, which means <code>nullable: true</code> should technically have no effect:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">MySchema</span><span class="p">:</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">nullable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Cat'</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Dog'</span>
+</code></pre></div>
+<p>Contracteer honors <code>nullable: true</code> on composition schemas regardless of whether <code>type</code> is present.
+This matches the behavior of most OpenAPI tooling and what users expect.
+The <code>nullable</code> rule is widely considered a specification design flaw, which OpenAPI 3.1 resolved by replacing <code>nullable</code> with <code>type</code> arrays (e.g., <code>type: ["object", "null"]</code>).</p>
+<h3 id="allowemptyvalue"><code>allowEmptyValue</code><a class="headerlink" href="#allowemptyvalue" title="Permanent link">&para;</a></h3>
+<p>The <code>allowEmptyValue</code> parameter flag indicates that a query parameter may be present with an empty value.
+Contracteer ignores the flag.
+The keyword was deprecated in OpenAPI 3.0 and dropped from OpenAPI 3.1.</p>
+<hr />
+<h2 id="openapi-31-specific-behavior">OpenAPI 3.1-specific behavior<a class="headerlink" href="#openapi-31-specific-behavior" title="Permanent link">&para;</a></h2>
+<p>These behaviors apply only to OpenAPI 3.1 documents.</p>
+<h3 id="type-arrays">Type arrays<a class="headerlink" href="#type-arrays" title="Permanent link">&para;</a></h3>
+<p>OpenAPI 3.1 allows <code>type</code> to be an array of type strings.
+Contracteer supports two forms:</p>
+<ul>
+<li><strong>Single-type array</strong> (e.g., <code>type: ["string"]</code>) -- equivalent to <code>type: string</code>.</li>
+<li><strong>Nullable form</strong> (one type plus <code>"null"</code>, e.g., <code>type: ["string", "null"]</code>) -- equivalent to a nullable string.</li>
+</ul>
+<p>Multi-type arrays with multiple non-null types (e.g., <code>type: ["string", "integer"]</code>) are rejected at load time.
+See <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</p>
+<p>To express a union of types, use <code>anyOf</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Not supported -- multi-type with non-null types</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nt">ProductId</span><span class="p">:</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"string"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"integer"</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># Supported equivalent</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="nt">ProductId</span><span class="p">:</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">integer</span>
+</code></pre></div>
+<h3 id="type-null"><code>type: null</code><a class="headerlink" href="#type-null" title="Permanent link">&para;</a></h3>
+<p>OpenAPI 3.1 represents "null is a valid value" with the JSON Schema 2020-12 form <code>type: "null"</code>.
+A <code>{type: "null"}</code> schema accepts only <code>null</code> and rejects every other value with <code>Type mismatch, expected type 'null'</code>.</p>
+<p>Contracteer supports <code>{type: "null"}</code> wherever it describes a coherent contract:</p>
+<ul>
+<li><strong>Property, array-item, and <code>additionalProperties</code> schemas.</strong>
+  Use it wherever <code>null</code> is the only valid value in that position.</li>
+<li><strong>A branch inside <code>anyOf</code> or <code>oneOf</code>.</strong>
+  A <code>{type: "null"}</code> branch makes the composition nullable -- the way to make a <code>$ref</code> or composed schema nullable.
+  For a single named type, <code>type: [Type, "null"]</code> is the more concise equivalent (see <a href="#type-arrays">Type arrays</a>).</li>
+</ul>
+<p>Composite nullability rules:</p>
+<ul>
+<li><code>anyOf</code> accepts null if the outer schema is nullable or any branch admits null.</li>
+<li><code>oneOf</code> accepts null if the outer is nullable or exactly one branch admits null.
+  Two or more null-admitting branches make the composite non-nullable -- the OpenAPI document is ambiguous, so Contracteer treats it as non-null.</li>
+<li><code>allOf</code> accepts null if the outer is nullable or every branch admits null.</li>
+</ul>
+<p>The three positions below are rejected at load time because the construct has no coherent meaning there, not because the feature is missing:</p>
+<ul>
+<li><strong>Standalone body or parameter schema.</strong>
+  A <code>{type: "null"}</code> body or parameter conveys no meaningful constraint and is almost always an author error.
+  Use <code>anyOf: [Type, {type: "null"}]</code> for a nullable value or HTTP status <code>204</code> for an empty response.
+  See <a href="../../guides/troubleshooting/#type-null-is-rejected-as-a-body-or-parameter-schema"><code>type: null</code> is rejected as a body or parameter schema</a>.</li>
+<li><strong><code>anyOf</code> or <code>oneOf</code> whose outer <code>type</code> array excludes <code>"null"</code> but a branch declares <code>type: "null"</code>.</strong>
+  The outer-type constraint and the null branch are contradictory.
+  See <a href="../../guides/troubleshooting/#outer-type-excludes-null-but-a-composition-branch-declares-it">Outer <code>type</code> excludes null but a composition branch declares it</a>.</li>
+<li><strong><code>allOf</code> with any <code>type: "null"</code> branch.</strong>
+  Unsatisfiable: a value cannot match both <code>{type: "null"}</code> and any non-null branch.
+  See <a href="../../guides/troubleshooting/#allof-includes-a-type-null-branch"><code>allOf</code> includes a <code>type: null</code> branch</a>.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="c1"># Nullable property: anyOf with the actual type and a null branch</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="nt">User</span><span class="p">:</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">        </span><span class="nt">nickname</span><span class="p">:</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">          </span><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">    </span><span class="c1"># Null-only property: accepts only null</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="w">    </span><span class="nt">Marker</span><span class="p">:</span>
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="w">        </span><span class="nt">tombstone</span><span class="p">:</span>
+<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">"null"</span>
+</code></pre></div>
+<h3 id="const"><code>const</code><a class="headerlink" href="#const" title="Permanent link">&para;</a></h3>
+<p>OpenAPI 3.1 introduces <code>const</code> for schemas with a single allowed value.
+Contracteer supports <code>const</code> on <code>string</code>, <code>integer</code>, <code>number</code>, and <code>boolean</code> schemas.
+The schema's <code>type</code> must be declared explicitly -- Contracteer does not infer the type from the <code>const</code> value.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="nt">OrderStatus</span><span class="p">:</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">      </span><span class="nt">const</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ACTIVE</span>
+</code></pre></div>
+<p>A schema with <code>const: null</code> is not representable.</p>
+<h3 id="propertynames"><code>propertyNames</code><a class="headerlink" href="#propertynames" title="Permanent link">&para;</a></h3>
+<p>OpenAPI 3.1 introduces <code>propertyNames</code> to constrain the names of properties in an object schema.
+<code>propertyNames</code> takes a schema that must resolve to a string type.</p>
+<p>Contracteer applies the constraint at three points:</p>
+<ul>
+<li><strong>Validation.</strong> Every property name in the body -- both declared properties and additional properties -- must satisfy the constraint.</li>
+<li><strong>Generation.</strong> When generating values for <code>additionalProperties</code>, Contracteer draws candidate names that satisfy the constraint.</li>
+<li><strong>Load time.</strong> Contracteer rejects a schema whose declared property names violate the constraint.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">Metadata</span><span class="p">:</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">      </span><span class="nt">propertyNames</span><span class="p">:</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">        </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="s">"^[a-z][a-z0-9_]*$"</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">      </span><span class="nt">additionalProperties</span><span class="p">:</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+</code></pre></div>
+<h3 id="contentencoding-and-contentmediatype-for-binary-bodies"><code>contentEncoding</code> and <code>contentMediaType</code> for binary bodies<a class="headerlink" href="#contentencoding-and-contentmediatype-for-binary-bodies" title="Permanent link">&para;</a></h3>
+<p>Contracteer recognizes two OpenAPI 3.1 keywords for declaring binary content in string schemas:</p>
+<ul>
+<li><code>contentEncoding: base64</code> -- the body is base64-encoded binary data (replacing OpenAPI 3.0's <code>format: byte</code>).</li>
+<li><code>contentMediaType: &lt;media type&gt;</code> -- the body is raw binary content of the named media type (replacing OpenAPI 3.0's <code>format: binary</code>).</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Base64-encoded binary content</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="nt">Avatar</span><span class="p">:</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">      </span><span class="nt">contentEncoding</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base64</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Raw binary content</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="nt">UploadedImage</span><span class="p">:</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">      </span><span class="nt">contentMediaType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">image/png</span>
+</code></pre></div>
+<p>Other <code>contentEncoding</code> values (<code>base16</code>, <code>base32</code>, <code>quoted-printable</code>, etc.) and structured-text <code>contentMediaType</code> values (<code>application/json</code>, <code>application/xml</code>, etc.) are rejected at load time.
+See <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</p>
+<p>For request and response bodies declared with a binary content type (<code>application/octet-stream</code>, <code>image/*</code>, etc.) but no schema or an empty schema, Contracteer infers binary content automatically.
+This applies to OpenAPI 3.0 documents as well.</p>
+<h3 id="ref-with-sibling-keywords"><code>$ref</code> with sibling keywords<a class="headerlink" href="#ref-with-sibling-keywords" title="Permanent link">&para;</a></h3>
+<p>OpenAPI 3.1 follows JSON Schema 2020-12, which allows other keywords alongside <code>$ref</code> in a Schema Object.
+The resolved target and the siblings must both be satisfied -- this is implicit <code>allOf</code> semantics.</p>
+<p>Contracteer supports this by resolving the <code>$ref</code> one hop, merging the sibling keywords onto the resolved target per the rules below, and converting the merged schema once.
+Chains of <code>$ref</code> with siblings recurse naturally and intermediate siblings are preserved.</p>
+<p>The following sibling patterns are supported:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Sibling type redeclaration -- must match the target's type</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="nt">config</span><span class="p">:</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Settings'</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="c1"># Narrowing a primitive target</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="nt">name</span><span class="p">:</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Name'</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">  </span><span class="nt">maxLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="w">  </span><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="c1"># Restricting an enum -- sibling values must be a subset of the target's enum</span>
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="nt">status</span><span class="p">:</span>
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Status'</span>
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="w">  </span><span class="nt">enum</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">active</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">pending</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a><span class="c1"># Extending an object target with additional required fields</span>
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="nt">contact</span><span class="p">:</span>
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Contact'</span>
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="w">  </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">email</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a>
+<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="c1"># Extending an object target with additional properties (no overlap with target)</span>
+<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a><span class="nt">shipment</span><span class="p">:</span>
+<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Order'</span>
+<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="w">  </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a><span class="w">    </span><span class="nt">tracking_id</span><span class="p">:</span>
+<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+</code></pre></div>
+<p>Per-keyword merge rules:</p>
+<table>
+<thead>
+<tr>
+<th>Sibling keyword</th>
+<th>Merge rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code> / <code>types</code></td>
+<td>Must equal the target's single type. Mismatch is rejected at load time.</td>
+</tr>
+<tr>
+<td><code>minLength</code> / <code>maxLength</code> / <code>minimum</code> / <code>maximum</code> / <code>exclusiveMinimum</code> / <code>exclusiveMaximum</code> / <code>multipleOf</code></td>
+<td>Take the tighter bound. <code>multipleOf</code> is rejected if both are set and differ.</td>
+</tr>
+<tr>
+<td><code>minProperties</code> / <code>maxProperties</code> / <code>minItems</code> / <code>maxItems</code></td>
+<td>Take the tighter bound.</td>
+</tr>
+<tr>
+<td><code>uniqueItems</code></td>
+<td>OR (<code>true</code> wins, because uniqueness narrows the contract).</td>
+</tr>
+<tr>
+<td><code>pattern</code></td>
+<td>Sibling fills if the target has none. Both defined is rejected at load time.</td>
+</tr>
+<tr>
+<td><code>enum</code></td>
+<td>Sibling values must be a subset of the target's <code>enum</code>. The merged result uses the sibling.</td>
+</tr>
+<tr>
+<td><code>const</code></td>
+<td>Sibling value must equal the target's <code>const</code> (if any) or be in the target's <code>enum</code>.</td>
+</tr>
+<tr>
+<td><code>required</code></td>
+<td>Union with the target's <code>required</code>.</td>
+</tr>
+<tr>
+<td><code>properties</code></td>
+<td>Merged map. Overlapping property names are rejected at load time.</td>
+</tr>
+<tr>
+<td><code>items</code> / <code>additionalProperties</code></td>
+<td>Sibling fills if the target has none. Both defined is rejected at load time.</td>
+</tr>
+<tr>
+<td>Any other keyword (<code>not</code>, <code>allOf</code>/<code>anyOf</code>/<code>oneOf</code> as siblings, <code>if</code>/<code>then</code>/<code>else</code>, JSON Schema applicators, etc.)</td>
+<td>Rejected at load time with a message naming the unsupported keyword.</td>
+</tr>
+</tbody>
+</table>
+<p>Reference Object siblings (under <code>parameters</code>, <code>requestBodies</code>, <code>responses</code>, <code>headers</code>, <code>examples</code>) are separate from Schema Object siblings.
+The OpenAPI 3.1 Specification states that only <code>summary</code> and <code>description</code> are allowed on a Reference Object; any other keyword is ignored.
+Contracteer follows that rule.</p>
+<p>If two schemas reference each other via <code>$ref</code> with siblings (for example <code>A → B → A</code>), the merge fails at load time with a message naming the cycle path.
+Regular <code>$ref</code> chains without siblings still permit circular references with the usual rules (see <a href="../../guides/troubleshooting/#circular-schema-reference-rejected">Circular schema reference rejected</a>).</p>
+<hr />
+<h2 id="unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords<a class="headerlink" href="#unsupported-openapi-31-keywords" title="Permanent link">&para;</a></h2>
+<p>Contracteer does not support the following JSON Schema 2020-12 keywords.
+Most are rejected at load time with an explanatory message.
+A few do not produce an error -- they are simply not honored, and references that rely on them will not resolve.</p>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Behavior</th>
+<th>Reason / alternative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prefixItems</code></td>
+<td>Rejected at load time</td>
+<td>Tuple validation requires per-position type dispatch. Use <code>items</code> if all positions share a type.</td>
+</tr>
+<tr>
+<td><code>contains</code> / <code>minContains</code> / <code>maxContains</code></td>
+<td>Rejected at load time</td>
+<td>Element-existence semantics not implemented.</td>
+</tr>
+<tr>
+<td><code>patternProperties</code></td>
+<td>Rejected at load time</td>
+<td>Regex-keyed property validation not implemented.</td>
+</tr>
+<tr>
+<td><code>dependentRequired</code></td>
+<td>Rejected at load time</td>
+<td>Conditional-required behavior not implemented.</td>
+</tr>
+<tr>
+<td><code>dependentSchemas</code></td>
+<td>Rejected at load time</td>
+<td>Conditional-schema behavior not implemented.</td>
+</tr>
+<tr>
+<td><code>unevaluatedItems</code> / <code>unevaluatedProperties</code></td>
+<td>Rejected at load time</td>
+<td>Adjacent-keyword evaluation not implemented.</td>
+</tr>
+<tr>
+<td><code>if</code> / <code>then</code> / <code>else</code></td>
+<td>Rejected at load time</td>
+<td>Conditional validation not implemented.</td>
+</tr>
+<tr>
+<td><code>not</code></td>
+<td>Rejected at load time</td>
+<td>Subschema negation not implemented. Also rejected in OAS 3.0.</td>
+</tr>
+<tr>
+<td><code>contentSchema</code></td>
+<td>Rejected at load time</td>
+<td>Nested-content validation not implemented.</td>
+</tr>
+<tr>
+<td>Non-base64 <code>contentEncoding</code></td>
+<td>Rejected at load time</td>
+<td>Only <code>base64</code> is supported today.</td>
+</tr>
+<tr>
+<td>Structured-text <code>contentMediaType</code></td>
+<td>Rejected at load time</td>
+<td>Inline content validation for <code>application/json</code>, <code>application/xml</code>, etc. is not implemented.</td>
+</tr>
+<tr>
+<td>Multi-type schemas (multiple non-null types)</td>
+<td>Rejected at load time</td>
+<td>Union disambiguation requires runtime type dispatch. Use <code>anyOf</code>.</td>
+</tr>
+<tr>
+<td><code>$defs</code></td>
+<td>Rejected when referenced via <code>$ref</code></td>
+<td>Use <code>#/components/schemas</code> instead.</td>
+</tr>
+<tr>
+<td><code>$anchor</code> / <code>$id</code></td>
+<td>Not honored</td>
+<td>Use <code>$ref</code> to <code>#/components/schemas</code> paths instead.</td>
+</tr>
+<tr>
+<td><code>$dynamicRef</code> / <code>$dynamicAnchor</code></td>
+<td>Not honored</td>
+<td>Use <code>$ref</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="specification-references">Specification references<a class="headerlink" href="#specification-references" title="Permanent link">&para;</a></h2>
+<p>Quotes throughout this page come from the OpenAPI Specification:</p>
+<ul>
+<li><a href="https://spec.openapis.org/oas/v3.0.4">OpenAPI Specification 3.0.4</a></li>
+<li><a href="https://spec.openapis.org/oas/v3.1.2">OpenAPI Specification 3.1.2</a></li>
+</ul>
+<hr />
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../guides/troubleshooting/">Troubleshooting</a> -- common issues caused by unsupported features and how to work around them.</li>
+<li><a href="../scenarios/">Creating Scenarios</a> -- how OpenAPI examples become scenarios and verification cases.</li>
+<li><a href="../testing-your-server/">Testing Your Server</a> -- what the verifier checks.</li>
+<li><a href="../testing-your-client/">Testing Your Client</a> -- how the mock server validates requests and generates responses.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../testing-your-client/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Testing Your Client">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Testing Your Client
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../getting-started/" class="md-footer__link md-footer__link--next" aria-label="Next: Getting Started">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Getting Started
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "navigation.footer", "content.code.copy", "content.code.annotate", "content.tabs.link", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

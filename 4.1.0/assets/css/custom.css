@@ -1,0 +1,29 @@
+/* Visual separation between sections */
+h2 {
+  margin-top: 2.5em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  font-weight: 700;
+}
+
+/* First h2 after the page title should not have a top border */
+h1 + h2,
+h1 + .admonition + h2,
+h1 + p + h2,
+h1 + p + p + h2,
+h1 + p + p + p + h2,
+hr + h2 {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Slightly larger h2 for better hierarchy */
+h2 {
+  font-size: 1.5em;
+}
+
+/* h3 stands out from body text */
+h3 {
+  margin-top: 1.8em;
+  font-weight: 600;
+}

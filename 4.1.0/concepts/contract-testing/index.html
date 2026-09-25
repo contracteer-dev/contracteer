@@ -1,0 +1,1639 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies.">
+      
+      
+      
+        <link rel="canonical" href="https://contracteer.dev/4.1.0/concepts/contract-testing/">
+      
+      
+        <link rel="prev" href="../..">
+      
+      
+        <link rel="next" href="../how-contracteer-works/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>What Is Contract Testing? - Contracteer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#what-is-contract-testing" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Contracteer" class="md-header__button md-logo" aria-label="Contracteer" data-md-component="logo">
+      
+  <img src="../../assets/images/contracteer_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Contracteer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              What Is Contract Testing?
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/contracteer-dev/contracteer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    contracteer-dev/contracteer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/ci-integration/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Contracteer" class="md-nav__button md-logo" aria-label="Contracteer" data-md-component="logo">
+      
+  <img src="../../assets/images/contracteer_logo.png" alt="logo">
+
+    </a>
+    Contracteer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/contracteer-dev/contracteer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    contracteer-dev/contracteer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What Is Contract Testing?
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What Is Contract Testing?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-apis-break-at-integration-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem: APIs Break at Integration Time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-insight-test-the-boundary-not-the-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Insight: Test the Boundary, Not the Implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-contract-tests-fit-the-testing-pyramid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Contract Tests Fit: The Testing Pyramid
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Where Contract Tests Fit: The Testing Pyramid">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-contract-tests-do-not-catch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Contract Tests Do Not Catch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#three-approaches-to-contract-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three Approaches to Contract Testing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Three Approaches to Contract Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#consumer-driven" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer-Driven
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#provider-driven" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider-Driven
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specification-driven-contract-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specification-Driven (Contract-First)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-openapi-document-as-source-of-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The OpenAPI Document as Source of Truth
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-takeaways" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Takeaways
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further Reading
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-contracteer-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How Contracteer Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scenarios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-your-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Your Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-your-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Your Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../openapi-coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/verifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/verifier-junit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifier with JUnit 5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/mockserver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mock Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/mockserver-spring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mock Server with Spring Boot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/ci-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-apis-break-at-integration-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem: APIs Break at Integration Time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-insight-test-the-boundary-not-the-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Insight: Test the Boundary, Not the Implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-contract-tests-fit-the-testing-pyramid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Contract Tests Fit: The Testing Pyramid
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Where Contract Tests Fit: The Testing Pyramid">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-contract-tests-do-not-catch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Contract Tests Do Not Catch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#three-approaches-to-contract-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three Approaches to Contract Testing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Three Approaches to Contract Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#consumer-driven" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer-Driven
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#provider-driven" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider-Driven
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specification-driven-contract-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specification-Driven (Contract-First)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-openapi-document-as-source-of-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The OpenAPI Document as Source of Truth
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-takeaways" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Takeaways
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further Reading
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="what-is-contract-testing">What Is Contract Testing?<a class="headerlink" href="#what-is-contract-testing" title="Permanent link">&para;</a></h1>
+<p>Contract testing verifies that the boundary between two services works as documented.
+It does not test internal logic or end-to-end workflows.
+It tests the agreement -- the <strong>contract</strong> -- that both sides depend on.</p>
+<hr />
+<h2 id="the-problem-apis-break-at-integration-time">The Problem: APIs Break at Integration Time<a class="headerlink" href="#the-problem-apis-break-at-integration-time" title="Permanent link">&para;</a></h2>
+<p>Consider two teams working on the same product.
+One team builds a REST API that returns product data.
+The other team builds a client that consumes it.</p>
+<p>Both teams test their code thoroughly.
+The server has unit tests for its business logic.
+The client tests against a mock that returns hardcoded responses.
+Every test passes.
+Every build is green.</p>
+<p>Then the server team renames a field from <code>productName</code> to <code>name</code>.
+Their tests still pass -- they test internal behavior, not the HTTP response shape.
+The client's tests still pass -- they run against a mock that nobody updated.
+The rename ships undetected, and the client breaks in production.</p>
+<p>This is <strong>contract drift</strong>: the actual API diverged from what consumers expect, and nothing caught it.
+The mock the client relied on became a lie.</p>
+<p>This failure mode is not rare.
+It happens every time a team changes a response field, adds a required parameter, modifies a status code, or alters an error format.
+The cost scales with the number of consumers: each one carries its own stale assumptions about the API.
+Even a single team owning both sides is not immune -- the contract can drift without anyone noticing.</p>
+<hr />
+<h2 id="the-insight-test-the-boundary-not-the-implementation">The Insight: Test the Boundary, Not the Implementation<a class="headerlink" href="#the-insight-test-the-boundary-not-the-implementation" title="Permanent link">&para;</a></h2>
+<p>The root cause is that each team tests in isolation.
+Unit tests verify internal behavior.
+End-to-end tests verify the full system.
+But neither focuses on the <strong>boundary</strong>.
+The boundary is the precise point where one service sends a request and the other returns a response.</p>
+<p>A contract test targets exactly this boundary.
+It verifies <strong>externally observable guarantees</strong>:</p>
+<ul>
+<li>The status code is what the contract says it should be.</li>
+<li>The response body has the documented structure.</li>
+<li>Required headers are present and correctly typed.</li>
+<li>Invalid requests are rejected with the documented error format.</li>
+</ul>
+<p>A contract test does not verify which validation rule fired, what error message was returned, or how the server computed the result.
+Those are internal concerns that belong to unit and integration tests.</p>
+<p>This distinction is what makes contract tests stable.
+Internal behavior changes constantly as teams refactor, optimize, and evolve their code.
+The external contract changes rarely -- and when it does, that change should be deliberate, visible, and tested.
+As Martin Fowler <a href="https://martinfowler.com/bliki/ContractTest.html">puts it</a>, contract tests verify format consistency rather than exact data values.
+They detect structural contract violations while accommodating legitimate changes in the data itself.</p>
+<hr />
+<h2 id="where-contract-tests-fit-the-testing-pyramid">Where Contract Tests Fit: The Testing Pyramid<a class="headerlink" href="#where-contract-tests-fit-the-testing-pyramid" title="Permanent link">&para;</a></h2>
+<p>The <a href="https://martinfowler.com/bliki/TestPyramid.html">testing pyramid</a> describes how different test types relate in quantity, speed, and scope.
+Higher levels are slower, more expensive, and fewer in number:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>              /        \
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>             /   E2E    \
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>            /            \
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>           /--------------\
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>          /                \
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>         /   Integration    \
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        /                    \
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>       /----------------------\  ◄── Contract tests
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>      /                        \
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>     /       Unit Tests         \
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    /                            \
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>   /------------------------------\
+</code></pre></div>
+<p><strong>Unit tests</strong> form the base.
+They are fast, numerous, and test individual components in isolation.
+They give no confidence about how components interact across service boundaries.</p>
+<p><strong>Contract tests</strong> are not a traditional layer of the pyramid.
+They are a specific type of test that bridges two levels.
+They run with the speed of unit tests -- no deployment, no infrastructure -- but they verify integration-level concerns.
+Does the server respond as documented?
+Does the client send valid requests?</p>
+<p><strong>Integration tests</strong> verify that components work together with real dependencies: databases, message brokers, file systems.
+They are slower and require more infrastructure than contract tests.
+They cover concerns that contract tests do not -- whether queries return correct data or whether messages are properly consumed.</p>
+<p><strong>End-to-end tests</strong> verify complete workflows across the full system.
+They are slow, brittle, and expensive to maintain.
+They catch issues that no other test type can -- but they should be few.</p>
+<h3 id="what-contract-tests-do-not-catch">What Contract Tests Do Not Catch<a class="headerlink" href="#what-contract-tests-do-not-catch" title="Permanent link">&para;</a></h3>
+<p>Contract tests are precise in scope.
+They verify the contract, nothing more.
+They do not catch:</p>
+<ul>
+<li><strong>Business logic bugs.</strong> If the server computes a wrong price but returns it in the correct format, the contract test passes.</li>
+<li><strong>Performance issues.</strong> A contract test does not measure response time or throughput.</li>
+<li><strong>Authentication and authorization flows.</strong> These involve session state, tokens, and multi-step interactions beyond the scope of a single contract.</li>
+<li><strong>Data consistency.</strong> Whether the data is correct across services is an integration concern.</li>
+</ul>
+<p>Contract tests reduce the need for expensive cross-service end-to-end tests.
+They catch contract drift early -- in the build, with the speed of unit tests.
+They make the overall test suite faster and more reliable by catching the most common integration failure -- structural mismatch -- at the cheapest possible level.</p>
+<hr />
+<h2 id="three-approaches-to-contract-testing">Three Approaches to Contract Testing<a class="headerlink" href="#three-approaches-to-contract-testing" title="Permanent link">&para;</a></h2>
+<p>Contract testing is not a single technique.
+Three distinct approaches exist, defined by <strong>who owns the contract</strong> and <strong>how it is produced</strong>.
+Each fits different team structures and development workflows.</p>
+<h3 id="consumer-driven">Consumer-Driven<a class="headerlink" href="#consumer-driven" title="Permanent link">&para;</a></h3>
+<p>The consumer team writes tests that express its expectations: "I send this request, I expect this response shape."
+These expectations are captured in a contract file.
+The provider team retrieves the contract and runs it against their implementation to verify compatibility.</p>
+<p>The contract reflects <strong>what the consumer actually uses</strong>, not the full API surface.
+This is valuable when multiple consumers have different needs and the provider wants to know exactly what each consumer depends on.</p>
+<p>The workflow is <strong>sequential</strong>: the consumer must publish its expectations before the provider can verify them.
+This requires coordination infrastructure -- a broker or shared repository -- to exchange contracts between teams.</p>
+<p>The contract format is typically <strong>proprietary</strong> to the tooling, not an industry standard like OpenAPI.
+This means the contracts are not reusable outside the specific tool ecosystem.</p>
+<h3 id="provider-driven">Provider-Driven<a class="headerlink" href="#provider-driven" title="Permanent link">&para;</a></h3>
+<p>The provider team owns the API definition and its lifecycle.
+The provider writes the contract, tests it against their implementation, and publishes stubs or mocks for consumers to develop against.</p>
+<p>The workflow is again <strong>sequential</strong>, but in the opposite direction.
+The provider defines first, and consumers adapt to what the provider publishes.</p>
+<p>In practice, provider-driven contracts are often generated from code annotations.
+This creates a reliability challenge: annotations describe <strong>intent</strong>, not behavior.
+Over time, they drift from the actual implementation -- like documentation that is no longer maintained.
+The contract becomes unreliable because it may not represent what the server actually does.</p>
+<p>This drift has tangible consequences.
+A developer consulting the auto-generated API documentation sees field names, types, and constraints that look authoritative.
+When they send a request based on that documentation, it fails because the annotations no longer match the implementation.
+The documentation becomes misleading rather than helpful.</p>
+<h3 id="specification-driven-contract-first">Specification-Driven (Contract-First)<a class="headerlink" href="#specification-driven-contract-first" title="Permanent link">&para;</a></h3>
+<p>The contract exists <strong>independently</strong> of both consumer and provider.
+It is a shared, industry-standard artifact -- an OpenAPI document, for example -- that defines the API contract.
+Both sides develop against it.
+Neither side owns it exclusively.</p>
+<p>The workflow is <strong>parallel</strong>: the provider implements the API to match the OpenAPI document, and the consumer builds a client against it.
+Neither blocks the other.
+Contract tests then verify that both sides conform.</p>
+<p>This is the approach Contracteer takes.</p>
+<hr />
+<h2 id="the-openapi-document-as-source-of-truth">The OpenAPI Document as Source of Truth<a class="headerlink" href="#the-openapi-document-as-source-of-truth" title="Permanent link">&para;</a></h2>
+<p>In specification-driven contract testing, the OpenAPI document is not a byproduct of implementation.
+It is the <strong>starting point</strong>.
+Teams agree on the API design -- endpoints, request shapes, response structures, error formats -- before writing code.</p>
+<p>This changes the development dynamic in three ways.</p>
+<p><strong>Parallel development.</strong>
+The provider team and the consumer team start working at the same time.
+The provider implements the server to match the OpenAPI document.
+The consumer builds against a mock server that enforces the OpenAPI document.
+No team waits for the other.</p>
+<p><strong>A shared communication medium.</strong>
+The OpenAPI document becomes the place where teams discuss API design.
+Merge requests to the OpenAPI document become the vehicle for proposing and reviewing changes.
+Any team involved with the API can propose changes, regardless of who implements the provider.</p>
+<p><strong>Continuous conformance.</strong>
+Contract tests run in the build on every commit.
+On the provider side, they verify that the server still responds according to the OpenAPI document.
+On the consumer side, they verify that the client sends valid requests.
+Drift is caught immediately, not in staging, not in production.</p>
+<p>When a contract test fails, the team faces a clear decision: fix the implementation to match the OpenAPI document, or update the document to reflect the intended change.
+Either way, the contract stays aligned with reality.</p>
+<p>The OpenAPI document is also <strong>portable</strong>.
+It uses an industry standard -- OpenAPI -- that integrates with documentation tools, API gateways, and testing tools.
+The contract is not locked into a proprietary format.</p>
+<hr />
+<h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Contract testing verifies the boundary between services -- the status codes, response shapes, and headers that both sides depend on.</li>
+<li>Contract tests run fast (no deployment, no infrastructure) and catch the most common integration failure: structural mismatch between what the server sends and what the client expects.</li>
+<li>Three approaches exist: consumer-driven (consumer owns the contract), provider-driven (provider owns the contract), and specification-driven (a shared OpenAPI document is the source of truth).</li>
+<li>Specification-driven contract testing enables parallel development, uses an industry-standard format, and makes the OpenAPI document a communication medium between teams.</li>
+<li>Contract tests do not replace other test types, but they significantly reduce the number of integration and end-to-end tests needed by catching structural mismatches early.</li>
+</ul>
+<hr />
+<h2 id="further-reading">Further Reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Martin Fowler, <a href="https://martinfowler.com/bliki/ContractTest.html">ContractTest</a> -- the original definition: what contract tests verify, how they relate to test doubles, and why they check format rather than data values.</li>
+<li>Martin Fowler, <a href="https://martinfowler.com/bliki/IntegrationTest.html">IntegrationTest</a> -- the narrow vs broad distinction, and how contract tests relate to each kind.</li>
+<li>Martin Fowler, <a href="https://martinfowler.com/bliki/TestPyramid.html">TestPyramid</a> -- the pyramid model and the rationale for many fast tests at the base, few slow tests at the top.</li>
+<li>Ham Vocke, <a href="https://martinfowler.com/articles/practical-test-pyramid.html">The Practical Test Pyramid</a> -- a comprehensive guide to each layer of the pyramid, including consumer-driven contract tests in microservice architectures.</li>
+</ul>
+<hr />
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../how-contracteer-works/">How Contracteer Works</a> -- how Contracteer turns an OpenAPI document into a verifier and a mock server.</li>
+<li><a href="../scenarios/">Creating Scenarios</a> -- how to write OpenAPI examples that produce the scenarios you want.</li>
+<li><a href="../testing-your-server/">Testing Your Server</a> -- how the verifier tests your server against the OpenAPI document.</li>
+<li><a href="../testing-your-client/">Testing Your Client</a> -- how the mock server validates requests and generates responses.</li>
+<li><a href="../../getting-started/">Getting Started</a> -- set up Contracteer in your project.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../.." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Home
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../how-contracteer-works/" class="md-footer__link md-footer__link--next" aria-label="Next: How Contracteer Works">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                How Contracteer Works
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "navigation.footer", "content.code.copy", "content.code.annotate", "content.tabs.link", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
