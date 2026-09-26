@@ -125,6 +125,46 @@ minLength: 5
 maxLength: 10
 ```
 
+### `additionalProperties: false` inside `allOf`
+
+A common OpenAPI 3.0 pattern extends a closed base schema through `allOf`:
+
+```yaml
+components:
+  schemas:
+    Product:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    DiscountedProduct:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          required: [discount]
+          properties:
+            discount:
+              type: number
+```
+
+Under JSON Schema, each `allOf` branch validates the whole value on its own, and `additionalProperties` only knows the `properties` declared in the same schema.
+`DiscountedProduct` is therefore unsatisfiable: any value carrying `discount` is rejected by the `Product` branch.
+JSON Schema 2019-09 introduced `unevaluatedProperties` to express this pattern. It is not available in OpenAPI 3.0.
+
+Contracteer applies the reading the author intends.
+When validating a branch, properties declared by the other branches are not counted as additional.
+`{"id": 1, "name": "Keyboard", "discount": 0.1}` is valid.
+`{"id": 1, "name": "Keyboard", "discount": 0.1, "color": "black"}` is rejected, because no branch declares `color`.
+Generated values contain the properties of all branches.
+
+This is a deliberate deviation.
+A document that relies on it passes Contracteer but is rejected by strict JSON Schema validators, and a consumer validating with such a tool refuses values Contracteer accepts.
+To stay portable, either drop `additionalProperties: false` from the base schema, or write the composed schema flat and repeat the base properties.
+
 ### Multiple composition keywords on the same schema
 
 JSON Schema allows `allOf`, `anyOf`, and `oneOf` to appear on the same schema, with each keyword applying independently:
@@ -311,7 +351,7 @@ This is consistent with the OpenAPI Specification, which permits typeless schema
 
 | Feature         | Notes                                                                                                                                                                                     |
 |-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `allOf`         | Single-element accepts any sub-schema type; multi-element requires structured types. Sibling `properties`, `required`, and `additionalProperties` are folded in as an implicit sub-schema |
+| `allOf`         | Single-element accepts any sub-schema type; multi-element requires structured types. Sibling `properties`, `required`, and `additionalProperties` are folded in as an implicit sub-schema. See [`additionalProperties: false` inside `allOf`](#additionalproperties-false-inside-allof) |
 | `oneOf`         | Validates that exactly one sub-schema matches. Sibling `properties`, `required`, and `additionalProperties` are supported                                                                 |
 | `anyOf`         | Validates that at least one sub-schema matches. Sibling `properties`, `required`, and `additionalProperties` are supported                                                                |
 | `discriminator` | `propertyName` and `mapping` on `oneOf`/`anyOf`/`allOf`. See [Discriminator validation](#discriminator-validation)                                                                        |
