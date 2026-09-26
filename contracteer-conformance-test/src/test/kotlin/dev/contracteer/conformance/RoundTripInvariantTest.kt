@@ -211,6 +211,21 @@ class RoundTripInvariantTest {
         probePath = "/two-success-responses-with-scenarios/1"
       ),
       ConformanceRow(
+        declaredResponses = "200 + 404 with a scenario on 404 and no response example",
+        operation = apiOperation("get", "/scenario-without-response-example/{id}") {
+          request { pathParam("id", integerType()) }
+          response(200) { jsonBody(responseBody()) }
+          response(404) { jsonBody(responseBody()) }
+          scenario("404_UNKNOWN", status = 404) {
+            request { pathParam["id"] = BigDecimal(999) }
+          }
+        },
+        expectedCaseCount = 2,
+        expectedMockStatus = 404,
+        invariant = HOLDS,
+        probePath = "/scenario-without-response-example/999"
+      ),
+      ConformanceRow(
         declaredResponses = "4XX with a query parameter",
         operation = apiOperation("get", "/class-4xx-with-parameter") {
           request { queryParam("limit", integerType(), isRequired = true) }

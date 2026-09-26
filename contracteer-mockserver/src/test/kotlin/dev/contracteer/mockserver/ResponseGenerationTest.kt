@@ -12,6 +12,7 @@ import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
 import dev.contracteer.core.dsl.stringType
+import dev.contracteer.core.serde.PlainTextSerde
 import kotlin.test.Test
 
 class ResponseGenerationTest {
@@ -247,5 +248,109 @@ class ResponseGenerationTest {
       .assertThat()
       .statusCode(418)
       .body(containsString("2XX"))
+  }
+
+  @Test
+  fun `returns response body generated from schema when matching scenario has no response body`() {
+    // Given
+    val operation = apiOperation("GET", "/v1/products/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      response(404) {
+        header("X-Request-Id", stringType())
+        jsonBody(objectType {
+          properties { "message" to stringType() }
+          required("message")
+        })
+      }
+      scenario("404_UNKNOWN_PRODUCT", status = 404) {
+        request { pathParam["id"] = 999 }
+      }
+    }
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When
+    val response = given()
+      .accept("application/json")
+      .get("/v1/products/999")
+
+    // Then
+    response
+      .then()
+      .assertThat()
+      .statusCode(404)
+      .header("X-Request-Id", notNullValue())
+      .contentType("application/json")
+      .body("message", notNullValue())
+  }
+
+  @Test
+  fun `selects generated body content type from Accept header when matching scenario has no response body`() {
+    // Given
+    val operation = apiOperation("GET", "/v1/products/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      response(404) {
+        jsonBody(objectType { properties { "message" to stringType() } })
+        body("application/xml", objectType { properties { "message" to stringType() } }, PlainTextSerde)
+      }
+      scenario("404_UNKNOWN_PRODUCT", status = 404) {
+        request { pathParam["id"] = 999 }
+      }
+    }
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When
+    val response = given()
+      .accept("application/xml;q=0.9, application/json;q=0.5")
+      .get("/v1/products/999")
+
+    // Then
+    response
+      .then()
+      .assertThat()
+      .statusCode(404)
+      .contentType("application/xml")
+  }
+
+  @Test
+  fun `returns 418 when matching scenario has no response body and Accept does not select a content type`() {
+    // Given
+    val operation = apiOperation("GET", "/v1/products/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      response(404) {
+        jsonBody(objectType { properties { "message" to stringType() } })
+        body("application/xml", objectType { properties { "message" to stringType() } }, PlainTextSerde)
+      }
+      scenario("404_UNKNOWN_PRODUCT", status = 404) {
+        request { pathParam["id"] = 999 }
+      }
+    }
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When
+    val response = given()
+      .accept("*/*")
+      .get("/v1/products/999")
+
+    // Then
+    response
+      .then()
+      .assertThat()
+      .statusCode(418)
+      .body(containsString("application/json, application/xml"))
   }
 }

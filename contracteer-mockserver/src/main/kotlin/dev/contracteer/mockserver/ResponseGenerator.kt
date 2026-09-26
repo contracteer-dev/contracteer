@@ -9,11 +9,10 @@ import dev.contracteer.core.operation.*
 
 internal object ResponseGenerator {
 
-  fun fromScenario(scenario: Scenario, responseSchema: ResponseSchema): Result<Response> {
-    return Response(Status.fromCode(scenario.statusCode)!!)
+  fun fromScenario(scenario: Scenario, responseSchema: ResponseSchema, fallbackBodySchema: BodySchema?): Result<Response> =
+    Response(Status.fromCode(scenario.statusCode)!!)
       .withScenarioHeaders(responseSchema.headers, scenario.response.headers)
-      .map { it.withScenarioBody(scenario.response.body, responseSchema) }
-  }
+      .flatMap { it.withScenarioBody(scenario.response.body, responseSchema, fallbackBodySchema) }
 
   fun fromSchema(statusCode: Int, headers: List<ParameterSchema>, bodySchema: BodySchema?): Result<Response> {
     val responseWithHeaders = Response(Status.fromCode(statusCode)!!).withGeneratedHeaders(headers)
@@ -29,8 +28,16 @@ internal object ResponseGenerator {
         .body(bodySchema.serde.serialize(value))
     }
 
-  private fun Response.withScenarioBody(scenarioBody: ScenarioBody?, responseSchema: ResponseSchema): Response {
-    if (scenarioBody == null) return this
+  private fun Response.withScenarioBody(scenarioBody: ScenarioBody?,
+                                        responseSchema: ResponseSchema,
+                                        fallbackBodySchema: BodySchema?): Result<Response> =
+    when {
+      scenarioBody != null       -> success(withExampleBody(scenarioBody, responseSchema))
+      fallbackBodySchema != null -> withGeneratedBody(fallbackBodySchema)
+      else                       -> success(this)
+    }
+
+  private fun Response.withExampleBody(scenarioBody: ScenarioBody, responseSchema: ResponseSchema): Response {
     val bodySchema = responseSchema.bodies.find { it.contentType == scenarioBody.contentType } ?: return this
     return header("Content-Type", scenarioBody.contentType.value)
       .body(bodySchema.serde.serialize(scenarioBody.value))

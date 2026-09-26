@@ -47,8 +47,21 @@ internal object RequestHandler {
 
     val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
     if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
-    return ResponseGenerator.fromScenario(scenario, responseSchema).orTeapot()
+
+    val fallbackBodySchemaResult = selectFallbackBodySchema(request.header("Accept"), scenario, responseSchema, operation)
+    if (fallbackBodySchemaResult !is Success) return teapotResponse(fallbackBodySchemaResult.errors().first())
+
+    return ResponseGenerator.fromScenario(scenario, responseSchema, fallbackBodySchemaResult.value).orTeapot()
   }
+
+  private fun selectFallbackBodySchema(acceptHeader: String?,
+                                       scenario: Scenario,
+                                       responseSchema: ResponseSchema,
+                                       operation: ApiOperation): Result<BodySchema?> =
+    when (scenario.response.body) {
+      null -> selectResponseBody(acceptHeader, responseSchema, operation)
+      else -> success(null)
+    }
 
   private fun handleSchemaOnlyResponse(request: Request, operation: ApiOperation): Response {
     val primaryResult = findPrimaryResponse(operation)
