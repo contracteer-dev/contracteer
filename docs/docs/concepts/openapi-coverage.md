@@ -351,7 +351,7 @@ This is consistent with the OpenAPI Specification, which permits typeless schema
 
 | Feature         | Notes                                                                                                                                                                                     |
 |-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `allOf`         | Single-element accepts any sub-schema type; multi-element requires structured types. Sibling `properties`, `required`, and `additionalProperties` are folded in as an implicit sub-schema. See [`additionalProperties: false` inside `allOf`](#additionalproperties-false-inside-allof) |
+| `allOf`         | Single-element accepts any sub-schema type; multi-element requires structured types. Sibling `properties`, `required`, and `additionalProperties` are folded in as an implicit sub-schema. A `required` name may refer to a property declared by another branch, including through a nested `allOf`. See [`additionalProperties: false` inside `allOf`](#additionalproperties-false-inside-allof) |
 | `oneOf`         | Validates that exactly one sub-schema matches. Sibling `properties`, `required`, and `additionalProperties` are supported                                                                 |
 | `anyOf`         | Validates that at least one sub-schema matches. Sibling `properties`, `required`, and `additionalProperties` are supported                                                                |
 | `discriminator` | `propertyName` and `mapping` on `oneOf`/`anyOf`/`allOf`. See [Discriminator validation](#discriminator-validation)                                                                        |
@@ -359,6 +359,11 @@ This is consistent with the OpenAPI Specification, which permits typeless schema
 A composition whose branches are all objects is accepted wherever a bare object schema is accepted: request and response bodies, parameter styles, content types.
 The same holds for compositions whose branches are all arrays.
 See [Composed schemas with incompatible branches](#composed-schemas-with-incompatible-branches) for the two cases Contracteer rejects at load time.
+
+**`required` across `allOf` branches.**
+A `required` name may refer to a property declared by another `allOf` branch, including one reached through a nested `allOf`.
+Contracteer rejects the OpenAPI document at load time when that property is declared only inside a `oneOf` or `anyOf` branch, where the requirement cannot be enforced, or when the only branch that could declare it is a circular reference.
+A `$ref` to a component that holds only `required` is also rejected, because that component is checked on its own.
 
 ### Discriminator validation
 
