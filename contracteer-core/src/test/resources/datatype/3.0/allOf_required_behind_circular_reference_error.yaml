@@ -1,0 +1,33 @@
+openapi: "3.0.0"
+info:
+  title: Test API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Node'
+      responses:
+        200:
+          description: OK
+
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        label:
+          type: string
+        child:
+          $ref: '#/components/schemas/RequiredNode'
+    RequiredNode:
+      allOf:
+        - $ref: '#/components/schemas/Node'
+        - type: object
+          required:
+            - label

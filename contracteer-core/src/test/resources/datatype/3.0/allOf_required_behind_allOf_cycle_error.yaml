@@ -1,0 +1,41 @@
+openapi: "3.0.0"
+info:
+  title: Test API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first:
+                  $ref: '#/components/schemas/First'
+                delegated:
+                  $ref: '#/components/schemas/DelegatedSecond'
+      responses:
+        200:
+          description: OK
+
+components:
+  schemas:
+    First:
+      allOf:
+        - $ref: '#/components/schemas/Second'
+    Second:
+      allOf:
+        - $ref: '#/components/schemas/First'
+        - type: object
+          properties:
+            label:
+              type: string
+    DelegatedSecond:
+      allOf:
+        - $ref: '#/components/schemas/Second'
+        - type: object
+          required:
+            - middle_name

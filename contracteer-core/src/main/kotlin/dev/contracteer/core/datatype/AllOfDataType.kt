@@ -41,6 +41,9 @@ class AllOfDataType private constructor(name: String,
         else AllOfDataType(name, transformed, outerIsNullable, discriminator, allowedValues)
       }
 
+  internal fun withSubTypes(subTypes: List<DataType<out Any>>): Result<AllOfDataType> =
+    create(name, subTypes, outerIsNullable, discriminator, allowedValues?.asSequence()?.toList().orEmpty())
+
   override fun doValidate(value: Any): Result<Any> {
     if (discriminator != null) {
       val discriminatorResult = validateDiscriminator(value)

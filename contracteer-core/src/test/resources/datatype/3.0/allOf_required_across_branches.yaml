@@ -1,0 +1,87 @@
+openapi: "3.0.0"
+info:
+  title: Test API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  $ref: '#/components/schemas/DelegatedIndividual'
+                requiredBesideAllOf:
+                  $ref: '#/components/schemas/DelegatedIndividualBesideAllOf'
+                typelessRequiredBranch:
+                  $ref: '#/components/schemas/DelegatedIndividualTypeless'
+                declaredInNestedAllOf:
+                  $ref: '#/components/schemas/DelegatedKybIndividual'
+                readOnlyRequired:
+                  $ref: '#/components/schemas/DelegatedIdentifiedIndividual'
+                individual:
+                  $ref: '#/components/schemas/Individual'
+      responses:
+        200:
+          description: OK
+
+components:
+  schemas:
+    Individual:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+    DelegatedIndividual:
+      allOf:
+        - $ref: '#/components/schemas/Individual'
+        - type: object
+          required:
+            - first_name
+            - last_name
+    DelegatedIndividualBesideAllOf:
+      allOf:
+        - $ref: '#/components/schemas/Individual'
+      required:
+        - first_name
+        - last_name
+    DelegatedIndividualTypeless:
+      allOf:
+        - $ref: '#/components/schemas/Individual'
+        - required:
+            - first_name
+            - last_name
+    KybIndividual:
+      allOf:
+        - $ref: '#/components/schemas/Individual'
+        - type: object
+          properties:
+            company:
+              type: string
+    DelegatedKybIndividual:
+      allOf:
+        - $ref: '#/components/schemas/KybIndividual'
+        - type: object
+          required:
+            - first_name
+    IdentifiedIndividual:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+    DelegatedIdentifiedIndividual:
+      allOf:
+        - $ref: '#/components/schemas/IdentifiedIndividual'
+        - type: object
+          required:
+            - id
+            - first_name

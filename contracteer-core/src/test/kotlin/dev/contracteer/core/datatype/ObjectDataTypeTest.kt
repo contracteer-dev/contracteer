@@ -161,6 +161,60 @@ class ObjectDataTypeTest {
   }
 
   @Nested
+  inner class WithRequiredPropertiesAdded {
+
+    @Test
+    fun `adding a required property enforces it and leaves the original unchanged`() {
+      // given
+      val objectDataType = objectType {
+        properties {
+          "first_name" to stringType()
+          "last_name" to stringType()
+        }
+      }
+
+      // when
+      val result = objectDataType.withRequiredProperties(setOf("first_name"))
+
+      // then
+      assert(result.assertSuccess().validate(mapOf("last_name" to "Lovelace")).isFailure())
+      assert(objectDataType.validate(mapOf("last_name" to "Lovelace")).isSuccess())
+    }
+
+    @Test
+    fun `adding required properties fails when they exceed maxProperties`() {
+      // given
+      val objectDataType = objectType(maxProperties = 1) {
+        properties {
+          "first_name" to stringType()
+          "last_name" to stringType()
+        }
+        required("first_name")
+      }
+
+      // when
+      val result = objectDataType.withRequiredProperties(setOf("last_name"))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `adding a required property keeps the enum`() {
+      // given
+      val objectDataType = objectType(enum = listOf(mapOf("first_name" to "Ada"))) {
+        properties { "first_name" to stringType() }
+      }
+
+      // when
+      val result = objectDataType.withRequiredProperties(setOf("first_name"))
+
+      // then
+      assert(result.assertSuccess().validate(mapOf("first_name" to "Grace")).isFailure())
+    }
+  }
+
+  @Nested
   inner class WithAdditionalProperties {
 
     @Test

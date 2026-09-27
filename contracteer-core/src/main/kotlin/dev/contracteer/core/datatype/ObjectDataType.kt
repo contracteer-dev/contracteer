@@ -102,12 +102,19 @@ class ObjectDataType private constructor(name: String,
       .mapNotNull { (dataType.randomValue(ctx) as? Value)?.value }
       .firstOrNull { it !in existingKeys }
 
-  override fun asRequestType(): DataType<Map<String, Any?>> {
-    val transformedProperties = properties.minus(readOnlyProperties).mapValues { (_, v) -> v.asRequestType() }
-    return if (readOnlyProperties.isEmpty() && transformedProperties.all { (k, v) -> v === properties[k] }) this
+  override fun asRequestType(): DataType<Map<String, Any?>> =
+    withoutProperties(readOnlyProperties) { it.asRequestType() }
+
+  override fun asResponseType(): DataType<Map<String, Any?>> =
+    withoutProperties(writeOnlyProperties) { it.asResponseType() }
+
+  private fun withoutProperties(excluded: Set<String>,
+                                view: (DataType<out Any>) -> DataType<out Any>): DataType<Map<String, Any?>> {
+    val transformedProperties = properties.minus(excluded).mapValues { (_, v) -> view(v) }
+    return if (excluded.isEmpty() && transformedProperties.all { (k, v) -> v === properties[k] }) this
     else ObjectDataType(name = name,
                         properties = transformedProperties,
-                        requiredProperties = requiredProperties - readOnlyProperties,
+                        requiredProperties = requiredProperties - excluded,
                         allowAdditionalProperties = allowAdditionalProperties,
                         additionalPropertiesDataType = additionalPropertiesDataType,
                         isNullable = isNullable,
@@ -117,20 +124,19 @@ class ObjectDataType private constructor(name: String,
                         allowedValues = allowedValues)
   }
 
-  override fun asResponseType(): DataType<Map<String, Any?>> {
-    val transformedProperties = properties.minus(writeOnlyProperties).mapValues { (_, v) -> v.asResponseType() }
-    return if (writeOnlyProperties.isEmpty() && transformedProperties.all { (k, v) -> v === properties[k] }) this
-    else ObjectDataType(name = name,
-                        properties = transformedProperties,
-                        requiredProperties = requiredProperties - writeOnlyProperties,
-                        allowAdditionalProperties = allowAdditionalProperties,
-                        additionalPropertiesDataType = additionalPropertiesDataType,
-                        isNullable = isNullable,
-                        minProperties = minProperties,
-                        maxProperties = maxProperties,
-                        propertyNamesDataType = propertyNamesDataType,
-                        allowedValues = allowedValues)
-  }
+  internal fun withRequiredProperties(names: Set<String>): Result<ObjectDataType> =
+    create(name = name,
+           properties = properties,
+           requiredProperties = requiredProperties + names,
+           readOnlyProperties = readOnlyProperties,
+           writeOnlyProperties = writeOnlyProperties,
+           allowAdditionalProperties = allowAdditionalProperties,
+           additionalPropertiesDataType = additionalPropertiesDataType,
+           isNullable = isNullable,
+           enum = allowedValues?.asSequence()?.toList().orEmpty(),
+           minProperties = minProperties,
+           maxProperties = maxProperties,
+           propertyNamesDataType = propertyNamesDataType)
 
   private fun validateProperties(value: Map<String, Any?>): Result<Map<String, Any?>> =
     properties.accumulate { (property, dataType) ->

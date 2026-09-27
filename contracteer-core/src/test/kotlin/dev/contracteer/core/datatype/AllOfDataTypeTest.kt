@@ -2,6 +2,7 @@ package dev.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import dev.contracteer.core.assertSuccess
 import dev.contracteer.core.datatype.GenerationOutcome.Boundary
 import dev.contracteer.core.dsl.allOfType
 import dev.contracteer.core.dsl.booleanType
@@ -150,6 +151,42 @@ class AllOfDataTypeTest {
 
     // then
     assert(result is Boundary)
+  }
+
+  @Nested
+  inner class WithSubTypesReplaced {
+    private val individual = objectType(name = "Individual") { properties { "first_name" to stringType() } }
+    private val requiredIndividual = objectType(name = "Individual") {
+      properties { "first_name" to stringType() }
+      required("first_name")
+    }
+
+    @Test
+    fun `replacing sub-types keeps the name and leaves the original unchanged`() {
+      // given
+      val allOf = allOfType(name = "Delegated") { subType(individual) }
+
+      // when
+      val result = allOf.withSubTypes(listOf(requiredIndividual))
+
+      // then
+      val replaced = result.assertSuccess()
+      assert(replaced.name == "Delegated")
+      assert(replaced.validate(emptyMap<String, Any?>()).isFailure())
+      assert(allOf.validate(emptyMap<String, Any?>()).isSuccess())
+    }
+
+    @Test
+    fun `replacing sub-types keeps the enum`() {
+      // given
+      val allOf = allOfType(enum = listOf(mapOf("first_name" to "Ada"))) { subType(individual) }
+
+      // when
+      val result = allOf.withSubTypes(listOf(requiredIndividual))
+
+      // then
+      assert(result.assertSuccess().validate(mapOf("first_name" to "Grace")).isFailure())
+    }
   }
 
   @Nested

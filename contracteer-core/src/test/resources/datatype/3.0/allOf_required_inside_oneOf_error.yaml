@@ -1,0 +1,38 @@
+openapi: "3.0.0"
+info:
+  title: Test API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DelegatedParty'
+      responses:
+        200:
+          description: OK
+
+components:
+  schemas:
+    Individual:
+      type: object
+      properties:
+        first_name:
+          type: string
+    Business:
+      type: object
+      properties:
+        legal_name:
+          type: string
+    DelegatedParty:
+      allOf:
+        - oneOf:
+            - $ref: '#/components/schemas/Individual'
+            - $ref: '#/components/schemas/Business'
+        - type: object
+          required:
+            - first_name

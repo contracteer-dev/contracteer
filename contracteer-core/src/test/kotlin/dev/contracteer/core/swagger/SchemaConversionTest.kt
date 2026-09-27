@@ -899,6 +899,130 @@ class SchemaConversionTest {
     assert(allOfDataType.validate(mapOf("name" to "Kitty", "huntingSkill" to "lazy")).isSuccess())
   }
 
+  @ParameterizedTest(name = "extract AllOfDataType enforcing a required property declared by a sibling branch (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract AllOfDataType enforcing a required property declared by a sibling branch`(version: String) {
+    // when
+    val allOfDataType = getDataType(version, "allOf_required_across_branches.yaml") as AllOfDataType
+
+    // then
+    assert(allOfDataType.validate(mapOf("first_name" to "Ada", "last_name" to "Lovelace")).isSuccess())
+    assert(allOfDataType.validate(mapOf("last_name" to "Lovelace")).isFailure())
+  }
+
+  @Test
+  fun `extract AllOfDataType enforcing a required property declared beside allOf`() {
+    // when
+    val allOfDataType = getDataType("3.0", "allOf_required_across_branches.yaml", "requiredBesideAllOf") as AllOfDataType
+
+    // then
+    assert(allOfDataType.validate(mapOf("first_name" to "Ada", "last_name" to "Lovelace")).isSuccess())
+    assert(allOfDataType.validate(mapOf("last_name" to "Lovelace")).isFailure())
+  }
+
+  @Test
+  fun `extract AllOfDataType enforcing a required property from a typeless branch`() {
+    // when
+    val allOfDataType = getDataType("3.0", "allOf_required_across_branches.yaml", "typelessRequiredBranch") as AllOfDataType
+
+    // then
+    assert(allOfDataType.validate(mapOf("first_name" to "Ada", "last_name" to "Lovelace")).isSuccess())
+    assert(allOfDataType.validate(mapOf("last_name" to "Lovelace")).isFailure())
+  }
+
+  @Test
+  fun `extract AllOfDataType enforcing a required property declared in a nested allOf`() {
+    // when
+    val allOfDataType = getDataType("3.0", "allOf_required_across_branches.yaml", "declaredInNestedAllOf") as AllOfDataType
+
+    // then
+    assert(allOfDataType.validate(mapOf("first_name" to "Ada", "company" to "Analytical Engines")).isSuccess())
+    assert(allOfDataType.validate(mapOf("company" to "Analytical Engines")).isFailure())
+  }
+
+  @Test
+  fun `extract AllOfDataType generating the required property declared by a sibling branch`() {
+    // given
+    val allOfDataType = getDataType("3.0", "allOf_required_across_branches.yaml") as AllOfDataType
+
+    // when
+    val values = (1..20).map { allOfDataType.randomValue() }
+
+    // then
+    assert(values.all { allOfDataType.validate(it).isSuccess() })
+  }
+
+  @Test
+  fun `extract AllOfDataType dropping a required readOnly property from the request`() {
+    // when
+    val allOfDataType = getDataType("3.0", "allOf_required_across_branches.yaml", "readOnlyRequired") as AllOfDataType
+
+    // then
+    assert(allOfDataType.validate(mapOf("first_name" to "Ada")).isSuccess())
+    assert(allOfDataType.validate(emptyMap<String, Any?>()).isFailure())
+  }
+
+  @Test
+  fun `extract the declaring component unchanged when an allOf requires one of its properties`() {
+    // when
+    val individual = getDataType("3.0", "allOf_required_across_branches.yaml", "individual") as ObjectDataType
+
+    // then
+    assert(individual.requiredProperties.isEmpty())
+  }
+
+  @Test
+  fun `does not extract AllOfDataType when a required property is declared by no branch`() {
+    // when
+    val result = loadOperations("3.0", "allOf_required_not_declared_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.single().contains("The following required properties are not defined in the schema: 'middle_name'"))
+  }
+
+  @Test
+  fun `does not extract AllOfDataType when a required property is declared only inside oneOf`() {
+    // when
+    val result = loadOperations("3.0", "allOf_required_inside_oneOf_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.single().contains("declared only inside 'oneOf' or 'anyOf'"))
+    assert(errors.single().contains("'first_name'"))
+  }
+
+  @Test
+  fun `does not extract AllOfDataType when a required property may be declared behind a circular reference`() {
+    // when
+    val result = loadOperations("3.0", "allOf_required_behind_circular_reference_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.single().contains("not declared by any 'allOf' branch that can be inspected: 'label'"))
+    assert(errors.single().contains("Branch 'Node' is a circular reference."))
+  }
+
+  @Test
+  fun `extract AllOfDataType enforcing a required property declared behind a resolved circular reference`() {
+    // when
+    val allOfDataType = getDataType("3.0", "allOf_required_behind_resolved_circular_reference.yaml") as AllOfDataType
+
+    // then
+    assert(allOfDataType.validate(mapOf("label" to "root")).isSuccess())
+    assert(allOfDataType.validate(mapOf("depth" to 1)).isFailure())
+  }
+
+  @Test
+  fun `does not extract AllOfDataType when a required property is declared by no branch of an allOf cycle`() {
+    // when
+    val result = loadOperations("3.0", "allOf_required_behind_allOf_cycle_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("The following required properties are not defined in the schema: 'middle_name'") })
+  }
+
   @Test
   fun `extract AllOfDataType wrapping oneOf when oneOf has sibling properties`() {
     // when

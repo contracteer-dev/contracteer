@@ -20,7 +20,8 @@ internal object ObjectDataTypeConverter {
 
   fun convert(
     schema: Schema<*>,
-    convert: (Schema<*>, String) -> Result<DataType<out Any>>): Result<ObjectDataType> {
+    convert: (Schema<*>, String) -> Result<DataType<out Any>>,
+    localRequiredOnly: Boolean = false): Result<ObjectDataType> {
 
     val booleanShorthand = additionalPropertiesAsBoolean(schema.additionalProperties)
     val (allowAdditionalProperties, additionalPropertiesSchema) = when {
@@ -46,7 +47,7 @@ internal object ObjectDataTypeConverter {
       ObjectDataType.create(
         name = schema.name,
         properties = properties,
-        requiredProperties = schema.required?.toSet() ?: emptySet(),
+        requiredProperties = schema.requiredProperties(localRequiredOnly),
         readOnlyProperties = readOnlyProps,
         writeOnlyProperties = writeOnlyProps,
         allowAdditionalProperties = allowAdditionalProperties,
@@ -82,12 +83,19 @@ internal object ObjectDataTypeConverter {
   }
 
   fun convertSiblingObject(schema: Schema<*>,
-                           convert: (Schema<*>, String) -> Result<DataType<out Any>>): Result<DataType<out Any>>? {
-    return if (schema.properties != null || schema.required != null || schema.additionalProperties != null)
-      convert(schema, convert)
+                           convert: (Schema<*>, String) -> Result<DataType<out Any>>,
+                           localRequiredOnly: Boolean = false): Result<DataType<out Any>>? {
+    val requiredTriggersConversion = schema.required != null && !localRequiredOnly
+    return if (schema.properties != null || requiredTriggersConversion || schema.additionalProperties != null)
+      convert(schema, convert, localRequiredOnly)
     else
       null
   }
+
+  private fun Schema<*>.requiredProperties(localRequiredOnly: Boolean): Set<String> =
+    required.orEmpty()
+      .filter { !localRequiredOnly || it in safeProperties() }
+      .toSet()
 
   private fun additionalPropertiesAsBoolean(value: Any?): Boolean? =
     when (value) {

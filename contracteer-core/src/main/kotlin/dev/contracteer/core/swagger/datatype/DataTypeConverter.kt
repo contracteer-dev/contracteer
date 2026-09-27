@@ -83,7 +83,9 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
   private fun displayName(ref: String): String =
     ref.removePrefix(Components.COMPONENTS_SCHEMAS_REF)
 
-  private fun convertSchema(schema: Schema<*>, schemaName: String): Result<DataType<out Any>> {
+  private fun convertSchema(schema: Schema<*>,
+                            schemaName: String,
+                            localRequiredOnly: Boolean = false): Result<DataType<out Any>> {
     schema.name = schemaName
     logger.debug { "Creating Datatype for Schema '${schema.name}'" }
     val convert = { s: Schema<*>, name: String -> convertToDataType(s, name) }
@@ -98,7 +100,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema)
       contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
       contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema)
-      schema.isObjectLike()                                         -> ObjectDataTypeConverter.convert(schema, convert)
+      schema.isObjectLike()                                         -> ObjectDataTypeConverter.convert(schema, convert, localRequiredOnly)
       schema.isArrayLike()                                          -> ArrayDataTypeConverter.convert(schema, convert)
       type == "boolean"                                             -> BooleanDataTypeConverter.convert(schema)
       type == "integer"                                             -> IntegerDataTypeConverter.convert(schema)
@@ -156,16 +158,15 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     if (keywords.size > 1)
       return failure("Schema '${schema.name}' combines multiple composition keywords (${keywords.joinToString(", ")}). Only one of 'allOf', 'anyOf', or 'oneOf' per schema is supported.")
 
-    val compositionResult = when {
-      schema.allOf != null -> AllOfDataTypeConverter.convert(schema, convert, discriminator)
-      schema.anyOf != null -> AnyOfDataTypeConverter.convert(schema, convert, discriminator)
-      else                 -> OneOfDataTypeConverter.convert(schema, convert, discriminator)
-    }
+    if (schema.allOf != null)
+      return AllOfDataTypeConverter.convert(schema, convert, ::convertAllOfBranch, discriminator)
+
+    val compositionResult =
+      if (schema.anyOf != null) AnyOfDataTypeConverter.convert(schema, convert, discriminator)
+      else OneOfDataTypeConverter.convert(schema, convert, discriminator)
 
     val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert)
                         ?: return compositionResult
-
-    if (schema.allOf != null) return compositionResult
 
     if (compositionResult !is Success || siblingResult !is Success)
       return (compositionResult combineWith siblingResult).retypeError()
@@ -174,6 +175,9 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       name = schema.name,
       subTypes = listOf(compositionResult.value, siblingResult.value))
   }
+
+  private fun convertAllOfBranch(schema: Schema<*>, schemaName: String): Result<DataType<out Any>> =
+    convertSchema(schema, schemaName, localRequiredOnly = true)
 
   private fun unsupportedContentEncoding(schema: Schema<*>, value: String): Result<DataType<out Any>> =
     failure("Schema '${schema.name}': contentEncoding='$value' is not supported. Only 'base64' is supported in OAS 3.1.")
