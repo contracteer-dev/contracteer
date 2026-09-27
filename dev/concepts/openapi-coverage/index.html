@@ -2453,7 +2453,7 @@ This is consistent with the OpenAPI Specification, which permits typeless schema
 <tbody>
 <tr>
 <td><code>allOf</code></td>
-<td>Single-element accepts any sub-schema type; multi-element requires structured types. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are folded in as an implicit sub-schema. See <a href="#additionalproperties-false-inside-allof"><code>additionalProperties: false</code> inside <code>allOf</code></a></td>
+<td>Single-element accepts any sub-schema type; multi-element requires structured types. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are folded in as an implicit sub-schema. A <code>required</code> name may refer to a property declared by another branch, including through a nested <code>allOf</code>. See <a href="#additionalproperties-false-inside-allof"><code>additionalProperties: false</code> inside <code>allOf</code></a></td>
 </tr>
 <tr>
 <td><code>oneOf</code></td>
@@ -2472,6 +2472,10 @@ This is consistent with the OpenAPI Specification, which permits typeless schema
 <p>A composition whose branches are all objects is accepted wherever a bare object schema is accepted: request and response bodies, parameter styles, content types.
 The same holds for compositions whose branches are all arrays.
 See <a href="#composed-schemas-with-incompatible-branches">Composed schemas with incompatible branches</a> for the two cases Contracteer rejects at load time.</p>
+<p><strong><code>required</code> across <code>allOf</code> branches.</strong>
+A <code>required</code> name may refer to a property declared by another <code>allOf</code> branch, including one reached through a nested <code>allOf</code>.
+Contracteer rejects the OpenAPI document at load time when that property is declared only inside a <code>oneOf</code> or <code>anyOf</code> branch, where the requirement cannot be enforced, or when the only branch that could declare it is a circular reference.
+A <code>$ref</code> to a component that holds only <code>required</code> is also rejected, because that component is checked on its own.</p>
 <h3 id="discriminator-validation">Discriminator validation<a class="headerlink" href="#discriminator-validation" title="Permanent link">&para;</a></h3>
 <p>Contracteer uses the discriminator as a hint to select which sub-schema in a <code>oneOf</code>, <code>anyOf</code>, or <code>allOf</code> composition validates the body.
 When the discriminator cannot identify a single sub-schema, Contracteer follows the OpenAPI rule that "discriminator MUST NOT change the validation outcome of the schema".</p>
