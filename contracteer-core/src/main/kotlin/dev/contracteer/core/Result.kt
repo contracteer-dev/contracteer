@@ -5,6 +5,7 @@ package dev.contracteer.core
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.Result.Failure
 import dev.contracteer.core.Result.Success
+import dev.contracteer.core.ResultScope.bind
 
 /**
  * Outcome of a validation or creation operation that is either a [Success] carrying a [value][Success.value],
@@ -24,22 +25,22 @@ sealed class Result<out T> {
   /** Returns a new result with every error path prefixed by [propertyName]. */
   fun forProperty(propertyName: String): Result<T> = when (this) {
     is Success -> this
-    is Failure -> Failure(propertyErrors.map { it.prependProperty(propertyName) })
+    is Failure -> Failure(propertyErrors.map { it.prependProperty(propertyName) }, truncated)
   }
 
   /** Returns a new result with every error path prefixed by the array index `[index]`. */
   fun forIndex(index: Int): Result<T> = when (this) {
     is Success -> this
-    is Failure -> Failure(propertyErrors.map { it.prependIndex(index) })
+    is Failure -> Failure(propertyErrors.map { it.prependIndex(index) }, truncated)
   }
 
   /** Returns a new result with every error path prefixed by the named key `[key]`. Used for parameter names, status codes, content types — selections from a named set. */
   fun forKey(key: String): Result<T> = forProperty("[$key]")
 
-  /** Returns the list of human-readable error messages, each prefixed with its property path. */
+  /** Returns the list of human-readable error messages, each prefixed with its property path, followed by a truncation notice when errors were dropped past the cap. */
   fun errors(): List<String> = when (this) {
     is Success -> emptyList()
-    is Failure -> propertyErrors.map { it.errorMessage() }
+    is Failure -> propertyErrors.map { it.errorMessage() } + listOfNotNull(truncationNotice(truncated))
   }
 
   /** Transforms the success value with [transform]; propagates errors unchanged on failure. */
@@ -54,10 +55,13 @@ sealed class Result<out T> {
     is Failure -> this
   }
 
-  /** Transforms every rendered error message (including its property path) with [transform]; returns this result unchanged on success. Property paths are flattened into the message text — subsequent [forProperty] calls will not compose with the original path. */
+  /** Transforms every rendered error message (including its property path) with [transform]; returns this result
+   * unchanged on success. Property paths are flattened into the message text — subsequent [forProperty] calls
+   * will not compose with the original path. The truncation notice is not transformed.
+   * */
   fun mapErrors(transform: (String) -> String): Result<T> = when (this) {
     is Success -> this
-    is Failure -> Failure(propertyErrors.map { PropertyError("", transform(it.errorMessage())) })
+    is Failure -> Failure(propertyErrors.map { PropertyError("", transform(it.errorMessage())) }, truncated)
   }
 
   /** Re-types a failure result to a different value type. Throws on success. */
@@ -69,15 +73,12 @@ sealed class Result<out T> {
   /** Merges this result with [other], succeeding only if both succeed, and accumulating all errors otherwise. */
   infix fun combineWith(other: Result<*>): Result<Unit> =
     if (this is Success && other is Success) Success(Unit)
-    else Failure(cappedErrors(this.propertyErrors(), other.propertyErrors()))
+    else cappedFailure(this, other)
 
   /** Chains a follow-up validation: on success, runs [next]; on failure, accumulates errors from both this result and [next]. */
   infix fun <E> andThen(next: () -> Result<E>): Result<E> = when (this) {
     is Success -> next()
-    is Failure -> {
-      val nextResult = next()
-      Failure(cappedErrors(propertyErrors, nextResult.propertyErrors()))
-    }
+    is Failure -> cappedFailure(this, next())
   }
 
   override fun toString() = when (this) {
@@ -90,23 +91,33 @@ sealed class Result<out T> {
     is Failure -> propertyErrors
   }
 
+  private fun truncated(): Int = when (this) {
+    is Success -> 0
+    is Failure -> truncated
+  }
+
   /** A successful result carrying a [value]. */
   class Success<out T>(val value: T): Result<T>()
 
   /** A failed result carrying one or more property-scoped error messages. */
   class Failure internal constructor(
-    internal val propertyErrors: List<PropertyError>
+    internal val propertyErrors: List<PropertyError>,
+    internal val truncated: Int = 0
   ): Result<Nothing>()
 
   companion object {
     private const val MAX_ERRORS = 25
 
-    private fun cappedErrors(left: List<PropertyError>, right: List<PropertyError>): List<PropertyError> {
-      val combined = left + right
-      return if (combined.size <= MAX_ERRORS)
-        combined
-      else
-        combined.take(MAX_ERRORS - 1) + PropertyError(error = "${combined.size - MAX_ERRORS + 1} additional errors were truncated")
+    private fun cappedFailure(left: Result<*>, right: Result<*>): Failure {
+      val combined = left.propertyErrors() + right.propertyErrors()
+      val overflow = (combined.size - MAX_ERRORS).coerceAtLeast(0)
+      return Failure(combined.take(MAX_ERRORS), left.truncated() + right.truncated() + overflow)
+    }
+
+    private fun truncationNotice(truncated: Int): String? = when (truncated) {
+      0    -> null
+      1    -> "1 additional error was truncated"
+      else -> "$truncated additional errors were truncated"
     }
 
     /** Creates a successful result carrying [value]. */

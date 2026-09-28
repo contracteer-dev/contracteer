@@ -79,14 +79,25 @@ class ResultErrorAccumulationTest {
   // -- Error accumulation cap --
 
   @Test
-  fun `accumulate caps errors at 25 with truncation message`() {
+  fun `accumulate keeps 25 errors and reports how many were truncated`() {
     // when
     val result = (1..30).toList().accumulate { failure<Int>("error $it") }
 
     // then
     val errors = result.assertFailure()
-    assert(errors.size == 25)
-    assert(errors.last().contains("additional errors were truncated"))
+    assert(errors.size == 26)
+    assert(errors[24] == "error 25")
+    assert(errors.last() == "5 additional errors were truncated")
+  }
+
+  @Test
+  fun `accumulate reports a single truncated error in the singular`() {
+    // when
+    val result = (1..26).toList().accumulate { failure<Int>("error $it") }
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.last() == "1 additional error was truncated")
   }
 
   @Test
@@ -100,7 +111,7 @@ class ResultErrorAccumulationTest {
   }
 
   @Test
-  fun `andThen caps errors at 25 with truncation message`() {
+  fun `andThen keeps 25 errors and reports how many were truncated`() {
     // given
     val first = (1..15).toList().accumulate { failure<Int>("error $it") }
 
@@ -109,7 +120,52 @@ class ResultErrorAccumulationTest {
 
     // then
     val errors = result.assertFailure()
-    assert(errors.size == 25)
-    assert(errors.last().contains("additional errors were truncated"))
+    assert(errors.size == 26)
+    assert(errors.last() == "15 additional errors were truncated")
+  }
+
+  @Test
+  fun `combineWith sums the truncated counts of both results`() {
+    // given
+    val first = (1..30).toList().accumulate { failure<Int>("first $it") }
+    val second = (1..30).toList().accumulate { failure<Int>("second $it") }
+
+    // when
+    val result = first combineWith second
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.size == 26)
+    assert(errors.last() == "35 additional errors were truncated")
+  }
+
+  @Test
+  fun `forProperty keeps the truncated count and renders it once without a path`() {
+    // given
+    val truncated = (1..30).toList().accumulate { failure<Int>("error $it") }
+
+    // when
+    val result = truncated.forProperty("items")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.size == 26)
+    assert(errors.first() == "'items': error 1")
+    assert(errors.last() == "5 additional errors were truncated")
+  }
+
+  @Test
+  fun `mapErrors keeps the truncated count and does not transform the truncation line`() {
+    // given
+    val truncated = (1..30).toList().accumulate { failure<Int>("error $it") }
+
+    // when
+    val result = truncated.mapErrors { "GET /items: $it" }
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.size == 26)
+    assert(errors.first() == "GET /items: error 1")
+    assert(errors.last() == "5 additional errors were truncated")
   }
 }
