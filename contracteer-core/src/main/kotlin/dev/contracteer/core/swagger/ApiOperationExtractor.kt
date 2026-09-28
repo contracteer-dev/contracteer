@@ -5,10 +5,10 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.parameters.Parameter
+import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
-import dev.contracteer.core.Result.Failure
 import dev.contracteer.core.Result.Success
 import dev.contracteer.core.combineResults
 import dev.contracteer.core.operation.ApiOperation
@@ -44,8 +44,8 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
     return value.readOperationsMap().map { (method, operation) ->
       resolvedPathParams
         .flatMap { pathParams -> normalizeOperationParameters(operation, pathParams) }
-        .mapErrors { "${method.name.uppercase()} $key: $it" }
         .flatMap { extractApiOperation(method.name, key, operation) }
+        .forOperation(OperationRef(method.name, key))
     }
   }
 
@@ -71,9 +71,9 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
     val extractedDefault = extractDefaultResponse(operation)
 
     if (!(extractedRequest is Success && extractedByStatusCode is Success && extractedByClass is Success && extractedDefault is Success))
-      return (extractedRequest combineWith extractedByStatusCode combineWith extractedByClass combineWith extractedDefault)
-        .mapErrors { "${method.uppercase()} $path: $it" }
-        .retypeError<ApiOperation>()
+      return (extractedRequest combineWith
+          extractedByStatusCode combineWith
+          extractedByClass combineWith extractedDefault).retypeError()
 
     val requestSchema = extractedRequest.value.toRequestSchema()
     val responseSchemas = ResponseSchemas(
@@ -82,18 +82,15 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
       extractedDefault.value?.toResponseSchema()
     )
 
-    return when (val headValidation = validateHeadResponses(method, responseSchemas)) {
-      is Failure -> headValidation.mapErrors { "${method.uppercase()} $path: $it" }.retypeError()
-      else       ->
-        ScenarioBuilder
-          .buildScenarios(method,
-                          path,
-                          extractedRequest.value,
-                          extractedByStatusCode.value,
-                          extractedByClass.value,
-                          extractedDefault.value)
-          .map { scenarios -> ApiOperation(path, method, requestSchema, responseSchemas, scenarios) }
-          .mapErrors { "${method.uppercase()} $path: $it" }
+    return validateHeadResponses(method, responseSchemas).flatMap {
+      ScenarioBuilder
+        .buildScenarios(method,
+                        path,
+                        extractedRequest.value,
+                        extractedByStatusCode.value,
+                        extractedByClass.value,
+                        extractedDefault.value)
+        .map { scenarios -> ApiOperation(path, method, requestSchema, responseSchemas, scenarios) }
     }
   }
 

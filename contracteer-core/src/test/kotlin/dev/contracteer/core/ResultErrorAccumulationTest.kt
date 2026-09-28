@@ -168,4 +168,19 @@ class ResultErrorAccumulationTest {
     assert(errors.first() == "GET /items: error 1")
     assert(errors.last() == "5 additional errors were truncated")
   }
+
+  @Test
+  fun `forOperation keeps the truncated count and renders the truncation line without the operation`() {
+    // given
+    val truncated = (1..30).toList().accumulate { failure<Int>("error $it") }
+
+    // when
+    val result = truncated.forOperation(OperationRef("GET", "/items"))
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.size == 26)
+    assert(errors.first() == "GET /items: error 1")
+    assert(errors.last() == "5 additional errors were truncated")
+  }
 }

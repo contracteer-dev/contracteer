@@ -9,7 +9,7 @@ import dev.contracteer.core.ResultScope.bind
 
 /**
  * Outcome of a validation or creation operation that is either a [Success] carrying a [value][Success.value],
- * or a [Failure] carrying one or more property-scoped error messages.
+ * or a [Failure] carrying one or more property-scoped [Diagnostic]s.
  *
  * Errors are tracked with dotted property paths (e.g. `address.street`) so that validation messages
  * can pinpoint the exact location of a problem inside nested structures.
@@ -43,6 +43,20 @@ sealed class Result<out T> {
     is Failure -> propertyErrors.map { it.errorMessage() } + listOfNotNull(truncationNotice(truncated))
   }
 
+  /** Returns the diagnostics carried by this result; empty on success. Property paths are not part of the diagnostics:
+   * they appear only in [errors]. The truncation notice is not a diagnostic.
+   * */
+  fun diagnostics(): List<Diagnostic> = when (this) {
+    is Success -> emptyList()
+    is Failure -> propertyErrors.map { it.diagnostic }
+  }
+
+  /** Returns a new result with [operation] set on every diagnostic; rendered errors are prefixed with it. */
+  internal fun forOperation(operation: OperationRef): Result<T> = when (this) {
+    is Success -> this
+    is Failure -> Failure(propertyErrors.map { it.withOperation(operation) }, truncated)
+  }
+
   /** Transforms the success value with [transform]; propagates errors unchanged on failure. */
   fun <R> map(transform: (T) -> R): Result<R> = when (this) {
     is Success -> Success(transform(value))
@@ -55,13 +69,14 @@ sealed class Result<out T> {
     is Failure -> this
   }
 
-  /** Transforms every rendered error message (including its property path) with [transform]; returns this result
+  /** Transforms every error message, including its property path but not its operation prefix, with [transform]; returns this result
    * unchanged on success. Property paths are flattened into the message text — subsequent [forProperty] calls
-   * will not compose with the original path. The truncation notice is not transformed.
+   * will not compose with the original path. Each transformed message becomes a freeform diagnostic that keeps
+   * its operation. The truncation notice is not transformed.
    * */
   fun mapErrors(transform: (String) -> String): Result<T> = when (this) {
     is Success -> this
-    is Failure -> Failure(propertyErrors.map { PropertyError("", transform(it.errorMessage())) }, truncated)
+    is Failure -> Failure(propertyErrors.map { it.mapMessage(transform) }, truncated)
   }
 
   /** Re-types a failure result to a different value type. Throws on success. */
@@ -99,7 +114,7 @@ sealed class Result<out T> {
   /** A successful result carrying a [value]. */
   class Success<out T>(val value: T): Result<T>()
 
-  /** A failed result carrying one or more property-scoped error messages. */
+  /** A failed result carrying one or more property-scoped diagnostics. */
   class Failure internal constructor(
     internal val propertyErrors: List<PropertyError>,
     internal val truncated: Int = 0
@@ -131,33 +146,48 @@ sealed class Result<out T> {
     /** Creates a failed result with the given error messages, not scoped to any property. */
     @JvmStatic
     fun <T> failure(vararg errors: String): Result<T> =
-      Failure(errors.map { PropertyError(error = it) })
+      Failure(errors.map { PropertyError(diagnostic = Diagnostic(it)) })
+
+    /** Creates a failed result with [diagnostic], not scoped to any property. */
+    @JvmStatic
+    fun <T> failure(diagnostic: Diagnostic): Result<T> =
+      Failure(listOf(PropertyError(diagnostic = diagnostic)))
 
     /** Creates a failed result with [error] scoped to the array element at [propertyIndex]. */
     @JvmStatic
     fun <T> failure(propertyIndex: Int, error: String): Result<T> =
-      Failure(listOf(PropertyError(propertyIndex, error)))
+      Failure(listOf(PropertyError(propertyIndex, Diagnostic(error))))
 
     /** Creates a failed result with [error] scoped to the property named [propertyName]. */
     @JvmStatic
     fun <T> failure(propertyName: String, error: String): Result<T> =
-      Failure(listOf(PropertyError(propertyName, error)))
+      Failure(listOf(PropertyError(propertyName, Diagnostic(error))))
 
     /** Creates a failed result with [error] scoped to the named key `[key]`. Used for parameter names, status codes, content types. */
     @JvmStatic
     fun <T> failureForKey(key: String, error: String): Result<T> =
-      Failure(listOf(PropertyError("[$key]", error)))
+      Failure(listOf(PropertyError("[$key]", Diagnostic(error))))
   }
 
-  internal class PropertyError(val path: String = "", val error: String) {
-    constructor(index: Int, error: String): this("[$index]", error)
+  internal class PropertyError(val path: String = "", val diagnostic: Diagnostic) {
+    constructor(index: Int, diagnostic: Diagnostic): this("[$index]", diagnostic)
 
     fun prependProperty(propertyName: String) =
-      PropertyError(buildPath(propertyName), error)
+      PropertyError(buildPath(propertyName), diagnostic)
 
     fun prependIndex(index: Int) = prependProperty("[$index]")
 
-    fun errorMessage() = if (path.isEmpty()) error else "'$path': $error"
+    fun withOperation(operation: OperationRef) =
+      PropertyError(path, diagnostic.copy(operation = operation))
+
+    fun mapMessage(transform: (String) -> String) =
+      PropertyError(diagnostic = Diagnostic(transform(locatedMessage()), operation = diagnostic.operation))
+
+    fun errorMessage() = operationPrefix() + locatedMessage()
+
+    private fun locatedMessage() = if (path.isEmpty()) diagnostic.message else "'$path': ${diagnostic.message}"
+
+    private fun operationPrefix() = diagnostic.operation?.let { "${it.method} ${it.path}: " } ?: ""
 
     private fun buildPath(propertyName: String) = when {
       propertyName.isEmpty() -> path
