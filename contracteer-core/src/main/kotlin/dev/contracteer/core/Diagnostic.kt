@@ -10,8 +10,8 @@ package dev.contracteer.core
  * @property message the human-readable description of the finding.
  * @property keyword the constraint or rule the finding is about (e.g. `maxItems`, `enum`); `null` when freeform.
  * @property operation the operation the finding belongs to; `null` when it belongs to none.
- * @property category what kind of finding this is; `null` until the reporting layer assigns it.
- * @property severity how serious the finding is; `null` until the reporting layer assigns it.
+ * @property category what kind of finding this is; `null` until assigned (a report assigns one to every finding).
+ * @property severity how serious the finding is; `null` until assigned (a report assigns one to every finding).
  */
 data class Diagnostic @JvmOverloads constructor(
   val message: String,

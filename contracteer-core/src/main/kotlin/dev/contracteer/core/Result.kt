@@ -57,6 +57,12 @@ sealed class Result<out T> {
     is Failure -> Failure(propertyErrors.map { it.withOperation(operation) }, truncated)
   }
 
+  /** Returns a new result with [category] and [severity] set on every diagnostic that has none; assigned ones are kept. */
+  internal fun withDefaults(category: DiagnosticCategory, severity: Severity): Result<T> = when (this) {
+    is Success -> this
+    is Failure -> Failure(propertyErrors.map { it.withDefaults(category, severity) }, truncated)
+  }
+
   /** Transforms the success value with [transform]; propagates errors unchanged on failure. */
   fun <R> map(transform: (T) -> R): Result<R> = when (this) {
     is Success -> Success(transform(value))
@@ -179,6 +185,9 @@ sealed class Result<out T> {
 
     fun withOperation(operation: OperationRef) =
       PropertyError(path, diagnostic.copy(operation = operation))
+
+    fun withDefaults(category: DiagnosticCategory, severity: Severity) =
+      PropertyError(path, diagnostic.copy(category = diagnostic.category ?: category, severity = diagnostic.severity ?: severity))
 
     fun mapMessage(transform: (String) -> String) =
       PropertyError(diagnostic = Diagnostic(transform(locatedMessage()), operation = diagnostic.operation))

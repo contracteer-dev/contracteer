@@ -5,9 +5,14 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import io.swagger.v3.parser.util.DeserializationUtils
+import dev.contracteer.core.DiagnosticCategory.EXECUTION_ERROR
+import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
+import dev.contracteer.core.Result.Failure
+import dev.contracteer.core.Result.Success
+import dev.contracteer.core.Severity.ERROR
 import dev.contracteer.core.operation.ApiOperation
 import dev.contracteer.core.result
 import java.io.File
@@ -25,6 +30,16 @@ object OpenApiLoader {
   }
 
   /**
+   * Parses the OpenAPI document at the given [path] and reports the outcome: the extracted operations, or the
+   * diagnostics that stopped the load. A failure to read the document is an [EXECUTION_ERROR]; any other failure
+   * is a [SPEC] finding.
+   *
+   * @param path a local file path, an HTTP(S) URL, or a `classpath:` resource path to an OpenAPI 3.0.x or 3.1.x document
+   */
+  @JvmStatic
+  fun load(path: String): LoadReport = loadOperations(path).toLoadReport(path)
+
+  /**
    * Parses the OpenAPI document at the given [path] and extracts all API operations.
    *
    * @param path a local file path, an HTTP(S) URL, or a `classpath:` resource path to an OpenAPI 3.0.x or 3.1.x document
@@ -34,7 +49,7 @@ object OpenApiLoader {
   @JvmStatic
   fun loadOperations(path: String): Result<List<ApiOperation>> =
     result {
-      val content = path.loadOpenApiDocument().bind()
+      val content = path.loadOpenApiDocument().withDefaults(EXECUTION_ERROR, ERROR).bind()
       checkSupportedVersion(content).bind()
       val openAPI = parse(content).bind()
       val sharedComponents = SharedComponents(
@@ -47,6 +62,11 @@ object OpenApiLoader {
       )
       ApiOperationExtractor(sharedComponents).extract(openAPI).bind()
     }
+
+  private fun Result<List<ApiOperation>>.toLoadReport(source: String): LoadReport = when (this) {
+    is Success -> LoadReport.Loaded(source, value)
+    is Failure -> LoadReport.Failed(source, withDefaults(SPEC, ERROR).diagnostics(), truncated)
+  }
 
   private fun checkSupportedVersion(content: String): Result<Unit> =
     when (val declared = readDeclaredVersion(content)) {

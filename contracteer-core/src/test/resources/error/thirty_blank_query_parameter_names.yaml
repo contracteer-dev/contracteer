@@ -1,0 +1,305 @@
+openapi: 3.0.0
+info:
+  title: Thirty Blank Query Parameter Names
+  version: '1.0'
+paths:
+  /search1:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search2:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search3:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search4:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search5:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search6:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search7:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search8:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search9:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search10:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search11:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search12:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search13:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search14:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search15:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search16:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search17:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search18:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search19:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search20:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search21:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search22:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search23:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search24:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search25:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search26:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search27:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search28:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search29:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /search30:
+    get:
+      parameters:
+        - in: query
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
