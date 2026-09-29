@@ -1965,11 +1965,11 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 <tbody>
 <tr>
 <td><code>application/xml</code></td>
-<td>Operations with XML-only content types are skipped with a warning.</td>
+<td>XML bodies are skipped with a warning, along with the scenarios that use them. A response with only XML bodies is skipped, along with the scenarios that target it. An operation is skipped when no request body or no response remains.</td>
 </tr>
 <tr>
 <td>Missing schema on body or parameter content</td>
-<td>Operations with request/response bodies or parameter <code>content</code> entries that have no schema are skipped with a warning. Exception: bodies declared with a binary content type (<code>application/octet-stream</code>, <code>image/*</code>, etc.) default to binary content.</td>
+<td>A body with no schema is skipped with a warning, under the same rules as XML. An operation with a parameter <code>content</code> entry that has no schema is skipped. Exception: bodies declared with a binary content type (<code>application/octet-stream</code>, <code>image/*</code>, etc.) default to binary content.</td>
 </tr>
 <tr>
 <td>Empty schema (<code>schema: {}</code>)</td>
