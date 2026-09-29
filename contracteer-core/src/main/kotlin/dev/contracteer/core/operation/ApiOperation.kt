@@ -90,10 +90,22 @@ data class ResponseSchemas(
       else -> Ambiguous(declaredResponses(), candidates.keys.sorted())
     }
 
-  private fun declaredResponses(): List<String> =
-    byStatusCode.keys.sorted().map { it.toString() } +
-    byClass.keys.sorted().map { "${it}XX" } +
-    listOfNotNull(defaultResponse?.let { "default" })
+  private fun declaredResponses(): List<String> = responsesByLabel().keys.toList()
+
+  /** The declared responses keyed by their label (`200`, `4XX`, `default`): status codes first, then classes, then the default. */
+  internal fun responsesByLabel(): Map<String, ResponseSchema> =
+    byStatusCode.toSortedMap().mapKeys { it.key.toString() } +
+    byClass.toSortedMap().mapKeys { "${it.key}XX" } +
+    listOfNotNull(defaultResponse?.let { "default" to it })
+
+  /** The label of the declared response that [responseFor] resolves for [statusCode]; `null` when none does. */
+  internal fun labelFor(statusCode: Int): String? =
+    when {
+      statusCode in byStatusCode  -> statusCode.toString()
+      statusCode / 100 in byClass -> "${statusCode / 100}XX"
+      defaultResponse != null     -> "default"
+      else                        -> null
+    }
 
   internal fun hasResponses(): Boolean =
     byStatusCode.isNotEmpty() || byClass.isNotEmpty() || defaultResponse != null

@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: Scenarios Of Excluded Responses
+  version: '1.0'
+paths:
+  /products:
+    get:
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+          examples:
+            404_MISSING:
+              value: 9
+            418_TEAPOT:
+              value: 10
+            503_DOWN:
+              value: 11
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+        '404':
+          description: Not found
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        4XX:
+          description: Client error
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string

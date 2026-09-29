@@ -1,0 +1,15 @@
+openapi: 3.0.0
+info:
+  title: Excluded Body Without Schema
+  version: '1.0'
+paths:
+  /products:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json: {}

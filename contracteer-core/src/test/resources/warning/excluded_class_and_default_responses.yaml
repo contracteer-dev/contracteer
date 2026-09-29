@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: Excluded Class And Default Responses
+  version: '1.0'
+paths:
+  /products:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+        4XX:
+          description: Client error
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        default:
+          description: Unexpected error
+          content:
+            application/json: {}

@@ -696,13 +696,13 @@ If your OpenAPI document relies on an unsupported keyword, you may need to work 
 Contracteer produces no verification cases for them.
 
 **Cause:** The operation uses a feature that Contracteer does not support.
-Operations are skipped when they use:
+Operations are skipped when:
 
-- `application/xml` content types.
-- Request or response bodies declared without a schema (e.g., `application/json: {}`).
-- Parameters using the `content` keyword without a schema.
+- Every request body, or every response, uses `application/xml` or is declared without a schema (e.g., `application/json: {}`).
+- A parameter uses the `content` keyword without a schema.
 
 Contracteer logs a warning for each skipped operation.
+Otherwise the operation is kept, and Contracteer logs a warning for each part it skips: a body, a response, or a scenario.
 An operation that loads but has no primary response is not skipped: it is reported instead (see [Operation not verified against the expected response](#operation-not-verified-against-the-expected-response)).
 
 **Fix:** Add a schema to the content type declaration, or remove the content type if no schema is needed.

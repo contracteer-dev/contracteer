@@ -18,10 +18,33 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      Diagnostic("Operation excluded: no supported response content type.",
-                 operation = OperationRef("GET", "/products"),
-                 category = SPEC,
-                 severity = WARNING)
+      operationWarning("Operation excluded: no supported response content type.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `operation excluded for parameter content without schema is reported as a spec warning carrying its operation`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/schemaless_parameter_content.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.filter { it.operation != null } == listOf(
+      operationWarning("Operation excluded: parameter content has no schema.", "GET", "/null-schema"),
+      operationWarning("Operation excluded: parameter content has no schema.", "GET", "/empty-schema")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `operation excluded for unsupported request body content is reported without a warning for each body`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/schemaless_request_body.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.filter { it.operation != null } == listOf(
+      operationWarning("Operation excluded: no supported request body content type.", "POST", "/null-schema"),
+      operationWarning("Operation excluded: no supported request body content type.", "POST", "/empty-schema")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -97,10 +120,11 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      Diagnostic("Example key '404_missing' targets status code 404, but no response with that status code is defined. Key ignored.",
-                 operation = OperationRef("GET", "/products/{id}"),
-                 category = SPEC,
-                 severity = WARNING)
+      operationWarning(
+        "Example key '404_missing' targets status code 404, but no response with that status code is defined. Key ignored.",
+        "GET",
+        "/products/{id}"
+      )
     )) { loaded.diagnostics.toString() }
   }
 
@@ -130,6 +154,104 @@ class OpenApiLoaderWarningsTest {
       "Schema '': unknown format 'int128' for integer type is ignored."
     )) { warnings.toString() }
   }
+
+  @Test
+  fun `body excluded among supported ones and the scenario using it are reported as spec warnings carrying their operation`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/xml_scenarios.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning("Response 200 body 'application/xml' excluded: XML content is not supported.", "GET", "/products"),
+      operationWarning("Scenario 'xml_scenario' excluded: its response body 'application/xml' is excluded.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `body without schema excluded among supported ones is reported as a spec warning carrying its operation`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/excluded_body_without_schema.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning("Response 200 body 'application/json' excluded: its schema is empty or missing.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `response excluded for having no supported body and the scenario targeting it are reported as spec warnings`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/schemaless_response_scenario.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.filter { it.operation != null } == listOf(
+      operationWarning("Response 201 excluded: no supported body.", "GET", "/test"),
+      operationWarning("Scenario 'bad_scenario' excluded: response 201 is excluded.", "GET", "/test")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `request body excluded among supported ones is reported as a spec warning carrying its operation`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/excluded_request_body.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning("Request body 'application/xml' excluded: XML content is not supported.", "POST", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `class and default responses excluded for having no supported body are reported as spec warnings`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/excluded_class_and_default_responses.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning("Response 4XX excluded: no supported body.", "GET", "/products"),
+      operationWarning("Default response excluded: no supported body.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `scenarios excluded under an example key shared across content types name the excluded body`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/same_example_key_across_content_types.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning("Request body 'application/xml' excluded: XML content is not supported.", "POST", "/products"),
+      operationWarning("Response 200 body 'application/xml' excluded: XML content is not supported.", "POST", "/products"),
+      operationWarning("Scenario 'widget' excluded: its response body 'application/xml' is excluded.", "POST", "/products"),
+      operationWarning("Scenario 'widget' excluded: its request body 'application/xml' is excluded.", "POST", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `scenarios targeting an excluded response name the declared response serving their status code`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/scenarios_of_excluded_responses.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning("Response 404 excluded: no supported body.", "GET", "/products"),
+      operationWarning("Response 4XX excluded: no supported body.", "GET", "/products"),
+      operationWarning("Default response excluded: no supported body.", "GET", "/products"),
+      operationWarning("Scenario '404_MISSING' excluded: response 404 is excluded.", "GET", "/products"),
+      operationWarning("Scenario '418_TEAPOT' excluded: response 4XX is excluded.", "GET", "/products"),
+      operationWarning("Scenario '503_DOWN' excluded: the default response is excluded.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  private fun operationWarning(message: String, method: String, path: String) =
+    Diagnostic(message, operation = OperationRef(method, path), category = SPEC, severity = WARNING)
 
   private fun assertSchemaWarnings(report: LoadReport): List<String> {
     val loaded = assertIs<LoadReport.Loaded>(report)
