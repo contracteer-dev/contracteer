@@ -1,20 +1,18 @@
 package dev.contracteer.core.swagger.datatype
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.media.Schema
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.datatype.Base64DataType
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.isNullable
 import dev.contracteer.core.swagger.mapEnum
 import java.util.Base64
 
 internal object Base64DataTypeConverter {
-  private val logger = KotlinLogging.logger {}
-
-  fun convert(schema: Schema<*>): Result<Base64DataType> {
-    if (schema.pattern != null) logger.warn { "Schema '${schema.name}': 'pattern' ignored because 'format: byte' takes precedence." }
+  fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<Base64DataType> {
+    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: byte' takes precedence.")
 
     return schema
       .mapEnum {

@@ -15,10 +15,11 @@ import dev.contracteer.core.operation.ApiOperation
 import dev.contracteer.core.operation.ResponseSchemas
 import dev.contracteer.core.swagger.datatype.DataTypeConverter
 
-internal class ApiOperationExtractor(private val sharedComponents: SharedComponents) {
+internal class ApiOperationExtractor(private val sharedComponents: SharedComponents,
+                                     private val warnings: LoadWarnings) {
 
   private val logger = KotlinLogging.logger {}
-  private val dataTypeConverter = DataTypeConverter(sharedComponents)
+  private val dataTypeConverter = DataTypeConverter(sharedComponents, warnings)
   private val schemaExtractor = SchemaExtractor(sharedComponents, dataTypeConverter)
 
   fun extract(openAPI: OpenAPI): Result<List<ApiOperation>> {
@@ -31,7 +32,7 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
           .flatMap { it.toApiOperations() }
           .combineResults()
           .map {
-            it.mapNotNull { operation -> filterUnsupportedOperation(operation) }
+            it.mapNotNull { operation -> filterUnsupportedOperation(operation, warnings) }
               .also { operations -> logExtractedOperations(operations) }
           }
     }
@@ -89,7 +90,8 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
                         extractedRequest.value,
                         extractedByStatusCode.value,
                         extractedByClass.value,
-                        extractedDefault.value)
+                        extractedDefault.value,
+                        warnings)
         .map { scenarios -> ApiOperation(path, method, requestSchema, responseSchemas, scenarios) }
     }
   }

@@ -1,22 +1,20 @@
 package dev.contracteer.core.swagger.datatype
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.media.Schema
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.datatype.DateTimeDataType
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.isNullable
 import dev.contracteer.core.swagger.mapEnum
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 internal object DateTimeDataTypeConverter {
-  private val logger = KotlinLogging.logger {}
-
-  fun convert(schema: Schema<*>): Result<DateTimeDataType> {
-    if (schema.pattern != null) logger.warn { "Schema '${schema.name}': 'pattern' ignored because 'format: date-time' takes precedence." }
-    if (schema.minLength != null || schema.maxLength != null) logger.warn { "Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: date-time' takes precedence." }
+  fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<DateTimeDataType> {
+    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: date-time' takes precedence.")
+    if (schema.minLength != null || schema.maxLength != null) warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: date-time' takes precedence.")
 
     return schema
       .mapEnum {

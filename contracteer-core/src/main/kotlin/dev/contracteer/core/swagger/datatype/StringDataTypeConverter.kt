@@ -1,14 +1,16 @@
 package dev.contracteer.core.swagger.datatype
 
 import io.swagger.v3.oas.models.media.Schema
+import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.datatype.StringDataType
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.isNullable
 import dev.contracteer.core.swagger.mapEnum
 
 internal object StringDataTypeConverter {
-  fun convert(schema: Schema<*>, openApiType: String) =
+  fun convert(schema: Schema<*>, openApiType: String, warnings: LoadWarnings): Result<StringDataType> =
     schema
       .mapEnum {
         when (it) {
@@ -25,5 +27,10 @@ internal object StringDataTypeConverter {
           pattern = schema.pattern,
           enum = enum
         )
-      }
+      }.also { if (it.isSuccess()) warnIfLengthIgnored(schema, warnings) }
+
+  private fun warnIfLengthIgnored(schema: Schema<*>, warnings: LoadWarnings) {
+    if (schema.pattern != null && ((schema.minLength ?: 0) > 0 || schema.maxLength != null))
+      warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'pattern' takes precedence.")
+  }
 }

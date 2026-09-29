@@ -57,7 +57,7 @@ class ScenarioBuilderTest {
       )
     )
 
-    val scenarios = ScenarioBuilder.buildScenarios("GET", "/products/{id}", request, byStatusCode, emptyMap(), null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("GET", "/products/{id}", request, byStatusCode, emptyMap(), null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.size == 2)
 
@@ -77,7 +77,7 @@ class ScenarioBuilderTest {
     val request = ExtractedRequestSchema(parameters = emptyList(), bodies = emptyList())
     val byStatusCode = mapOf(200 to ExtractedResponseSchema(headers = emptyList(), bodies = emptyList()))
 
-    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test", request, byStatusCode, emptyMap(), null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test", request, byStatusCode, emptyMap(), null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.isEmpty())
   }
@@ -100,7 +100,7 @@ class ScenarioBuilderTest {
     )
     val byStatusCode = mapOf(200 to ExtractedResponseSchema(headers = emptyList(), bodies = emptyList()))
 
-    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.isEmpty())
   }
@@ -125,7 +125,7 @@ class ScenarioBuilderTest {
       )
     )
 
-    val scenarios = ScenarioBuilder.buildScenarios("POST", "/products", request, byStatusCode, emptyMap(), null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("POST", "/products", request, byStatusCode, emptyMap(), null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.size == 4)
     val pairs = scenarios.map { it.request.body!!.contentType.value to it.response.body!!.contentType.value }.toSet()
@@ -168,7 +168,7 @@ class ScenarioBuilderTest {
       )
     )
 
-    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.size == 1)
     assert(scenarios.single().statusCode == 400)
@@ -206,7 +206,7 @@ class ScenarioBuilderTest {
       )
     )
 
-    val result = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null)
+    val result = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null, LoadWarnings())
 
     assert(result.isFailure())
   }
@@ -243,7 +243,7 @@ class ScenarioBuilderTest {
       )
     )
 
-    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.size == 1)
     assert(scenarios.single().key == "404_not_found")
@@ -271,7 +271,7 @@ class ScenarioBuilderTest {
     val byStatusCode = mapOf(200 to ExtractedResponseSchema(headers = emptyList(), bodies = emptyList()))
     val byClass = mapOf(4 to ExtractedResponseSchema(headers = emptyList(), bodies = emptyList()))
 
-    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, byClass, null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, byClass, null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.size == 1)
     assert(scenarios.single().key == "404_not_found")
@@ -297,7 +297,7 @@ class ScenarioBuilderTest {
     val byStatusCode = mapOf(200 to ExtractedResponseSchema(headers = emptyList(), bodies = emptyList()))
     val default = ExtractedResponseSchema(headers = emptyList(), bodies = emptyList())
 
-    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), default).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("GET", "/test/{id}", request, byStatusCode, emptyMap(), default, LoadWarnings()).assertSuccess()
 
     assert(scenarios.size == 1)
     assert(scenarios.single().key == "404_not_found")
@@ -334,7 +334,7 @@ class ScenarioBuilderTest {
       )
     )
 
-    val scenarios = ScenarioBuilder.buildScenarios("POST", "/products", request, byStatusCode, emptyMap(), null).assertSuccess()
+    val scenarios = ScenarioBuilder.buildScenarios("POST", "/products", request, byStatusCode, emptyMap(), null, LoadWarnings()).assertSuccess()
 
     assert(scenarios.size == 1)
     assert(scenarios.single().request.body!!.contentType.value == "application/json")

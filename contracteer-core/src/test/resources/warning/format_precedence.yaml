@@ -1,0 +1,77 @@
+openapi: 3.0.0
+info:
+  title: Format Precedence
+  version: '1.0'
+paths:
+  /values:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    $ref: '#/components/schemas/Date'
+                  dateTime:
+                    $ref: '#/components/schemas/DateTime'
+                  uuid:
+                    $ref: '#/components/schemas/Uuid'
+                  email:
+                    $ref: '#/components/schemas/Email'
+                  byte:
+                    $ref: '#/components/schemas/Byte'
+                  binary:
+                    $ref: '#/components/schemas/Binary'
+                  hostname:
+                    $ref: '#/components/schemas/Hostname'
+                  uri:
+                    $ref: '#/components/schemas/Uri'
+                  uriReference:
+                    $ref: '#/components/schemas/UriReference'
+components:
+  schemas:
+    Date:
+      type: string
+      format: date
+      pattern: '^.*$'
+      maxLength: 10
+    DateTime:
+      type: string
+      format: date-time
+      pattern: '^.*$'
+      maxLength: 30
+    Uuid:
+      type: string
+      format: uuid
+      pattern: '^.*$'
+      maxLength: 36
+    Email:
+      type: string
+      format: email
+      pattern: '^.*$'
+    Byte:
+      type: string
+      format: byte
+      pattern: '^.*$'
+    Binary:
+      type: string
+      format: binary
+      pattern: '^.*$'
+    Hostname:
+      type: string
+      format: hostname
+      pattern: '^.*$'
+      maxLength: 50
+    Uri:
+      type: string
+      format: uri
+      pattern: '^.*$'
+      maxLength: 50
+    UriReference:
+      type: string
+      format: uri-reference
+      pattern: '^.*$'
+      maxLength: 50

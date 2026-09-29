@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: Identical Warnings
+  version: '1.0'
+paths:
+  /counts:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int128
+  /totals:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int128

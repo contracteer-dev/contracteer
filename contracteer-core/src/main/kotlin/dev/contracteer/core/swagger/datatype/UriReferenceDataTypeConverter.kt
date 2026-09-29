@@ -1,22 +1,20 @@
 package dev.contracteer.core.swagger.datatype
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.media.Schema
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.datatype.UriReferenceDataType
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.isNullable
 import dev.contracteer.core.swagger.mapEnum
 
 internal object UriReferenceDataTypeConverter {
-  private val logger = KotlinLogging.logger {}
-
-  fun convert(schema: Schema<*>): Result<UriReferenceDataType> {
+  fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<UriReferenceDataType> {
     if (schema.minLength != null || schema.maxLength != null)
-      logger.warn { "Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: uri-reference' takes precedence." }
+      warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: uri-reference' takes precedence.")
     if (schema.pattern != null)
-      logger.warn { "Schema '${schema.name}': 'pattern' ignored because 'format: uri-reference' takes precedence." }
+      warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: uri-reference' takes precedence.")
 
     return schema
       .mapEnum {

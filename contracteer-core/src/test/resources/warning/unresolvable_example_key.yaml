@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: Unresolvable Example Key
+  version: '1.0'
+paths:
+  /products/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          examples:
+            404_missing:
+              value: 999
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer

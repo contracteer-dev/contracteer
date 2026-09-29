@@ -1,6 +1,5 @@
 package dev.contracteer.core.datatype
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -38,7 +37,6 @@ class StringDataType private constructor(name: String,
   }
 
   companion object {
-    private val logger = KotlinLogging.logger {}
     private const val CANDIDATE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
     private const val DEFAULT_MAX_LENGTH = 10L
 
@@ -57,7 +55,6 @@ class StringDataType private constructor(name: String,
 
       return result {
         val stringPattern = parsePattern(pattern).bind()
-        warnIfLengthIgnored(name, stringPattern, minLength, maxLength)
         val range = Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal()).bind()
         buildDataType(name, openApiType, isNullable, range, stringPattern, enum).bind()
       }
@@ -65,11 +62,6 @@ class StringDataType private constructor(name: String,
 
     private fun parsePattern(pattern: String?): Result<StringPattern?> =
       if (pattern == null) success(null) else StringPattern.create(pattern)
-
-    private fun warnIfLengthIgnored(name: String, pattern: StringPattern?, minLength: Int?, maxLength: Int?) {
-      if (pattern != null && ((minLength != null && minLength > 0) || maxLength != null))
-        logger.warn { "Schema '$name': 'minLength'/'maxLength' ignored because 'pattern' takes precedence." }
-    }
 
     private fun buildDataType(name: String,
                               openApiType: String,

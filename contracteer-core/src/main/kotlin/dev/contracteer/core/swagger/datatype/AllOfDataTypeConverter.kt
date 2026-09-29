@@ -14,6 +14,7 @@ import dev.contracteer.core.datatype.ObjectDataType
 import dev.contracteer.core.datatype.ProxyDataType
 import dev.contracteer.core.joinWithQuotes
 import dev.contracteer.core.result
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.effectiveEnum
 import dev.contracteer.core.swagger.hasComposition
 import dev.contracteer.core.swagger.isAnyType
@@ -30,7 +31,8 @@ internal object AllOfDataTypeConverter {
   fun convert(schema: Schema<*>,
               convert: (Schema<*>, String) -> Result<DataType<out Any>>,
               convertInlineBranch: (Schema<*>, String) -> Result<DataType<out Any>>,
-              discriminator: (Schema<*>) -> Discriminator?): Result<AllOfDataType> {
+              discriminator: (Schema<*>) -> Discriminator?,
+              warnings: LoadWarnings): Result<AllOfDataType> {
     if (schema.allOf == null) return failure("'allOf' must be defined.")
 
     val subTypeResults = schema.allOf
@@ -41,7 +43,7 @@ internal object AllOfDataTypeConverter {
         else convert(subSchema, "allOf #$index")
       }
 
-    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert, localRequiredOnly = true)
+    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert, warnings, localRequiredOnly = true)
 
     return result {
       val subDataTypes = (subTypeResults + listOfNotNull(siblingResult))

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import io.swagger.v3.parser.util.DeserializationUtils
+import dev.contracteer.core.Diagnostic
 import dev.contracteer.core.DiagnosticCategory.EXECUTION_ERROR
 import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.Result
@@ -31,13 +32,17 @@ object OpenApiLoader {
 
   /**
    * Parses the OpenAPI document at the given [path] and reports the outcome: the extracted operations, or the
-   * diagnostics that stopped the load. A failure to read the document is an [EXECUTION_ERROR]; any other failure
-   * is a [SPEC] finding.
+   * diagnostics that stopped the load, along with the load's warnings. A failure to read the document is an
+   * [EXECUTION_ERROR]; any other failure, and every warning, is a [SPEC] finding.
    *
    * @param path a local file path, an HTTP(S) URL, or a `classpath:` resource path to an OpenAPI 3.0.x or 3.1.x document
    */
   @JvmStatic
-  fun load(path: String): LoadReport = loadOperations(path).toLoadReport(path)
+  fun load(path: String): LoadReport {
+    val warnings = LoadWarnings()
+    val operations = extractOperations(path, warnings)
+    return operations.toLoadReport(path, warnings.diagnostics)
+  }
 
   /**
    * Parses the OpenAPI document at the given [path] and extracts all API operations.
@@ -48,6 +53,9 @@ object OpenApiLoader {
    */
   @JvmStatic
   fun loadOperations(path: String): Result<List<ApiOperation>> =
+    extractOperations(path, LoadWarnings())
+
+  private fun extractOperations(path: String, warnings: LoadWarnings): Result<List<ApiOperation>> =
     result {
       val content = path.loadOpenApiDocument().withDefaults(EXECUTION_ERROR, ERROR).bind()
       checkSupportedVersion(content).bind()
@@ -60,13 +68,14 @@ object OpenApiLoader {
         examples = openAPI.components.safeExamples(),
         responses = openAPI.components.safeResponses()
       )
-      ApiOperationExtractor(sharedComponents).extract(openAPI).bind()
+      ApiOperationExtractor(sharedComponents, warnings).extract(openAPI).bind()
     }
 
-  private fun Result<List<ApiOperation>>.toLoadReport(source: String): LoadReport = when (this) {
-    is Success -> LoadReport.Loaded(source, value)
-    is Failure -> LoadReport.Failed(source, withDefaults(SPEC, ERROR).diagnostics(), truncated)
-  }
+  private fun Result<List<ApiOperation>>.toLoadReport(source: String, warnings: List<Diagnostic>): LoadReport =
+    when (this) {
+      is Success -> LoadReport.Loaded(source, value, warnings)
+      is Failure -> LoadReport.Failed(source, withDefaults(SPEC, ERROR).diagnostics() + warnings, truncated)
+    }
 
   private fun checkSupportedVersion(content: String): Result<Unit> =
     when (val declared = readDeclaredVersion(content)) {

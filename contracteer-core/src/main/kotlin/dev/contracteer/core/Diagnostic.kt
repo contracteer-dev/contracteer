@@ -19,7 +19,12 @@ data class Diagnostic @JvmOverloads constructor(
   val operation: OperationRef? = null,
   val category: DiagnosticCategory? = null,
   val severity: Severity? = null
-)
+) {
+
+  /** Renders [text] (by default the [message]) for humans, prefixed with the [operation] when there is one, e.g. `GET /items/{id}: text`. */
+  internal fun render(text: String = message): String =
+    operation?.let { "${it.method} ${it.path}: $text" } ?: text
+}
 
 /** Identifies an operation by its HTTP [method] (upper case, e.g. `GET`) and its [path] template (e.g. `/items/{id}`). */
 data class OperationRef(val method: String, val path: String)

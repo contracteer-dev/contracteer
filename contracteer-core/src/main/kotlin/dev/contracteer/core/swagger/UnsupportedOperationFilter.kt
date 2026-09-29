@@ -1,6 +1,6 @@
 package dev.contracteer.core.swagger
 
-import io.github.oshai.kotlinlogging.KotlinLogging
+import dev.contracteer.core.OperationRef
 import dev.contracteer.core.codec.ContentCodec
 import dev.contracteer.core.datatype.AnyDataType
 import dev.contracteer.core.operation.ApiOperation
@@ -8,11 +8,10 @@ import dev.contracteer.core.operation.BodySchema
 import dev.contracteer.core.operation.ResponseSchema
 import dev.contracteer.core.operation.Scenario
 
-private val logger = KotlinLogging.logger {}
-
-internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? {
+internal fun filterUnsupportedOperation(operation: ApiOperation, warnings: LoadWarnings): ApiOperation? {
+  val operationRef = OperationRef(operation.method, operation.path)
   if (operation.requestSchema.parameters.any { it.dataType is AnyDataType && it.codec is ContentCodec }) {
-    logger.warn { "Operation '${operation.method} ${operation.path}' excluded: parameter content has no schema." }
+    warnings.warn("Operation excluded: parameter content has no schema.", operationRef)
     return null
   }
 
@@ -23,12 +22,12 @@ internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? 
     .filter { filteredResponseSchemas.responseFor(it.statusCode) != null }
 
   if (operation.requestSchema.bodies.isNotEmpty() && requestBodies.isEmpty()) {
-    logger.warn { "Operation '${operation.method} ${operation.path}' excluded: no supported request body content type." }
+    warnings.warn("Operation excluded: no supported request body content type.", operationRef)
     return null
   }
 
   if (operation.responseSchemas.hasResponses() && !filteredResponseSchemas.hasResponses()) {
-    logger.warn { "Operation '${operation.method} ${operation.path}' excluded: no supported response content type." }
+    warnings.warn("Operation excluded: no supported response content type.", operationRef)
     return null
   }
 

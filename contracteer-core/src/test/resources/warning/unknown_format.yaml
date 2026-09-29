@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: Unknown Format
+  version: '1.0'
+paths:
+  /values:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    $ref: '#/components/schemas/Count'
+                  ratio:
+                    $ref: '#/components/schemas/Ratio'
+components:
+  schemas:
+    Count:
+      type: integer
+      format: int128
+    Ratio:
+      type: number
+      format: decimal128

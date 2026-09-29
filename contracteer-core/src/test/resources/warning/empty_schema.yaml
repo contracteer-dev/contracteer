@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Empty Schema
+  version: '1.0'
+paths:
+  /items:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payload:
+                    $ref: '#/components/schemas/Payload'
+components:
+  schemas:
+    Payload: {}

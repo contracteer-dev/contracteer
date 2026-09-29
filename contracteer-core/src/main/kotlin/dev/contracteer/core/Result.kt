@@ -192,11 +192,9 @@ sealed class Result<out T> {
     fun mapMessage(transform: (String) -> String) =
       PropertyError(diagnostic = Diagnostic(transform(locatedMessage()), operation = diagnostic.operation))
 
-    fun errorMessage() = operationPrefix() + locatedMessage()
+    fun errorMessage() = diagnostic.render(locatedMessage())
 
     private fun locatedMessage() = if (path.isEmpty()) diagnostic.message else "'$path': ${diagnostic.message}"
-
-    private fun operationPrefix() = diagnostic.operation?.let { "${it.method} ${it.path}: " } ?: ""
 
     private fun buildPath(propertyName: String) = when {
       propertyName.isEmpty() -> path

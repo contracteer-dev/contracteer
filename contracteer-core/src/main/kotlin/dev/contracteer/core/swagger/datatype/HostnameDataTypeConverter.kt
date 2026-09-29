@@ -1,22 +1,20 @@
 package dev.contracteer.core.swagger.datatype
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.media.Schema
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.datatype.HostnameDataType
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.isNullable
 import dev.contracteer.core.swagger.mapEnum
 
 internal object HostnameDataTypeConverter {
-  private val logger = KotlinLogging.logger {}
-
-  fun convert(schema: Schema<*>): Result<HostnameDataType> {
+  fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<HostnameDataType> {
     if (schema.minLength != null || schema.maxLength != null)
-      logger.warn { "Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: hostname' takes precedence." }
+      warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: hostname' takes precedence.")
     if (schema.pattern != null)
-      logger.warn { "Schema '${schema.name}': 'pattern' ignored because 'format: hostname' takes precedence." }
+      warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: hostname' takes precedence.")
 
     return schema
       .mapEnum {

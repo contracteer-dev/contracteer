@@ -9,6 +9,7 @@ import dev.contracteer.core.datatype.DataType
 import dev.contracteer.core.datatype.ObjectDataType
 import dev.contracteer.core.datatype.StringDataType
 import dev.contracteer.core.result
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.booleanSchemaValue
 import dev.contracteer.core.swagger.effectiveEnum
 import dev.contracteer.core.swagger.effectivePropertyNames
@@ -21,6 +22,7 @@ internal object ObjectDataTypeConverter {
   fun convert(
     schema: Schema<*>,
     convert: (Schema<*>, String) -> Result<DataType<out Any>>,
+    warnings: LoadWarnings,
     localRequiredOnly: Boolean = false): Result<ObjectDataType> {
 
     val booleanShorthand = additionalPropertiesAsBoolean(schema.additionalProperties)
@@ -42,7 +44,7 @@ internal object ObjectDataTypeConverter {
       val enum = schema.effectiveEnum().bind()
       val readOnlyProps = schema.safeProperties().filter { (_, propSchema) -> propSchema.readOnly == true }.keys
       val writeOnlyProps = schema.safeProperties().filter { (_, propSchema) -> propSchema.writeOnly == true }.keys
-      val propertyNamesDataType = convertPropertyNames(schema, convert).bind()
+      val propertyNamesDataType = convertPropertyNames(schema, convert, warnings).bind()
 
       ObjectDataType.create(
         name = schema.name,
@@ -63,7 +65,8 @@ internal object ObjectDataTypeConverter {
 
   private fun convertPropertyNames(
     schema: Schema<*>,
-    convert: (Schema<*>, String) -> Result<DataType<out Any>>
+    convert: (Schema<*>, String) -> Result<DataType<out Any>>,
+    warnings: LoadWarnings
   ): Result<StringDataType?> {
     val propertyNamesSchema = schema.effectivePropertyNames() ?: return success(null)
     propertyNamesSchema.name = "${schema.name}.propertyNames"
@@ -71,7 +74,7 @@ internal object ObjectDataTypeConverter {
     val asDataType = if (propertyNamesSchema.`$ref` != null || propertyNamesSchema.effectiveType() != null)
       convert(propertyNamesSchema, propertyNamesSchema.name)
     else
-      StringDataTypeConverter.convert(propertyNamesSchema, "string")
+      StringDataTypeConverter.convert(propertyNamesSchema, "string", warnings)
     return asDataType.flatMap { dataType ->
       when (dataType) {
         is StringDataType -> success(dataType)
@@ -84,10 +87,11 @@ internal object ObjectDataTypeConverter {
 
   fun convertSiblingObject(schema: Schema<*>,
                            convert: (Schema<*>, String) -> Result<DataType<out Any>>,
+                           warnings: LoadWarnings,
                            localRequiredOnly: Boolean = false): Result<DataType<out Any>>? {
     val requiredTriggersConversion = schema.required != null && !localRequiredOnly
     return if (schema.properties != null || requiredTriggersConversion || schema.additionalProperties != null)
-      convert(schema, convert, localRequiredOnly)
+      convert(schema, convert, warnings, localRequiredOnly)
     else
       null
   }

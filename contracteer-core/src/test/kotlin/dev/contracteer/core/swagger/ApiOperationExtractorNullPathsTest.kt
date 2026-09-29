@@ -12,7 +12,7 @@ class ApiOperationExtractorNullPathsTest {
     val openAPI = OpenAPI().apply { paths = null }
 
     // When
-    val result = ApiOperationExtractor(emptySharedComponents()).extract(openAPI)
+    val result = ApiOperationExtractor(emptySharedComponents(), LoadWarnings()).extract(openAPI)
 
     // Then
     val operations = result.assertSuccess()

@@ -1,19 +1,17 @@
 package dev.contracteer.core.swagger.datatype
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.media.Schema
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.datatype.EmailDataType
+import dev.contracteer.core.swagger.LoadWarnings
 import dev.contracteer.core.swagger.isNullable
 import dev.contracteer.core.swagger.mapEnum
 
 internal object EmailDataTypeConverter {
-  private val logger = KotlinLogging.logger {}
-
-  fun convert(schema: Schema<*>): Result<EmailDataType> {
-    if (schema.pattern != null) logger.warn { "Schema '${schema.name}': 'pattern' ignored because 'format: email' takes precedence." }
+  fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<EmailDataType> {
+    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: email' takes precedence.")
 
     return schema
       .mapEnum {

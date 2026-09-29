@@ -1,7 +1,7 @@
 package dev.contracteer.core.swagger
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.examples.Example
+import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -9,7 +9,6 @@ import dev.contracteer.core.combineResults
 import dev.contracteer.core.operation.*
 import dev.contracteer.core.operation.ParameterElement.*
 
-private val logger = KotlinLogging.logger {}
 private val STATUS_CODE_PREFIX = Regex("""^(\d{3})_\w+$""")
 
 internal object ScenarioBuilder {
@@ -18,17 +17,18 @@ internal object ScenarioBuilder {
    * Builds the list of [Scenario]s implied by matching example keys across the request and response schemas.
    *
    * Non-400 scenario examples are validated against their schemas; a validation failure yields a [Result.Failure].
-   * Status-code-prefixed keys (e.g. `404_NOT_FOUND`) that cannot be resolved are logged as warnings and ignored.
+   * Status-code-prefixed keys (e.g. `404_NOT_FOUND`) that cannot be resolved are reported to [warnings] and ignored.
    */
   fun buildScenarios(method: String,
                      path: String,
                      request: ExtractedRequestSchema,
                      byStatusCode: Map<Int, ExtractedResponseSchema>,
                      byClass: Map<Int, ExtractedResponseSchema>,
-                     default: ExtractedResponseSchema?): Result<List<Scenario>> {
+                     default: ExtractedResponseSchema?,
+                     warnings: LoadWarnings): Result<List<Scenario>> {
 
     if (request.exampleKeys().isEmpty()) return success(emptyList())
-    warnUnresolvablePrefixedKeys(method, path, request, byStatusCode, byClass, default)
+    warnUnresolvablePrefixedKeys(method, path, request, byStatusCode, byClass, default, warnings)
 
     return targetResponses(request, byStatusCode, byClass, default)
       .map { (statusCode, response) ->
@@ -186,14 +186,15 @@ internal object ScenarioBuilder {
                                            request: ExtractedRequestSchema,
                                            byStatusCode: Map<Int, ExtractedResponseSchema>,
                                            byClass: Map<Int, ExtractedResponseSchema>,
-                                           default: ExtractedResponseSchema?) {
+                                           default: ExtractedResponseSchema?,
+                                           warnings: LoadWarnings) {
     request.exampleKeys().forEach { key ->
       val statusCode = key.statusCodePrefix()
       if (statusCode != null && responseFor(statusCode, byStatusCode, byClass, default) == null) {
-        logger.warn {
-          "Operation '$method $path': example key '$key' targets status code $statusCode, " +
-          "but no response with that status code is defined. Key ignored."
-        }
+        warnings.warn(
+          "Example key '$key' targets status code $statusCode, but no response with that status code is defined. Key ignored.",
+          OperationRef(method, path)
+        )
       }
     }
   }

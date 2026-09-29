@@ -12,7 +12,8 @@ import dev.contracteer.core.datatype.*
 import dev.contracteer.core.operation.ContentType
 import dev.contracteer.core.swagger.*
 
-internal class DataTypeConverter(private val sharedComponents: SharedComponents) {
+internal class DataTypeConverter(private val sharedComponents: SharedComponents,
+                                 private val warnings: LoadWarnings) {
 
   private val logger = KotlinLogging.logger {}
   private val dataTypeCache: MutableMap<String, DataType<out Any>> = mutableMapOf()
@@ -97,14 +98,14 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     return when {
       schema.hasComposition()                                       -> convertComposedSchema(schema, convert, discriminator)
       unsupportedFeature != null                                    -> unsupported(schema, unsupportedFeature.description, unsupportedFeature.suggestion)
-      contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema)
+      contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema, warnings)
       contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
-      contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema)
-      schema.isObjectLike()                                         -> ObjectDataTypeConverter.convert(schema, convert, localRequiredOnly)
+      contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema, warnings)
+      schema.isObjectLike()                                         -> ObjectDataTypeConverter.convert(schema, convert, warnings, localRequiredOnly)
       schema.isArrayLike()                                          -> ArrayDataTypeConverter.convert(schema, convert)
       type == "boolean"                                             -> BooleanDataTypeConverter.convert(schema)
-      type == "integer"                                             -> IntegerDataTypeConverter.convert(schema)
-      type == "number"                                              -> NumberDataTypeConverter.convert(schema)
+      type == "integer"                                             -> IntegerDataTypeConverter.convert(schema, warnings)
+      type == "number"                                              -> NumberDataTypeConverter.convert(schema, warnings)
       schema.hasStructuredTextContent()                             -> unsupportedStructuredTextContentMediaType(schema)
       type == "string"                                              -> convertStringSchema(schema)
       schema.isNullOnly()                                           -> success(NullDataType)
@@ -133,17 +134,17 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
 
   private fun convertStringSchema(schema: Schema<*>): Result<DataType<out Any>> =
     when (schema.format) {
-      "date"          -> DateDataTypeConverter.convert(schema)
-      "date-time"     -> DateTimeDataTypeConverter.convert(schema)
-      "email"         -> EmailDataTypeConverter.convert(schema)
-      "uuid"          -> UuidDataTypeConverter.convert(schema)
-      "binary"        -> BinaryDataTypeConverter.convert(schema)
-      "byte"          -> Base64DataTypeConverter.convert(schema)
-      "password"      -> StringDataTypeConverter.convert(schema, "string/password")
-      "hostname"      -> HostnameDataTypeConverter.convert(schema)
-      "uri"           -> UriDataTypeConverter.convert(schema)
-      "uri-reference" -> UriReferenceDataTypeConverter.convert(schema)
-      else            -> StringDataTypeConverter.convert(schema, "string")
+      "date"          -> DateDataTypeConverter.convert(schema, warnings)
+      "date-time"     -> DateTimeDataTypeConverter.convert(schema, warnings)
+      "email"         -> EmailDataTypeConverter.convert(schema, warnings)
+      "uuid"          -> UuidDataTypeConverter.convert(schema, warnings)
+      "binary"        -> BinaryDataTypeConverter.convert(schema, warnings)
+      "byte"          -> Base64DataTypeConverter.convert(schema, warnings)
+      "password"      -> StringDataTypeConverter.convert(schema, "string/password", warnings)
+      "hostname"      -> HostnameDataTypeConverter.convert(schema, warnings)
+      "uri"           -> UriDataTypeConverter.convert(schema, warnings)
+      "uri-reference" -> UriReferenceDataTypeConverter.convert(schema, warnings)
+      else            -> StringDataTypeConverter.convert(schema, "string", warnings)
     }
 
   private fun convertComposedSchema(schema: Schema<*>,
@@ -159,13 +160,13 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       return failure("Schema '${schema.name}' combines multiple composition keywords (${keywords.joinToString(", ")}). Only one of 'allOf', 'anyOf', or 'oneOf' per schema is supported.")
 
     if (schema.allOf != null)
-      return AllOfDataTypeConverter.convert(schema, convert, ::convertAllOfBranch, discriminator)
+      return AllOfDataTypeConverter.convert(schema, convert, ::convertAllOfBranch, discriminator, warnings)
 
     val compositionResult =
       if (schema.anyOf != null) AnyOfDataTypeConverter.convert(schema, convert, discriminator)
       else OneOfDataTypeConverter.convert(schema, convert, discriminator)
 
-    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert)
+    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert, warnings)
                         ?: return compositionResult
 
     if (compositionResult !is Success || siblingResult !is Success)
@@ -192,7 +193,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
 
   private fun tryToInferSchemaType(schema: Schema<*>): Result<DataType<out Any>> =
     if (schema.isAnyType())
-      success(AnyDataType).also { logger.warn { "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type." } }
+      success(AnyDataType).also { warnings.warn("Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.") }
     else
       failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
 
