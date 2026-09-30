@@ -3,9 +3,12 @@ package dev.contracteer.core.swagger
 import io.swagger.v3.oas.models.SpecVersion
 import io.swagger.v3.oas.models.media.JsonSchema
 import io.swagger.v3.oas.models.media.Schema
+import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
+import dev.contracteer.core.accumulate
 import dev.contracteer.core.joinWithQuotes
 
 internal fun mergeSchemaAndSiblings(target: Schema<*>,
@@ -203,10 +206,19 @@ private fun mergeProperties(target: Schema<*>,
 
 private fun rejectUnhandledSiblings(siblingKeywords: List<String>,
                                     name: String,
-                                    handled: Set<String>): Result<Unit> {
-  val unsupported = siblingKeywords.filterNot { it in handled }
-  return if (unsupported.isEmpty()) success(Unit)
-  else failure($$"Schema '$$name': sibling $${unsupported.joinWithQuotes()} on '$ref' is not supported.")
+                                    handled: Set<String>): Result<Unit> =
+  siblingKeywords
+    .filterNot { it in handled }
+    .accumulate { unsupportedSibling(it, name) }
+
+private fun unsupportedSibling(sibling: String, name: String): Result<Unit> =
+  failure(Diagnostic($$"Schema '$$name': sibling '$$sibling' on '$ref' is not supported.", keyword = keywordOf(sibling), rule = UNSUPPORTED))
+
+/** Sibling names are keywords, except a keyword group, reported under its first keyword, and the multi-type form of `type`. */
+private fun keywordOf(sibling: String) = when (sibling) {
+  "if/then/else" -> "if"
+  "types"        -> "type"
+  else           -> sibling
 }
 
 private fun cloneAsV31(target: Schema<*>): JsonSchema = JsonSchema().apply {

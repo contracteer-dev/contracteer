@@ -4,11 +4,12 @@ package dev.contracteer.core
  * One finding reported by Contracteer: a spec problem found while loading an OpenAPI document, or a
  * contract violation found while validating a request or a response.
  *
- * A diagnostic without a [keyword] is freeform: its [message] is the only description of the finding.
+ * A diagnostic without a [rule] is freeform: its [message] is the only description of the finding.
  * The shape is experimental and may change until a consumer freezes it.
  *
  * @property message the human-readable description of the finding.
- * @property keyword the constraint or rule the finding is about (e.g. `maxItems`, `enum`); `null` when freeform.
+ * @property keyword the OpenAPI or JSON Schema keyword the finding is about (e.g. `maxItems`, `$ref`); `null` when none applies.
+ * @property rule the family the finding belongs to; `null` when freeform.
  * @property operation the operation the finding belongs to; `null` when it belongs to none.
  * @property category what kind of finding this is; `null` until assigned (a report assigns one to every finding).
  * @property severity how serious the finding is; `null` until assigned (a report assigns one to every finding).
@@ -16,6 +17,7 @@ package dev.contracteer.core
 data class Diagnostic @JvmOverloads constructor(
   val message: String,
   val keyword: String? = null,
+  val rule: DiagnosticRule? = null,
   val operation: OperationRef? = null,
   val category: DiagnosticCategory? = null,
   val severity: Severity? = null

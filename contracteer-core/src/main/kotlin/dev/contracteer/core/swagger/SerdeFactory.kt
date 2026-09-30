@@ -2,6 +2,8 @@ package dev.contracteer.core.swagger
 
 import io.swagger.v3.oas.models.media.Encoding
 import io.swagger.v3.oas.models.media.MediaType
+import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.DiagnosticRule.UNSERIALIZABLE_CONTENT
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -29,7 +31,7 @@ internal class SerdeFactory(private val codecFactory: CodecFactory) {
         contentType.isMultipart()      -> requireObjectShape(contentType, shape) { buildMultipartSerde(it, mediaType) }
         contentType.isJson()           -> success(JsonSerde)
         contentType.isXml()            -> success(PlainTextSerde)
-        shapeIsStructural              -> failure("Content type ${contentType.value} supports only primitive schemas (string, integer, number, boolean and their formats)")
+        shapeIsStructural              -> unserializable("Content type ${contentType.value} supports only primitive schemas (string, integer, number, boolean and their formats)")
         else                           -> success(PlainTextSerde)
       }
     }
@@ -38,7 +40,7 @@ internal class SerdeFactory(private val codecFactory: CodecFactory) {
                                  shape: EncodingShape,
                                  build: (EncodingShape.Object) -> Result<Serde>): Result<Serde> =
     if (shape is EncodingShape.Object) build(shape)
-    else failure("Content type ${contentType.value} requires object schema")
+    else unserializable("Content type ${contentType.value} requires object schema")
 
   private fun buildFormUrlEncodedSerde(shape: EncodingShape.Object, mediaType: MediaType): Result<Serde> =
     validateFormUrlEncodedProperties(shape.properties).flatMap {
@@ -64,7 +66,7 @@ internal class SerdeFactory(private val codecFactory: CodecFactory) {
   private fun validateFormUrlEncodedProperty(name: String, view: DecodeView): Result<Unit> =
     view.shape().flatMap { shape ->
       when (shape) {
-        is EncodingShape.Object -> failure(name, "Form-urlencoded does not support nested object properties $UNDEFINED_BEHAVIOR")
+        is EncodingShape.Object -> unserializableProperty(name, "Form-urlencoded does not support nested object properties $UNDEFINED_BEHAVIOR")
         is EncodingShape.Array  -> rejectIfArrayOfComplexItems(name, shape)
         else                    -> success()
       }
@@ -73,7 +75,7 @@ internal class SerdeFactory(private val codecFactory: CodecFactory) {
   private fun rejectIfArrayOfComplexItems(name: String, array: EncodingShape.Array): Result<Unit> =
     array.itemType.shape().flatMap { itemShape ->
       if (itemShape is EncodingShape.Object || itemShape is EncodingShape.Array)
-        failure(name, "Form-urlencoded does not support arrays of complex types (item type: '${array.itemType.source.openApiType}') $UNDEFINED_BEHAVIOR")
+        unserializableProperty(name, "Form-urlencoded does not support arrays of complex types (item type: '${array.itemType.source.openApiType}') $UNDEFINED_BEHAVIOR")
       else success()
     }
 
@@ -113,13 +115,19 @@ internal class SerdeFactory(private val codecFactory: CodecFactory) {
                                      isFileArray: Boolean): Result<String> =
     when {
       view.source.isBinary() || isFileArray                         -> success("application/octet-stream")
-      shape is EncodingShape.Mixed                                  -> failure(name, "Cannot determine default content type for multipart part: schema branches have incompatible shapes. Specify 'contentType' explicitly in the encoding to resolve.")
+      shape is EncodingShape.Mixed                                  -> unserializableProperty(name, "Cannot determine default content type for multipart part: schema branches have incompatible shapes. Specify 'contentType' explicitly in the encoding to resolve.")
       shape is EncodingShape.Array || shape is EncodingShape.Object -> success("application/json")
       else                                                          -> success("text/plain")
     }
 
   private fun serdeForContentType(contentType: String): Serde =
     if ("json" in contentType.lowercase()) JsonSerde else PlainTextSerde
+
+  private fun <T> unserializableProperty(name: String, message: String): Result<T> =
+    unserializable<T>(message).forProperty(name)
+
+  private fun <T> unserializable(message: String): Result<T> =
+    failure(Diagnostic(message, rule = UNSERIALIZABLE_CONTENT))
 }
 
 private fun DataType<out Any>.isBinary(): Boolean = when (this) {

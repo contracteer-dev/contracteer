@@ -1,0 +1,19 @@
+openapi: "3.0.3"
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: string
+                  pattern: '^[0-9a-z\.\-]*(?<!\.)$'
+      responses:
+        200:
+          description: ok

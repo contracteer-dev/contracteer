@@ -284,6 +284,7 @@ Any of these gives Contracteer a finite stopping point.
 ### Sibling keyword on `$ref` is rejected
 
 **Symptom:** Loading an OpenAPI 3.1 document fails with a message such as `Schema 'X': sibling 'propertyNames' on '$ref' is not supported.`
+Each unsupported sibling is reported on its own line.
 
 **Cause:** A Schema Object combines `$ref` with a sibling keyword Contracteer does not merge.
 Supported siblings cover type, length and numeric bounds, enum and const, required, properties, items, additionalProperties, multipleOf, pattern, uniqueItems, and item/property count bounds.

@@ -8,6 +8,8 @@ import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
+import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -25,7 +27,7 @@ internal class SharedComponents(
 ) {
 
   fun dereference(ref: String): Result<Schema<*>> {
-    if (!ref.startsWith("#/")) return failure(unresolvable(ref, "external references are not supported"))
+    if (!ref.startsWith("#/")) return unsupported(ref, "external references are not supported")
 
     val segments = ref.removePrefix("#/").split("/").map(::unescapePointerSegment)
     if (segments.size < 3 || segments[0] != "components") return failure(unresolvable(ref, "expected '#/components/<section>/<name>'"))
@@ -33,7 +35,7 @@ internal class SharedComponents(
     val section = segments[1]
     val name = segments[2]
     val components = componentsFor(section)
-                     ?: return failure(unresolvable(ref, "section '$section' is not supported in Contracteer"))
+                     ?: return unsupported(ref, "section '$section' is not supported in Contracteer")
     val start = components[name]
                 ?: return failure(unresolvable(ref, "$section '$name' not found"))
 
@@ -97,7 +99,7 @@ internal class SharedComponents(
       "items"                   -> wrapField(schema.items, "Schema", "items", ref)
       "additionalProperties"    -> descendAdditionalProperties(schema.additionalProperties, ref)
       "not"                     -> wrapField(schema.not, "Schema", "not", ref)
-      "definitions", $$"$defs"  -> failure(unresolvable(ref, "segment '$head' is not supported in Contracteer"))
+      "definitions", $$"$defs"  -> unsupported(ref, "segment '$head' is not supported in Contracteer")
       else                      -> failure(unresolvable(ref, "Schema has no field '$head'"))
     }
 
@@ -162,6 +164,9 @@ internal class SharedComponents(
 
   private fun ensureSchema(node: Any, ref: String): Result<Schema<*>> =
     if (node is Schema<*>) success(node) else failure(unresolvable(ref, "target is not a Schema"))
+
+  private fun <T> unsupported(ref: String, reason: String): Result<T> =
+    failure(Diagnostic(unresolvable(ref, reason), keyword = $$"$ref", rule = UNSUPPORTED))
 
   private fun unresolvable(ref: String, reason: String) =
     $$"$ref '$$ref': cannot resolve JSON Pointer — $$reason"

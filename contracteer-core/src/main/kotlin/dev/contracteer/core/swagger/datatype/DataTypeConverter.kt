@@ -4,6 +4,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.media.Schema
+import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.DiagnosticRule.INFINITE_CYCLE
+import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -97,7 +100,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     val unsupportedFeature = schema.unsupportedFeature()
     return when {
       schema.hasComposition()                                       -> convertComposedSchema(schema, convert, discriminator)
-      unsupportedFeature != null                                    -> unsupported(schema, unsupportedFeature.description, unsupportedFeature.suggestion)
+      unsupportedFeature != null                                    -> unsupported(schema, unsupportedFeature)
       contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema, warnings)
       contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
       contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema, warnings)
@@ -113,24 +116,27 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     }
   }
 
-  private data class UnsupportedFeature(val description: String, val suggestion: String? = null)
+  private data class UnsupportedFeature(val description: String, val keyword: String?, val suggestion: String? = null)
 
   private fun Schema<*>.unsupportedFeature(): UnsupportedFeature? =
     when {
-      booleanSchemaValue() != null -> UnsupportedFeature("boolean schema '${booleanSchemaValue()}'", "Use a schema object instead.")
-      hasNonNullableMultiType()    -> UnsupportedFeature("non-nullable multi-type 'types: $types'", "Use 'oneOf' or 'anyOf' to express a union of types.")
-      hasPrefixItems()             -> UnsupportedFeature("'prefixItems'", "Use 'items' if all positions share a single type.")
-      hasContains()                -> UnsupportedFeature("'contains/minContains/maxContains'")
-      hasConditional()             -> UnsupportedFeature("'if/then/else'")
-      hasNot()                     -> UnsupportedFeature("'not'")
-      hasUnevaluatedProperties()   -> UnsupportedFeature("'unevaluatedProperties'")
-      hasUnevaluatedItems()        -> UnsupportedFeature("'unevaluatedItems'")
-      hasPatternProperties()       -> UnsupportedFeature("'patternProperties'")
-      hasDependentRequired()       -> UnsupportedFeature("'dependentRequired'")
-      hasDependentSchemas()        -> UnsupportedFeature("'dependentSchemas'")
-      hasContentSchema()           -> UnsupportedFeature("'contentSchema'")
+      booleanSchemaValue() != null -> UnsupportedFeature("boolean schema '${booleanSchemaValue()}'", null, "Use a schema object instead.")
+      hasNonNullableMultiType()    -> UnsupportedFeature("non-nullable multi-type 'types: $types'", "type", "Use 'oneOf' or 'anyOf' to express a union of types.")
+      hasPrefixItems()             -> unsupportedKeyword("prefixItems", "Use 'items' if all positions share a single type.")
+      hasContains()                -> UnsupportedFeature("'contains/minContains/maxContains'", "contains")
+      hasConditional()             -> UnsupportedFeature("'if/then/else'", "if")
+      hasNot()                     -> unsupportedKeyword("not")
+      hasUnevaluatedProperties()   -> unsupportedKeyword("unevaluatedProperties")
+      hasUnevaluatedItems()        -> unsupportedKeyword("unevaluatedItems")
+      hasPatternProperties()       -> unsupportedKeyword("patternProperties")
+      hasDependentRequired()       -> unsupportedKeyword("dependentRequired")
+      hasDependentSchemas()        -> unsupportedKeyword("dependentSchemas")
+      hasContentSchema()           -> unsupportedKeyword("contentSchema")
       else                         -> null
     }
+
+  private fun unsupportedKeyword(keyword: String, suggestion: String? = null) =
+    UnsupportedFeature("'$keyword'", keyword, suggestion)
 
   private fun convertStringSchema(schema: Schema<*>): Result<DataType<out Any>> =
     when (schema.format) {
@@ -181,15 +187,18 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     convertSchema(schema, schemaName, localRequiredOnly = true)
 
   private fun unsupportedContentEncoding(schema: Schema<*>, value: String): Result<DataType<out Any>> =
-    failure("Schema '${schema.name}': contentEncoding='$value' is not supported. Only 'base64' is supported in OAS 3.1.")
+    unsupported("Schema '${schema.name}': contentEncoding='$value' is not supported. Only 'base64' is supported in OAS 3.1.", "contentEncoding")
 
-  private fun unsupported(schema: Schema<*>, what: String, suggestion: String? = null): Result<DataType<out Any>> {
-    val base = "Schema '${schema.name}': $what is not supported in Contracteer."
-    return failure(if (suggestion != null) "$base $suggestion" else base)
+  private fun unsupported(schema: Schema<*>, feature: UnsupportedFeature): Result<DataType<out Any>> {
+    val base = "Schema '${schema.name}': ${feature.description} is not supported in Contracteer."
+    return unsupported(if (feature.suggestion != null) "$base ${feature.suggestion}" else base, feature.keyword)
   }
 
   private fun unsupportedStructuredTextContentMediaType(schema: Schema<*>): Result<DataType<out Any>> =
-    failure("Schema '${schema.name}': contentMediaType='${schema.effectiveContentMediaType()}' is not yet supported in Contracteer.")
+    unsupported("Schema '${schema.name}': contentMediaType='${schema.effectiveContentMediaType()}' is not yet supported in Contracteer.", "contentMediaType")
+
+  private fun unsupported(message: String, keyword: String?): Result<DataType<out Any>> =
+    failure(Diagnostic(message, keyword = keyword, rule = UNSUPPORTED))
 
   private fun tryToInferSchemaType(schema: Schema<*>): Result<DataType<out Any>> =
     if (schema.isAnyType())
@@ -201,7 +210,10 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     val cyclePath = findNonBreakablePath(proxy.delegate, proxy, listOf(proxy.name))
     return when {
       cyclePath != null ->
-        failure("Circular reference with no optional, nullable, or collection exit point: ${cyclePath.joinToString(" → ")}")
+        failure(Diagnostic(
+          "Circular reference with no optional, nullable, or collection exit point: ${cyclePath.joinToString(" → ")}",
+          keyword = $$"$ref",
+          rule = INFINITE_CYCLE))
 
       else              -> {
         dataTypeCache[ref] = dataType

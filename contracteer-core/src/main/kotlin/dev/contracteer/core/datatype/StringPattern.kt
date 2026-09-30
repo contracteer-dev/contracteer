@@ -1,6 +1,8 @@
 package dev.contracteer.core.datatype
 
 import com.github.curiousoddman.rgxgen.RgxGen
+import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.DiagnosticRule.PATTERN_UNCERTIFIABLE
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -73,7 +75,11 @@ internal class StringPattern private constructor(
       )
 
     private fun <T> patternNotSupported(pattern: String): Result<T> =
-      failure("pattern", "'$pattern' is not supported for value generation. Use OpenAPI examples to provide explicit values for this property (creating Scenarios), or simplify the pattern.")
+      failure<T>(Diagnostic(
+        "'$pattern' is not supported for value generation. Use OpenAPI examples to provide explicit values for this property (creating Scenarios), or simplify the pattern.",
+        keyword = "pattern",
+        rule = PATTERN_UNCERTIFIABLE
+      )).forProperty("pattern")
 
     private fun shortCause(e: Throwable): String =
       e.message?.lines()?.firstOrNull() ?: e::class.simpleName.orEmpty()
