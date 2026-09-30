@@ -1,5 +1,9 @@
 package dev.contracteer.core.swagger
 
+import dev.contracteer.core.DiagnosticRule
+import dev.contracteer.core.DiagnosticRule.BODY_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.OPERATION_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.SCENARIO_EXCLUDED
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.codec.ContentCodec
 import dev.contracteer.core.datatype.AnyDataType
@@ -15,10 +19,10 @@ internal fun filterUnsupportedOperation(operation: ApiOperation, warnings: LoadW
   val supported = operation.withoutUnsupportedContent()
   val exclusionReason = operation.exclusionReason(supported)
   if (exclusionReason != null) {
-    warnings.warn("Operation excluded: $exclusionReason.", operationRef)
+    warnings.warn(OPERATION_EXCLUDED, "Operation excluded: $exclusionReason.", operation = operationRef)
     return null
   }
-  operation.exclusionWarnings(supported.responseSchemas).forEach { warnings.warn(it, operationRef) }
+  operation.exclusions(supported.responseSchemas).forEach { warnings.warn(it.rule, it.message, operation = operationRef) }
   return supported
 }
 
@@ -42,20 +46,22 @@ private fun ApiOperation.exclusionReason(supported: ApiOperation): String? =
     else                                                                                    -> null
   }
 
-private fun ApiOperation.exclusionWarnings(supportedResponses: ResponseSchemas): List<String> =
-  requestSchema.bodies.exclusionWarnings("Request body") +
-  responseSchemas.responsesByLabel().flatMap { (label, schema) -> schema.exclusionWarnings(responseName(label)) } +
+private data class Exclusion(val rule: DiagnosticRule, val message: String)
+
+private fun ApiOperation.exclusions(supportedResponses: ResponseSchemas): List<Exclusion> =
+  requestSchema.bodies.exclusions("Request body") +
+  responseSchemas.responsesByLabel().flatMap { (label, schema) -> schema.exclusions(responseName(label)) } +
   scenarios.mapNotNull { scenario ->
-    exclusionReason(scenario, supportedResponses)?.let { "Scenario '${scenario.key}' excluded: $it." }
+    exclusionReason(scenario, supportedResponses)?.let { Exclusion(SCENARIO_EXCLUDED, "Scenario '${scenario.key}' excluded: $it.") }
   }
 
-private fun ResponseSchema.exclusionWarnings(name: String): List<String> =
-  if (filterUnsupportedBodies(this) == null) listOf("$name excluded: no supported body.")
-  else bodies.exclusionWarnings("$name body")
+private fun ResponseSchema.exclusions(name: String): List<Exclusion> =
+  if (filterUnsupportedBodies(this) == null) listOf(Exclusion(BODY_EXCLUDED, "$name excluded: no supported body."))
+  else bodies.exclusions("$name body")
 
-private fun List<BodySchema>.exclusionWarnings(name: String): List<String> =
+private fun List<BodySchema>.exclusions(name: String): List<Exclusion> =
   filter { it.isUnsupported() }
-    .map { "$name '${it.contentType.value}' excluded: ${it.unsupportedReason()}." }
+    .map { Exclusion(BODY_EXCLUDED, "$name '${it.contentType.value}' excluded: ${it.unsupportedReason()}.") }
 
 private fun responseName(label: String) =
   if (label == "default") "Default response" else "Response $label"

@@ -2,6 +2,12 @@ package dev.contracteer.core.swagger
 
 import dev.contracteer.core.Diagnostic
 import dev.contracteer.core.DiagnosticCategory.SPEC
+import dev.contracteer.core.DiagnosticRule
+import dev.contracteer.core.DiagnosticRule.BODY_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.OPERATION_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.SCENARIO_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.UNKNOWN_FORMAT
+import dev.contracteer.core.DiagnosticRule.UNRESOLVED_EXAMPLE_KEY
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Severity.ERROR
 import dev.contracteer.core.Severity.WARNING
@@ -18,7 +24,7 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      operationWarning("Operation excluded: no supported response content type.", "GET", "/products")
+      operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported response content type.", "GET", "/products")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -30,8 +36,8 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics.filter { it.operation != null } == listOf(
-      operationWarning("Operation excluded: parameter content has no schema.", "GET", "/null-schema"),
-      operationWarning("Operation excluded: parameter content has no schema.", "GET", "/empty-schema")
+      operationWarning(OPERATION_EXCLUDED, "Operation excluded: parameter content has no schema.", "GET", "/null-schema"),
+      operationWarning(OPERATION_EXCLUDED, "Operation excluded: parameter content has no schema.", "GET", "/empty-schema")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -43,8 +49,8 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics.filter { it.operation != null } == listOf(
-      operationWarning("Operation excluded: no supported request body content type.", "POST", "/null-schema"),
-      operationWarning("Operation excluded: no supported request body content type.", "POST", "/empty-schema")
+      operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported request body content type.", "POST", "/null-schema"),
+      operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported request body content type.", "POST", "/empty-schema")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -58,18 +64,19 @@ class OpenApiLoaderWarningsTest {
     assert(warnings.sorted() == listOf(
       "Schema 'Binary': 'pattern' ignored because 'format: binary' takes precedence.",
       "Schema 'Byte': 'pattern' ignored because 'format: byte' takes precedence.",
-      "Schema 'Date': 'minLength'/'maxLength' ignored because 'format: date' takes precedence.",
+      "Schema 'Date': 'maxLength' ignored because 'format: date' takes precedence.",
       "Schema 'Date': 'pattern' ignored because 'format: date' takes precedence.",
-      "Schema 'DateTime': 'minLength'/'maxLength' ignored because 'format: date-time' takes precedence.",
+      "Schema 'DateTime': 'maxLength' ignored because 'format: date-time' takes precedence.",
       "Schema 'DateTime': 'pattern' ignored because 'format: date-time' takes precedence.",
       "Schema 'Email': 'pattern' ignored because 'format: email' takes precedence.",
-      "Schema 'Hostname': 'minLength'/'maxLength' ignored because 'format: hostname' takes precedence.",
+      "Schema 'Hostname': 'maxLength' ignored because 'format: hostname' takes precedence.",
       "Schema 'Hostname': 'pattern' ignored because 'format: hostname' takes precedence.",
-      "Schema 'Uri': 'minLength'/'maxLength' ignored because 'format: uri' takes precedence.",
+      "Schema 'Uri': 'maxLength' ignored because 'format: uri' takes precedence.",
       "Schema 'Uri': 'pattern' ignored because 'format: uri' takes precedence.",
-      "Schema 'UriReference': 'minLength'/'maxLength' ignored because 'format: uri-reference' takes precedence.",
+      "Schema 'UriReference': 'maxLength' ignored because 'format: uri-reference' takes precedence.",
       "Schema 'UriReference': 'pattern' ignored because 'format: uri-reference' takes precedence.",
-      "Schema 'Uuid': 'minLength'/'maxLength' ignored because 'format: uuid' takes precedence.",
+      "Schema 'Uuid': 'maxLength' ignored because 'format: uuid' takes precedence.",
+      "Schema 'Uuid': 'minLength' ignored because 'format: uuid' takes precedence.",
       "Schema 'Uuid': 'pattern' ignored because 'format: uuid' takes precedence."
     )) { warnings.toString() }
   }
@@ -95,8 +102,8 @@ class OpenApiLoaderWarningsTest {
     // then
     val warnings = assertSchemaWarnings(report)
     assert(warnings.sorted() == listOf(
-      "Schema 'Code': 'minLength'/'maxLength' ignored because 'pattern' takes precedence.",
-      "Schema 'Labels.propertyNames': 'minLength'/'maxLength' ignored because 'pattern' takes precedence."
+      "Schema 'Code': 'minLength' ignored because 'pattern' takes precedence.",
+      "Schema 'Labels.propertyNames': 'maxLength' ignored because 'pattern' takes precedence."
     )) { warnings.toString() }
   }
 
@@ -121,9 +128,11 @@ class OpenApiLoaderWarningsTest {
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
       operationWarning(
+        UNRESOLVED_EXAMPLE_KEY,
         "Example key '404_missing' targets status code 404, but no response with that status code is defined. Key ignored.",
         "GET",
-        "/products/{id}"
+        "/products/{id}",
+        keyword = "examples"
       )
     )) { loaded.diagnostics.toString() }
   }
@@ -138,7 +147,7 @@ class OpenApiLoaderWarningsTest {
     val severities = failed.diagnostics.map { it.severity }
     assert(severities.first() == ERROR) { failed.diagnostics.toString() }
     assert(failed.diagnostics.last() ==
-             Diagnostic("Schema '': unknown format 'int128' for integer type is ignored.", category = SPEC, severity = WARNING)
+             Diagnostic("Schema '': unknown format 'int128' for integer type is ignored.", "format", UNKNOWN_FORMAT, category = SPEC, severity = WARNING)
     ) { failed.diagnostics.toString() }
     assert(severities.count { it == WARNING } == 1) { failed.diagnostics.toString() }
   }
@@ -163,8 +172,8 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      operationWarning("Response 200 body 'application/xml' excluded: XML content is not supported.", "GET", "/products"),
-      operationWarning("Scenario 'xml_scenario' excluded: its response body 'application/xml' is excluded.", "GET", "/products")
+      operationWarning(BODY_EXCLUDED, "Response 200 body 'application/xml' excluded: XML content is not supported.", "GET", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario 'xml_scenario' excluded: its response body 'application/xml' is excluded.", "GET", "/products")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -176,7 +185,7 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      operationWarning("Response 200 body 'application/json' excluded: its schema is empty or missing.", "GET", "/products")
+      operationWarning(BODY_EXCLUDED, "Response 200 body 'application/json' excluded: its schema is empty or missing.", "GET", "/products")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -188,8 +197,8 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics.filter { it.operation != null } == listOf(
-      operationWarning("Response 201 excluded: no supported body.", "GET", "/test"),
-      operationWarning("Scenario 'bad_scenario' excluded: response 201 is excluded.", "GET", "/test")
+      operationWarning(BODY_EXCLUDED, "Response 201 excluded: no supported body.", "GET", "/test"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario 'bad_scenario' excluded: response 201 is excluded.", "GET", "/test")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -201,7 +210,7 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      operationWarning("Request body 'application/xml' excluded: XML content is not supported.", "POST", "/products")
+      operationWarning(BODY_EXCLUDED, "Request body 'application/xml' excluded: XML content is not supported.", "POST", "/products")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -213,8 +222,8 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      operationWarning("Response 4XX excluded: no supported body.", "GET", "/products"),
-      operationWarning("Default response excluded: no supported body.", "GET", "/products")
+      operationWarning(BODY_EXCLUDED, "Response 4XX excluded: no supported body.", "GET", "/products"),
+      operationWarning(BODY_EXCLUDED, "Default response excluded: no supported body.", "GET", "/products")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -226,10 +235,10 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      operationWarning("Request body 'application/xml' excluded: XML content is not supported.", "POST", "/products"),
-      operationWarning("Response 200 body 'application/xml' excluded: XML content is not supported.", "POST", "/products"),
-      operationWarning("Scenario 'widget' excluded: its response body 'application/xml' is excluded.", "POST", "/products"),
-      operationWarning("Scenario 'widget' excluded: its request body 'application/xml' is excluded.", "POST", "/products")
+      operationWarning(BODY_EXCLUDED, "Request body 'application/xml' excluded: XML content is not supported.", "POST", "/products"),
+      operationWarning(BODY_EXCLUDED, "Response 200 body 'application/xml' excluded: XML content is not supported.", "POST", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario 'widget' excluded: its response body 'application/xml' is excluded.", "POST", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario 'widget' excluded: its request body 'application/xml' is excluded.", "POST", "/products")
     )) { loaded.diagnostics.toString() }
   }
 
@@ -241,17 +250,17 @@ class OpenApiLoaderWarningsTest {
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
     assert(loaded.diagnostics == listOf(
-      operationWarning("Response 404 excluded: no supported body.", "GET", "/products"),
-      operationWarning("Response 4XX excluded: no supported body.", "GET", "/products"),
-      operationWarning("Default response excluded: no supported body.", "GET", "/products"),
-      operationWarning("Scenario '404_MISSING' excluded: response 404 is excluded.", "GET", "/products"),
-      operationWarning("Scenario '418_TEAPOT' excluded: response 4XX is excluded.", "GET", "/products"),
-      operationWarning("Scenario '503_DOWN' excluded: the default response is excluded.", "GET", "/products")
+      operationWarning(BODY_EXCLUDED, "Response 404 excluded: no supported body.", "GET", "/products"),
+      operationWarning(BODY_EXCLUDED, "Response 4XX excluded: no supported body.", "GET", "/products"),
+      operationWarning(BODY_EXCLUDED, "Default response excluded: no supported body.", "GET", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario '404_MISSING' excluded: response 404 is excluded.", "GET", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario '418_TEAPOT' excluded: response 4XX is excluded.", "GET", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario '503_DOWN' excluded: the default response is excluded.", "GET", "/products")
     )) { loaded.diagnostics.toString() }
   }
 
-  private fun operationWarning(message: String, method: String, path: String) =
-    Diagnostic(message, operation = OperationRef(method, path), category = SPEC, severity = WARNING)
+  private fun operationWarning(rule: DiagnosticRule, message: String, method: String, path: String, keyword: String? = null) =
+    Diagnostic(message, keyword, rule, OperationRef(method, path), category = SPEC, severity = WARNING)
 
   private fun assertSchemaWarnings(report: LoadReport): List<String> {
     val loaded = assertIs<LoadReport.Loaded>(report)

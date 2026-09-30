@@ -30,7 +30,7 @@ internal object StringDataTypeConverter {
       }.also { if (it.isSuccess()) warnIfLengthIgnored(schema, warnings) }
 
   private fun warnIfLengthIgnored(schema: Schema<*>, warnings: LoadWarnings) {
-    if (schema.pattern != null && ((schema.minLength ?: 0) > 0 || schema.maxLength != null))
-      warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'pattern' takes precedence.")
+    if (schema.pattern != null)
+      warnings.warnConflictingConstraints(schema, "pattern", "minLength" to schema.minLength?.takeIf { it > 0 }, "maxLength" to schema.maxLength)
   }
 }

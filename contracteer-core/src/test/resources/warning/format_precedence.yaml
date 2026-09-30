@@ -47,6 +47,7 @@ components:
       type: string
       format: uuid
       pattern: '^.*$'
+      minLength: 36
       maxLength: 36
     Email:
       type: string

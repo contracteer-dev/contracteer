@@ -14,8 +14,7 @@ import java.util.Date
 
 internal object DateDataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<DateDataType> {
-    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: date' takes precedence.")
-    if (schema.minLength != null || schema.maxLength != null) warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: date' takes precedence.")
+    warnings.warnFormatPrecedence(schema, "date")
 
     return schema
       .mapEnum {

@@ -11,7 +11,7 @@ import dev.contracteer.core.swagger.mapEnum
 
 internal object EmailDataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<EmailDataType> {
-    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: email' takes precedence.")
+    warnings.warnConflictingConstraints(schema, "format: email", "pattern" to schema.pattern)
 
     return schema
       .mapEnum {

@@ -11,7 +11,7 @@ import dev.contracteer.core.swagger.mapEnum
 
 internal object BinaryDataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<BinaryDataType> {
-    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: binary' takes precedence.")
+    warnings.warnConflictingConstraints(schema, "format: binary", "pattern" to schema.pattern)
 
     return schema
       .mapEnum {

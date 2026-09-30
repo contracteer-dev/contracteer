@@ -12,7 +12,7 @@ import java.util.Base64
 
 internal object Base64DataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<Base64DataType> {
-    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: byte' takes precedence.")
+    warnings.warnConflictingConstraints(schema, "format: byte", "pattern" to schema.pattern)
 
     return schema
       .mapEnum {

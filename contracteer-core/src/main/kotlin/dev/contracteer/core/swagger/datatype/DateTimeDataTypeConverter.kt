@@ -13,8 +13,7 @@ import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 internal object DateTimeDataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<DateTimeDataType> {
-    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: date-time' takes precedence.")
-    if (schema.minLength != null || schema.maxLength != null) warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: date-time' takes precedence.")
+    warnings.warnFormatPrecedence(schema, "date-time")
 
     return schema
       .mapEnum {

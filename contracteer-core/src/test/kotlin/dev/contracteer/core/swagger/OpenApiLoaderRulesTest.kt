@@ -1,11 +1,19 @@
 package dev.contracteer.core.swagger
 
 import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.DiagnosticRule.BODY_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.CONFLICTING_CONSTRAINTS
+import dev.contracteer.core.DiagnosticRule.EMPTY_SCHEMA
 import dev.contracteer.core.DiagnosticRule.INFINITE_CYCLE
+import dev.contracteer.core.DiagnosticRule.OPERATION_EXCLUDED
 import dev.contracteer.core.DiagnosticRule.PATTERN_UNCERTIFIABLE
+import dev.contracteer.core.DiagnosticRule.SCENARIO_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.UNKNOWN_FORMAT
+import dev.contracteer.core.DiagnosticRule.UNRESOLVED_EXAMPLE_KEY
 import dev.contracteer.core.DiagnosticRule.UNSERIALIZABLE_CONTENT
 import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.Severity.ERROR
+import dev.contracteer.core.Severity.WARNING
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -99,9 +107,101 @@ class OpenApiLoaderRulesTest {
     assert(errors.map { it.rule to it.keyword } == listOf(PATTERN_UNCERTIFIABLE to "pattern")) { report.diagnostics.toString() }
   }
 
+  @Test
+  fun `operation excluded by the filter is reported as operation excluded without a keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/xml_schema.yaml")
+
+    // then
+    val warnings = report.warnings()
+    assert(warnings.map { it.rule to it.keyword } == listOf(OPERATION_EXCLUDED to null)) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `body and scenario excluded by the filter are reported as body excluded and scenario excluded without a keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/xml_scenarios.yaml")
+
+    // then
+    val warnings = report.warnings()
+    assert(warnings.map { it.rule to it.keyword } == listOf(BODY_EXCLUDED to null, SCENARIO_EXCLUDED to null)) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `response excluded by the filter is reported as body excluded without a keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/excluded_class_and_default_responses.yaml")
+
+    // then
+    val warnings = report.warnings()
+    assert(warnings.map { it.rule to it.keyword }.distinct() == listOf(BODY_EXCLUDED to null)) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `constraints a format takes precedence over are reported as conflicting constraints with their own keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/format_precedence.yaml")
+
+    // then
+    val warnings = report.warnings().filter { it.message.startsWith("Schema 'Uuid'") }
+    assert(warnings.map { it.rule to it.keyword } == listOf(
+      CONFLICTING_CONSTRAINTS to "pattern",
+      CONFLICTING_CONSTRAINTS to "minLength",
+      CONFLICTING_CONSTRAINTS to "maxLength"
+    )) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `length constraints a pattern takes precedence over are reported as conflicting constraints with their own keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/pattern_precedence.yaml")
+
+    // then
+    val warnings = report.warnings()
+    assert(warnings.map { it.rule to it.keyword } == listOf(
+      CONFLICTING_CONSTRAINTS to "minLength",
+      CONFLICTING_CONSTRAINTS to "maxLength"
+    )) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `unknown numeric format is reported as unknown format with the format keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/unknown_format.yaml")
+
+    // then
+    val warnings = report.warnings()
+    assert(warnings.map { it.rule to it.keyword }.distinct() == listOf(UNKNOWN_FORMAT to "format")) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `empty schema is reported as empty schema without a keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/empty_schema.yaml")
+
+    // then
+    val warnings = report.warnings()
+    assert(warnings.map { it.rule to it.keyword } == listOf(EMPTY_SCHEMA to null)) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `example key targeting an undefined status code is reported as unresolved example key with the examples keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/unresolvable_example_key.yaml")
+
+    // then
+    val warnings = report.warnings()
+    assert(warnings.map { it.rule to it.keyword } == listOf(UNRESOLVED_EXAMPLE_KEY to "examples")) { report.diagnostics.toString() }
+  }
+
   private fun LoadReport.errors(): List<Diagnostic> {
     assertIs<LoadReport.Failed>(this)
     return diagnostics.filter { it.severity == ERROR }
+  }
+
+  private fun LoadReport.warnings(): List<Diagnostic> {
+    assertIs<LoadReport.Loaded>(this)
+    return diagnostics.filter { it.severity == WARNING }
   }
 
   companion object {

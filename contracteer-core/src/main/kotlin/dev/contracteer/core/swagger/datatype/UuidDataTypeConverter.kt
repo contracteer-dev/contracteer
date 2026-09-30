@@ -12,8 +12,7 @@ import java.util.UUID
 
 internal object UuidDataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<UuidDataType> {
-    if (schema.pattern != null) warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: uuid' takes precedence.")
-    if (schema.minLength != null || schema.maxLength != null) warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: uuid' takes precedence.")
+    warnings.warnFormatPrecedence(schema, "uuid")
     return schema
       .mapEnum {
         when (it) {

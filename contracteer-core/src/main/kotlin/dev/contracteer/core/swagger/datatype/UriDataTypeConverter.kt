@@ -11,10 +11,7 @@ import dev.contracteer.core.swagger.mapEnum
 
 internal object UriDataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<UriDataType> {
-    if (schema.minLength != null || schema.maxLength != null)
-      warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: uri' takes precedence.")
-    if (schema.pattern != null)
-      warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: uri' takes precedence.")
+    warnings.warnFormatPrecedence(schema, "uri")
 
     return schema
       .mapEnum {

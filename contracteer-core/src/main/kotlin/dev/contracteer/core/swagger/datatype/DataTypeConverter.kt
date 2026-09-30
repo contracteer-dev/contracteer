@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.media.Schema
 import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.DiagnosticRule.EMPTY_SCHEMA
 import dev.contracteer.core.DiagnosticRule.INFINITE_CYCLE
 import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.Result
@@ -202,7 +203,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
 
   private fun tryToInferSchemaType(schema: Schema<*>): Result<DataType<out Any>> =
     if (schema.isAnyType())
-      success(AnyDataType).also { warnings.warn("Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.") }
+      success(AnyDataType).also { warnings.warn(EMPTY_SCHEMA, "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.") }
     else
       failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
 

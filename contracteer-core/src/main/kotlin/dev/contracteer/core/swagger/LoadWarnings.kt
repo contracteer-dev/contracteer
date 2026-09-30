@@ -3,6 +3,7 @@ package dev.contracteer.core.swagger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import dev.contracteer.core.Diagnostic
 import dev.contracteer.core.DiagnosticCategory.SPEC
+import dev.contracteer.core.DiagnosticRule
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Severity.WARNING
 
@@ -18,8 +19,8 @@ internal class LoadWarnings {
   val diagnostics: List<Diagnostic>
     get() = collected.toList()
 
-  fun warn(message: String, operation: OperationRef? = null) {
-    val diagnostic = Diagnostic(message, operation = operation, category = SPEC, severity = WARNING)
+  fun warn(rule: DiagnosticRule, message: String, keyword: String? = null, operation: OperationRef? = null) {
+    val diagnostic = Diagnostic(message, keyword = keyword, rule = rule, operation = operation, category = SPEC, severity = WARNING)
     if (collected.add(diagnostic)) logger.warn { diagnostic.render() }
   }
 }

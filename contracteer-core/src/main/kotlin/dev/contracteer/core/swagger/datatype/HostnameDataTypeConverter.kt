@@ -11,10 +11,7 @@ import dev.contracteer.core.swagger.mapEnum
 
 internal object HostnameDataTypeConverter {
   fun convert(schema: Schema<*>, warnings: LoadWarnings): Result<HostnameDataType> {
-    if (schema.minLength != null || schema.maxLength != null)
-      warnings.warn("Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: hostname' takes precedence.")
-    if (schema.pattern != null)
-      warnings.warn("Schema '${schema.name}': 'pattern' ignored because 'format: hostname' takes precedence.")
+    warnings.warnFormatPrecedence(schema, "hostname")
 
     return schema
       .mapEnum {

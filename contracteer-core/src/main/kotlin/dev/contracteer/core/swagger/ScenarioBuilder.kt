@@ -1,6 +1,6 @@
 package dev.contracteer.core.swagger
 
-import io.swagger.v3.oas.models.examples.Example
+import dev.contracteer.core.DiagnosticRule.UNRESOLVED_EXAMPLE_KEY
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
@@ -192,7 +192,9 @@ internal object ScenarioBuilder {
       val statusCode = key.statusCodePrefix()
       if (statusCode != null && responseFor(statusCode, byStatusCode, byClass, default) == null) {
         warnings.warn(
+          UNRESOLVED_EXAMPLE_KEY,
           "Example key '$key' targets status code $statusCode, but no response with that status code is defined. Key ignored.",
+          "examples",
           OperationRef(method, path)
         )
       }

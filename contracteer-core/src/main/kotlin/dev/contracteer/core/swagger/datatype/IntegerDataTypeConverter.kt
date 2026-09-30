@@ -1,6 +1,7 @@
 package dev.contracteer.core.swagger.datatype
 
 import io.swagger.v3.oas.models.media.Schema
+import dev.contracteer.core.DiagnosticRule.UNKNOWN_FORMAT
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -56,6 +57,6 @@ internal object IntegerDataTypeConverter {
     "int64" -> Range.create(Long.MIN_VALUE.toBigDecimal(), Long.MAX_VALUE.toBigDecimal())
     else    ->
       Range.create()
-        .also { warnings.warn("Schema '$schemaName': unknown format '$format' for integer type is ignored.") }
+        .also { warnings.warn(UNKNOWN_FORMAT, "Schema '$schemaName': unknown format '$format' for integer type is ignored.", "format") }
   }
 }
