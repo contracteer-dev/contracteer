@@ -18,6 +18,7 @@ import dev.contracteer.core.dsl.form
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
 import dev.contracteer.core.dsl.stringType
+import java.net.ServerSocket
 import kotlin.test.Test
 
 class OpenApiVerifierTest {
@@ -354,7 +355,27 @@ class OpenApiVerifierTest {
     assert(errorMessage.contains(GenerationOutcome.Reason.CYCLE.explanation()))
   }
 
+  @Test
+  fun `fails the case with a connection failure when the server cannot be reached`() {
+    // given
+    val apiOperation = apiOperation("GET", "/maintenance") {
+      response(503) {}
+    }
+    val unreachableUrl = "http://localhost:${releasedPort()}"
+    val verifier = OpenApiVerifier(VerifierConfiguration(unreachableUrl))
+
+    // when
+    val outcome = verifier.verify(VerificationCaseFactory.create(apiOperation).single())
+
+    // then
+    assert(outcome.result.errors() == listOf("Request failed: could not connect to $unreachableUrl")) {
+      "Expected a connection failure but got: ${outcome.result}"
+    }
+  }
+
   // --- helpers ---
+
+  private fun releasedPort(): Int = ServerSocket(0).use { it.localPort }
 
   private fun <T> withHttpServer(routes: RoutingHttpHandler, block: (port: Int) -> T): T {
     val server = routes.asServer(SunHttp(0)).start()

@@ -4,6 +4,7 @@ import org.http4k.client.JavaHttpClient
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status.Companion.CONNECTION_REFUSED
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -21,7 +22,16 @@ internal class VerificationHttpClient(serverUrl: String) {
   private val baseClient = JavaHttpClient()
 
   fun execute(case: VerificationCase): Result<Pair<Request, Response>> =
-    buildRequest(case).map { request -> request to baseClient(request) }
+    buildRequest(case).flatMap { send(it) }
+
+  // http4k's client answers a refused connection or an unknown host with a synthetic 503 instead of
+  // throwing. Its status equals CONNECTION_REFUSED; a 503 sent by the server does not.
+  // http4k compares statuses by code and client-generated flag, not description.
+  private fun send(request: Request): Result<Pair<Request, Response>> {
+    val response = baseClient(request)
+    return if (response.status == CONNECTION_REFUSED) failure("Request failed: could not connect to $serverUrl")
+    else success(request to response)
+  }
 
   private fun buildRequest(case: VerificationCase): Result<Request> =
     when (case) {

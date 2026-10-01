@@ -32,6 +32,16 @@ At startup, the mock server logs at WARN each operation that answers `418` or an
 
 ## Verifier Issues
 
+### Every case fails with "could not connect"
+
+**Symptom:** Every verification case fails with `Request failed: could not connect to http://localhost:8080`.
+
+**Cause:** No server answers at the base URL: the server is not started, it listens on another port, or the host name does not resolve.
+
+**Fix:** Start the server before the verification runs.
+Check the base URL given to the verifier: `--base-url` on the CLI, `baseUrl` on `VerifierConfiguration`, `serverUrl` and `serverPort` on `@ContracteerTest`.
+When the server starts on a random port, check that the field annotated with `@ContracteerServerPort` holds that port.
+
 ### All verification cases fail with the wrong status code
 
 **Symptom:** Every scenario-based case expects `200` but the server returns `404`.
