@@ -12,8 +12,8 @@ package dev.contracteer.core
  * @property keyword the OpenAPI or JSON Schema keyword the finding is about (e.g. `maxItems`, `$ref`); `null` when none applies.
  * @property rule the family the finding belongs to; `null` when freeform.
  * @property operation the operation the finding belongs to; `null` when it belongs to none.
- * @property category what kind of finding this is; `null` until assigned (a report assigns one to every finding).
- * @property severity how serious the finding is; `null` until assigned (a report assigns one to every finding).
+ * @property category what kind of finding this is; `null` until assigned (a load report and the verifier assign one to every finding).
+ * @property severity how serious the finding is; `null` until assigned (a load report and the verifier assign one to every finding).
  */
 data class Diagnostic @JvmOverloads constructor(
   val message: String,

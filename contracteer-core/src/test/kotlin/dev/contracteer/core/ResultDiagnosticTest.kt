@@ -1,7 +1,11 @@
 package dev.contracteer.core
 
+import dev.contracteer.core.DiagnosticCategory.CONTRACT_VIOLATION
+import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
+import dev.contracteer.core.Severity.ERROR
+import dev.contracteer.core.Severity.WARNING
 import org.junit.jupiter.api.Test
 
 class ResultDiagnosticTest {
@@ -61,6 +65,25 @@ class ResultDiagnosticTest {
     // then
     assert(result.diagnostics().map { it.operation } == listOf(OperationRef("GET", "/items"), OperationRef("GET", "/items")))
     assert(result.errors() == listOf("GET /items: error 1", "GET /items: 'name': error 2"))
+  }
+
+  @Test
+  fun `withDefaults sets the category and severity a diagnostic lacks and keeps the assigned ones`() {
+    // given
+    val unassigned = Diagnostic("error 1")
+    val assigned = Diagnostic("error 2", category = SPEC, severity = WARNING)
+    val categoryOnly = Diagnostic("error 3", category = SPEC)
+    val failure = failure<Any>(unassigned) combineWith failure<Any>(assigned) combineWith failure<Any>(categoryOnly)
+
+    // when
+    val result = failure.withDefaults(CONTRACT_VIOLATION, ERROR)
+
+    // then
+    assert(result.diagnostics() == listOf(
+      unassigned.copy(category = CONTRACT_VIOLATION, severity = ERROR),
+      assigned,
+      categoryOnly.copy(severity = ERROR)
+    ))
   }
 
   @Test

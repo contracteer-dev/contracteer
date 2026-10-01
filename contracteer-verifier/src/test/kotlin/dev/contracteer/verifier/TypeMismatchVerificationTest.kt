@@ -11,8 +11,6 @@ import org.http4k.core.Status.Companion.UNPROCESSABLE_ENTITY
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
-import org.http4k.server.SunHttp
-import org.http4k.server.asServer
 import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
@@ -38,7 +36,6 @@ class TypeMismatchVerificationTest {
           .body("""{"error": "invalid body"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("POST", "/users") {
       request {
@@ -58,13 +55,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    val outcome = verifier.verify(typeMismatchCase)
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(outcome.result.isSuccess())
     assert(capturedBody == "<<not-a-object>>")
     assert(capturedContentType?.contains("application/json") == true)
@@ -83,7 +80,6 @@ class TypeMismatchVerificationTest {
           .body("""{"error": "invalid id"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("GET", "/users/{id}") {
       request {
@@ -101,13 +97,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    val outcome = verifier.verify(typeMismatchCase)
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(outcome.result.isSuccess())
     assert(capturedId == "<<not-a-integer>>")
   }
@@ -127,7 +123,6 @@ class TypeMismatchVerificationTest {
           .body("""{"error": "invalid"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("GET", "/users/{id}") {
       request {
@@ -149,13 +144,13 @@ class TypeMismatchVerificationTest {
     val pathCase = cases
       .filterIsInstance<TypeMismatch>()
       .first { it.mutatedElement == MutatedElement.Parameter(PathParam("id")) }
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    val outcome = verifier.verify(pathCase)
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(pathCase)
+    }
 
     // Then
-    server.stop()
     assert(outcome.result.isSuccess())
     assert(capturedId == "<<not-a-integer>>")
     // The non-mutated query param should have a valid integer value
@@ -176,7 +171,6 @@ class TypeMismatchVerificationTest {
           .body("""{"error": "invalid"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("GET", "/users") {
       request {
@@ -194,13 +188,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    verifier.verify(typeMismatchCase)
+    withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(capturedCookieHeader == "session_ttl=<<not-a-integer>>")
   }
 
@@ -217,7 +211,6 @@ class TypeMismatchVerificationTest {
           .body("""{"error": "invalid"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("GET", "/users") {
       request {
@@ -236,13 +229,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    verifier.verify(typeMismatchCase)
+    withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(capturedCookieHeader!!.matches(Regex("session_ttl=<<not-a-integer>>; theme=[^\"]*")))
   }
 
@@ -256,7 +249,6 @@ class TypeMismatchVerificationTest {
           .body("""{"id": 1}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("POST", "/users") {
       request {
@@ -276,13 +268,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    val outcome = verifier.verify(typeMismatchCase)
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(outcome.result.isFailure())
     assert(outcome.result.errors().any { it.contains("Status code") })
   }
@@ -297,7 +289,6 @@ class TypeMismatchVerificationTest {
           .body("""{"detail": "invalid body"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("POST", "/users") {
       request {
@@ -325,13 +316,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    val outcome = verifier.verify(typeMismatchCase)
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(outcome.result.isSuccess()) { "Expected success but got: ${outcome.result.errors()}" }
   }
 
@@ -341,7 +332,6 @@ class TypeMismatchVerificationTest {
     val app = routes(
       "/users/{id}" bind GET to { Response(NOT_FOUND) }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("GET", "/users/{id}") {
       request {
@@ -362,13 +352,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    val outcome = verifier.verify(typeMismatchCase)
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(outcome.result.isSuccess()) { "Expected success but got: ${outcome.result.errors()}" }
   }
 
@@ -382,7 +372,6 @@ class TypeMismatchVerificationTest {
           .body("""{"title": "missing credentials"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     val apiOperation = apiOperation("POST", "/users") {
       request {
@@ -402,13 +391,13 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
-    val outcome = verifier.verify(typeMismatchCase)
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(typeMismatchCase)
+    }
 
     // Then
-    server.stop()
     assert(outcome.result.isFailure())
     assert(outcome.result.errors().any { it.contains("Status code") })
   }

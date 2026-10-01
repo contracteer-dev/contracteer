@@ -52,8 +52,8 @@ sealed class Result<out T> {
     is Failure -> Failure(findings.map { it.copy(operation = operation) }, truncated)
   }
 
-  /** Returns a new result with [category] and [severity] set on every diagnostic that has none; assigned ones are kept. */
-  internal fun withDefaults(category: DiagnosticCategory, severity: Severity): Result<T> = when (this) {
+  /** Sets [category] on every diagnostic that has no category and [severity] on every diagnostic that has no severity; a value already assigned is kept. A success is returned unchanged. */
+  fun withDefaults(category: DiagnosticCategory, severity: Severity): Result<T> = when (this) {
     is Success -> this
     is Failure -> Failure(findings.map { it.withDefaults(category, severity) }, truncated)
   }

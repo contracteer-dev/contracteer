@@ -5,12 +5,12 @@ import org.http4k.core.Method.POST
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
-import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
-import org.http4k.server.SunHttp
-import org.http4k.server.asServer
+import dev.contracteer.core.DiagnosticCategory.CONTRACT_VIOLATION
+import dev.contracteer.core.DiagnosticCategory.EXECUTION_ERROR
+import dev.contracteer.core.Severity.ERROR
 import dev.contracteer.core.datatype.GenerationOutcome
 import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.cyclicObjectType
@@ -18,7 +18,9 @@ import dev.contracteer.core.dsl.form
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
 import dev.contracteer.core.dsl.stringType
+import java.net.InetAddress
 import java.net.ServerSocket
+import kotlin.concurrent.thread
 import kotlin.test.Test
 
 class OpenApiVerifierTest {
@@ -157,6 +159,47 @@ class OpenApiVerifierTest {
     assert(results.size == 1)
     assert(results[0].result.isFailure())
     assert(results[0].result.errors().isNotEmpty())
+  }
+
+  @Test
+  fun `categorises a response that breaks the contract as a contract violation`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request {
+        pathParam("id", integerType())
+      }
+
+      response(200) {
+        jsonBody(objectType {
+          properties {
+            "id" to integerType()
+            "name" to stringType()
+          }
+        })
+      }
+
+      scenario("validUser", status = 200) {
+        request { pathParam["id"] = 1 }
+        response { jsonBody { "id" to 1; "name" to "John" } }
+      }
+    }
+    val case = VerificationCaseFactory.create(apiOperation).single()
+
+    val app = routes(
+      "/users/{id}" bind GET to {
+        Response(OK).header("Content-Type", "application/json").body("""{"id": "invalid", "name": "John"}""")
+      }
+    )
+
+    // When
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(case)
+    }
+
+    // Then
+    val diagnostics = outcome.result.diagnostics()
+    assert(diagnostics.isNotEmpty())
+    assert(diagnostics.all { it.category == CONTRACT_VIOLATION && it.severity == ERROR })
   }
 
   @Test
@@ -356,6 +399,39 @@ class OpenApiVerifierTest {
   }
 
   @Test
+  fun `categorises a request that cannot be built as an execution error`() {
+    // Given
+    val person = cyclicObjectType("Person") { proxy ->
+      properties {
+        "name" to stringType()
+        "friend" to proxy
+      }
+      required("name", "friend")
+    }
+    val apiOperation = apiOperation("POST", "/persons") {
+      request { jsonBody(person) }
+      response(200) { jsonBody(objectType { properties { "id" to integerType() } }) }
+    }
+    val case = VerificationCaseFactory.create(apiOperation).single { it is VerificationCase.SchemaBased }
+
+    val app = routes(
+      "/persons" bind POST to {
+        Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
+      }
+    )
+
+    // When
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(case)
+    }
+
+    // Then
+    val diagnostics = outcome.result.diagnostics()
+    assert(diagnostics.isNotEmpty())
+    assert(diagnostics.all { it.category == EXECUTION_ERROR && it.severity == ERROR })
+  }
+
+  @Test
   fun `fails the case with a connection failure when the server cannot be reached`() {
     // given
     val apiOperation = apiOperation("GET", "/maintenance") {
@@ -371,18 +447,37 @@ class OpenApiVerifierTest {
     assert(outcome.result.errors() == listOf("Request failed: could not connect to $unreachableUrl")) {
       "Expected a connection failure but got: ${outcome.result}"
     }
+    assert(outcome.result.diagnostics().single().category == EXECUTION_ERROR)
+  }
+
+  @Test
+  fun `categorises a transport failure as an execution error`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/users") {
+      response(200) {}
+    }
+    val case = VerificationCaseFactory.create(apiOperation).single()
+
+    // When
+    val outcome = withServerClosingEveryConnection { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(case)
+    }
+
+    // Then
+    val diagnostic = outcome.result.diagnostics().single()
+    assert(diagnostic.message.startsWith("Request failed: IOException"))
+    assert(diagnostic.category == EXECUTION_ERROR)
+    assert(diagnostic.severity == ERROR)
   }
 
   // --- helpers ---
 
   private fun releasedPort(): Int = ServerSocket(0).use { it.localPort }
 
-  private fun <T> withHttpServer(routes: RoutingHttpHandler, block: (port: Int) -> T): T {
-    val server = routes.asServer(SunHttp(0)).start()
-    try {
-      return block(server.port())
-    } finally {
-      server.stop()
+  // The client throws on a connection closed before any response byte, where it answers a refused one with a synthetic 503.
+  private fun <T> withServerClosingEveryConnection(block: (port: Int) -> T): T =
+    ServerSocket(0, 0, InetAddress.getLoopbackAddress()).use { socket ->
+      thread(isDaemon = true) { runCatching { generateSequence { socket.accept() }.forEach { it.close() } } }
+      block(socket.localPort)
     }
-  }
 }
