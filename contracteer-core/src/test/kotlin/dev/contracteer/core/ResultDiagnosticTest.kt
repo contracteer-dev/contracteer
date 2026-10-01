@@ -38,7 +38,7 @@ class ResultDiagnosticTest {
   }
 
   @Test
-  fun `property path prefixes keep the diagnostic`() {
+  fun `property path prefixes locate the diagnostic`() {
     // given
     val diagnostic = Diagnostic("Array has 5 items but maxItems is 3", keyword = "maxItems")
 
@@ -46,7 +46,7 @@ class ResultDiagnosticTest {
     val result = failure<Any>(diagnostic).forKey("tags").forIndex(0).forProperty("items")
 
     // then
-    assert(result.diagnostics() == listOf(diagnostic))
+    assert(result.diagnostics() == listOf(diagnostic.copy(location = "items[0][tags]")))
     assert(result.errors() == listOf("'items[0][tags]': Array has 5 items but maxItems is 3"))
   }
 

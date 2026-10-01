@@ -35,6 +35,16 @@ class OpenApiLoaderReportTest {
   }
 
   @Test
+  fun `extraction error fails the load with a diagnostic carrying its location`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/error/single_example_invalid.yaml")
+
+    // then
+    assertIs<LoadReport.Failed>(report)
+    assert(report.diagnostics.map { it.location }.distinct() == listOf("request.path[id].example")) { report.diagnostics.toString() }
+  }
+
+  @Test
   fun `unsupported OpenAPI version fails the load as a spec error`() {
     // when
     val report = OpenApiLoader.load("classpath:error/openapi_32_unsupported.yaml")

@@ -147,7 +147,7 @@ class OpenApiLoaderWarningsTest {
     val severities = failed.diagnostics.map { it.severity }
     assert(severities.first() == ERROR) { failed.diagnostics.toString() }
     assert(failed.diagnostics.last() ==
-             Diagnostic("Schema '': unknown format 'int128' for integer type is ignored.", "format", UNKNOWN_FORMAT, category = SPEC, severity = WARNING)
+             Diagnostic("Schema '': unknown format 'int128' for integer type is ignored.", keyword = "format", rule = UNKNOWN_FORMAT, category = SPEC, severity = WARNING)
     ) { failed.diagnostics.toString() }
     assert(severities.count { it == WARNING } == 1) { failed.diagnostics.toString() }
   }
@@ -260,7 +260,7 @@ class OpenApiLoaderWarningsTest {
   }
 
   private fun operationWarning(rule: DiagnosticRule, message: String, method: String, path: String, keyword: String? = null) =
-    Diagnostic(message, keyword, rule, OperationRef(method, path), category = SPEC, severity = WARNING)
+    Diagnostic(message, keyword = keyword, rule = rule, operation = OperationRef(method, path), category = SPEC, severity = WARNING)
 
   private fun assertSchemaWarnings(report: LoadReport): List<String> {
     val loaded = assertIs<LoadReport.Loaded>(report)

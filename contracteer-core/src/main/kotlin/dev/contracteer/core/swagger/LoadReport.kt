@@ -1,6 +1,7 @@
 package dev.contracteer.core.swagger
 
 import dev.contracteer.core.Diagnostic
+import dev.contracteer.core.Mappers
 import dev.contracteer.core.operation.ApiOperation
 
 /**
@@ -20,6 +21,16 @@ sealed class LoadReport(
   val truncated: Int
 ) {
 
+  /** Renders this report as JSON. The shape is experimental and may change. */
+  fun toJson(): String = Mappers.jsonMapper.writeValueAsString(linkedMapOf(
+    "version" to JSON_VERSION,
+    "source" to source,
+    "status" to if (this is Loaded) "loaded" else "failed",
+    "operationCount" to (this as? Loaded)?.operations?.size,
+    "diagnostics" to diagnostics.map { it.toJsonMap() },
+    "truncated" to truncated
+  ))
+
   /** The document loaded; [operations] are the operations extracted from it, and [diagnostics] are its warnings. */
   class Loaded internal constructor(
     source: String,
@@ -33,4 +44,9 @@ sealed class LoadReport(
     diagnostics: List<Diagnostic>,
     truncated: Int
   ): LoadReport(source, diagnostics, truncated)
+
+  private companion object {
+    /** The version of the JSON shape [toJson] renders. */
+    const val JSON_VERSION = 1
+  }
 }
