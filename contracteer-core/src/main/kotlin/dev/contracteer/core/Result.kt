@@ -46,6 +46,12 @@ sealed class Result<out T> {
     is Failure -> findings
   }
 
+  /** Returns how many errors were dropped past the cap; zero on success. */
+  fun truncated(): Int = when (this) {
+    is Success -> 0
+    is Failure -> truncated
+  }
+
   /** Returns a new result with [operation] set on every diagnostic; rendered errors are prefixed with it. */
   internal fun forOperation(operation: OperationRef): Result<T> = when (this) {
     is Success -> this
@@ -100,11 +106,6 @@ sealed class Result<out T> {
   override fun toString() = when (this) {
     is Success -> "Result(success, value=$value)"
     is Failure -> "Result(failure, errors=${errors()})"
-  }
-
-  private fun truncated(): Int = when (this) {
-    is Success -> 0
-    is Failure -> truncated
   }
 
   /** A successful result carrying a [value]. */

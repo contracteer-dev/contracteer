@@ -10,6 +10,7 @@ import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Failure
 import dev.contracteer.core.Result.Success
 import dev.contracteer.core.Severity.ERROR
+import dev.contracteer.core.swagger.LoadReport
 
 /**
  * Verifies a real server implementation against OpenAPI contract expectations.
@@ -42,18 +43,22 @@ class OpenApiVerifier(configuration: VerifierConfiguration) {
     )
 
   /**
-   * Verifies every case of the given [plans] and reports what each one found.
+   * Verifies every operation of the given [loaded] document and reports what each case found.
    *
-   * Every case runs: a failing case does not stop the run.
+   * Every case of every operation runs: a failing case does not stop the run. To run a subset of the
+   * cases, verify them one by one.
    * This entry point is experimental and may change until a consumer freezes it.
    *
-   * @return a [VerificationReport] with one outcome per case and the unverified primary responses of the plans
+   * @return a [VerificationReport] with one outcome per case, the primary responses no case asserts, and [loaded]
    */
-  fun verify(plans: List<VerificationPlan>): VerificationReport =
-    VerificationReport(
+  fun verify(loaded: LoadReport.Loaded): VerificationReport {
+    val plans = loaded.operations.map { VerificationCaseFactory.plan(it) }
+    return VerificationReport(
+      loadReport = loaded,
       outcomes = plans.flatMap { it.cases }.map { verify(it) },
       unverifiedPrimaryResponses = plans.mapNotNull { it.unverifiedPrimaryResponse }
     )
+  }
 
   private fun handleExecutionResult(case: VerificationCase,
                                     executionResult: Result<Pair<Request, Response>>): VerificationOutcome =

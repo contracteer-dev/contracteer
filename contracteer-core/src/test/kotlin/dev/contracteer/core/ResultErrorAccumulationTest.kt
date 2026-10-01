@@ -111,6 +111,26 @@ class ResultErrorAccumulationTest {
   }
 
   @Test
+  fun `truncated counts the errors dropped past the cap`() {
+    // when
+    val result = (1..30).toList().accumulate { failure<Int>("error $it") }
+
+    // then
+    assert(result.truncated() == 5)
+  }
+
+  @Test
+  fun `truncated is zero under the cap and on success`() {
+    // when
+    val underTheCap = (1..24).toList().accumulate { failure<Int>("error $it") }
+    val success = success(1)
+
+    // then
+    assert(underTheCap.truncated() == 0)
+    assert(success.truncated() == 0)
+  }
+
+  @Test
   fun `andThen keeps 25 errors and reports how many were truncated`() {
     // given
     val first = (1..15).toList().accumulate { failure<Int>("error $it") }

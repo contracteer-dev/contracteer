@@ -10,12 +10,13 @@ import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
 import dev.contracteer.core.dsl.stringType
+import dev.contracteer.core.loadedReport
 import kotlin.test.Test
 
 class VerificationReportTest {
 
   @Test
-  fun `reports every outcome in plan order and the unverified primary responses`() {
+  fun `reports every outcome in operation order and the unverified primary responses and the load report`() {
     // Given
     val users = apiOperation("GET", "/users/{id}") {
       request {
@@ -46,7 +47,7 @@ class VerificationReportTest {
 
       scenario("ok", status = 200)
     }
-    val plans = listOf(users, orders).map { VerificationCaseFactory.plan(it) }
+    val loaded = loadedReport(listOf(users, orders))
 
     val app = routes(
       "/users/{id}" bind GET to {
@@ -57,12 +58,14 @@ class VerificationReportTest {
 
     // When
     val report = withHttpServer(app) { port ->
-      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(plans)
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(loaded)
     }
 
     // Then
+    val plans = listOf(users, orders).map { VerificationCaseFactory.plan(it) }
     assert(report.outcomes.map { it.case } == plans.flatMap { it.cases })
     assert(report.outcomes.map { it.result.isSuccess() } == listOf(true, false, true))
     assert(report.unverifiedPrimaryResponses == listOf(plans[1].unverifiedPrimaryResponse))
+    assert(report.loadReport === loaded)
   }
 }

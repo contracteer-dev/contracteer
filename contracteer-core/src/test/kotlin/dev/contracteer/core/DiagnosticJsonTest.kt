@@ -1,5 +1,6 @@
 package dev.contracteer.core
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
@@ -24,7 +25,7 @@ class DiagnosticJsonTest {
     )
 
     // when
-    val actual = json.readTree(diagnostic.toJson())
+    val actual = json.valueToTree<JsonNode>(diagnostic.toJsonMap())
 
     // then
     val expected = json.readTree("""

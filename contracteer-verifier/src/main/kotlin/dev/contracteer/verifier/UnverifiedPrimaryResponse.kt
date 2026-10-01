@@ -28,7 +28,8 @@ data class UnverifiedPrimaryResponse(
   val message: String
     get() = "${method.uppercase()} $path -> primary response not verified: ${explanation()}"
 
-  private fun explanation(): String = when (reason) {
+  /** Why the primary response goes unverified, without naming the operation. */
+  internal fun explanation(): String = when (reason) {
     is NoSelectableResponse -> "declares only ${reason.declared.joinAsProse()}; no exact status code a request can target"
     is NoPreferredResponse  -> "declares ${reason.declared.joinAsProse()}; no exact 2xx or 3xx a request can target"
     NoResponsesDeclared     -> "declares no response"

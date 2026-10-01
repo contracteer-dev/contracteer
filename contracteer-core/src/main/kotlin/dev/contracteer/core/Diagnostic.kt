@@ -25,9 +25,6 @@ data class Diagnostic @JvmOverloads constructor(
   val severity: Severity? = null
 ) {
 
-  /** Renders this finding as JSON. The shape is experimental and may change until a consumer freezes it. */
-  fun toJson(): String = Mappers.jsonMapper.writeValueAsString(toJsonMap())
-
   /** Renders the finding:
    * - the [operation] when there is one,
    * - then the [location] when there is one,
@@ -53,8 +50,11 @@ data class Diagnostic @JvmOverloads constructor(
   internal fun mapMessage(transform: (String) -> String): Diagnostic =
     Diagnostic(transform(locatedMessage()), operation = operation)
 
-  /** Projects the finding onto the JSON wire shape: every property as a key, absent ones as `null`, enums in kebab-case. */
-  internal fun toJsonMap(): Map<String, Any?> = linkedMapOf(
+  /**
+   * Projects the finding onto its JSON shape, for a report to nest in its own document: every property as a key,
+   * absent ones as `null`, enums in kebab-case. The shape is experimental and may change until a consumer freezes it.
+   */
+  fun toJsonMap(): Map<String, Any?> = linkedMapOf(
     "message" to message,
     "location" to location,
     "keyword" to keyword,
