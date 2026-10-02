@@ -1280,6 +1280,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#lint-reports-exclusions-were-not-evaluated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lint reports "Exclusions were not evaluated"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-lint-warning-names-a-schema-but-no-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A lint warning names a schema but no operation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#equivalent-paths-rejected" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1901,6 +1923,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#lint-reports-exclusions-were-not-evaluated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lint reports "Exclusions were not evaluated"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-lint-warning-names-a-schema-but-no-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A lint warning names a schema but no operation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#equivalent-paths-rejected" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2400,6 +2444,17 @@ Use <code>examples</code> on both request and response elements.
 See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to do this.</p>
 <hr />
 <h2 id="openapi-document-issues">OpenAPI Document Issues<a class="headerlink" href="#openapi-document-issues" title="Permanent link">&para;</a></h2>
+<h3 id="lint-reports-exclusions-were-not-evaluated"><code>lint</code> reports "Exclusions were not evaluated"<a class="headerlink" href="#lint-reports-exclusions-were-not-evaluated" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> <code>contracteer lint</code> lists errors and ends with <code>The document does not load: ... Exclusions were not evaluated.</code></p>
+<p><strong>Cause:</strong> Contracteer decides which operations, bodies and scenarios to exclude once every operation is read.
+An error stops the load before that step, so the report cannot say what would be excluded.</p>
+<p><strong>Fix:</strong> Fix the listed errors and run <code>lint</code> again.
+A document that loads may then report warnings the failed run did not show.</p>
+<h3 id="a-lint-warning-names-a-schema-but-no-operation">A <code>lint</code> warning names a schema but no operation<a class="headerlink" href="#a-lint-warning-names-a-schema-but-no-operation" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> A warning such as <code>Schema 'reference': 'minLength' ignored because 'format: uuid' takes precedence.</code> has no <code>METHOD /path</code> prefix.</p>
+<p><strong>Cause:</strong> A component schema is read once and shared by every operation that references it.
+The warning is about the schema, not about one use of it.</p>
+<p><strong>Fix:</strong> Search the document for the schema or property name the message quotes.</p>
 <h3 id="equivalent-paths-rejected">Equivalent paths rejected<a class="headerlink" href="#equivalent-paths-rejected" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with "Equivalent paths found: '/resources/{resourceId}/items' and '/resources/{parentId}/items'."</p>
 <p><strong>Cause:</strong> The OpenAPI document defines two paths that differ only in parameter names.
@@ -2656,7 +2711,7 @@ Contracteer reads examples from parameters and media types, not from schema prop
 <p><strong>Fix:</strong> Move examples to the parameter or media type level using the <code>examples</code> or <code>example</code> keyword.
 See <a href="../../concepts/scenarios/">Creating Scenarios</a> for the correct placement.</p>
 <h3 id="warning-about-ignored-pattern-or-length-constraints">Warning about ignored pattern or length constraints<a class="headerlink" href="#warning-about-ignored-pattern-or-length-constraints" title="Permanent link">&para;</a></h3>
-<p><strong>Symptom:</strong> Contracteer logs a warning like "pattern ignored because format takes precedence" or "minLength/maxLength ignored because pattern takes precedence."</p>
+<p><strong>Symptom:</strong> Contracteer logs a warning like <code>Schema 'reference': 'minLength' ignored because 'format: uuid' takes precedence.</code></p>
 <p><strong>Cause:</strong> Your schema combines constraints that Contracteer applies in precedence order: <code>format</code> &gt; <code>pattern</code> &gt; <code>minLength</code>/<code>maxLength</code>.
 The lower-priority constraint is ignored for both validation and generation.</p>
 <p><strong>Fix:</strong> This is intentional.

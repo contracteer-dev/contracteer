@@ -973,6 +973,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#check-an-openapi-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check an OpenAPI Document
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Check an OpenAPI Document">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-output_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#try-it-now" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1247,6 +1275,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#check-an-openapi-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check an OpenAPI Document
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Check an OpenAPI Document">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-output_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#try-it-now" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1289,7 +1345,7 @@
 
 
 <h1 id="use-the-cli">Use the CLI<a class="headerlink" href="#use-the-cli" title="Permanent link">&para;</a></h1>
-<p>The Contracteer CLI runs verification and starts mock servers from the command line.
+<p>The Contracteer CLI runs verification, starts mock servers and checks OpenAPI documents from the command line.
 It is a standalone native binary -- no JVM installation required.</p>
 <p><strong>Develop against an OpenAPI document before the server exists.</strong>
 Start a mock server from the OpenAPI document and build your client against it.
@@ -1301,7 +1357,7 @@ It does not matter whether the server is built in Node.js, Python, Go, or any ot
 If it speaks HTTP and has an OpenAPI document, Contracteer can verify it.</p>
 <p><strong>Integrate into CI/CD pipelines.</strong>
 For non-JVM projects, add a verification step to your pipeline without any build tool integration.
-The CLI exits with code <code>0</code> when all cases pass and <code>1</code> when any case fails -- standard CI behavior.</p>
+<code>contracteer verify</code> exits with code <code>0</code> when all cases pass and <code>1</code> when any case fails -- standard CI behavior.</p>
 <hr />
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <h3 id="homebrew-macos-linux">Homebrew (macOS / Linux)<a class="headerlink" href="#homebrew-macos-linux" title="Permanent link">&para;</a></h3>
@@ -1428,12 +1484,83 @@ It is Contracteer telling you that something is wrong or ambiguous.
 The 418 body explains what happened -- read it before investigating further.</p>
 <p>See <a href="../../concepts/testing-your-client/">Testing Your Client</a> for a detailed explanation of mock server behavior.</p>
 <hr />
+<h2 id="check-an-openapi-document">Check an OpenAPI Document<a class="headerlink" href="#check-an-openapi-document" title="Permanent link">&para;</a></h2>
+<p><code>contracteer lint</code> reports what Contracteer cannot execute in an OpenAPI document, and what it skips or ignores.
+It needs no running server, so it can run on the pull request that changes the document.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>contracteer<span class="w"> </span>lint<span class="w"> </span>openapi.yaml
+</code></pre></div>
+<p>The OpenAPI document can be a local file path or an HTTP(S) URL.</p>
+<p>Example output:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>OpenAPI document: openapi.yaml
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>Warnings (2)
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>   Schema 'reference': 'minLength' ignored because 'format: uuid' takes precedence. [conflicting-constraints]
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>   POST /orders: Operation excluded: no supported request body content type. [operation-excluded]
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>The document loads: 2 operations declared, 1 excluded. 0 errors, 2 warnings.
+</code></pre></div>
+<p>Each finding ends with its rule in brackets, when it has one.
+An <strong>error</strong> means Contracteer cannot load the document: neither the verifier nor the mock server can use it.
+A <strong>warning</strong> means the document loads, but a part of it is left out or a declared constraint is not applied.
+The closing line states what was checked.
+The report is the only output on stdout; logs go to stderr.</p>
+<p><code>lint</code> reports only what affects execution.
+It does not check naming, descriptions or other style conventions.</p>
+<p>The command exits with code <code>0</code> when the document loads and <code>1</code> when it does not, including when the document cannot be read.
+With <code>--fail-on warning</code>, it also exits with <code>1</code> when the document loads with a warning.
+A usage error exits with <code>2</code>.</p>
+<p><strong>Options:</strong></p>
+<ul>
+<li><strong><code>--fail-on</code></strong> <em>(default: <code>error</code>)</em> -- Lowest severity that makes the command exit with <code>1</code>: <code>error</code> or <code>warning</code>.</li>
+<li><strong><code>--format</code></strong> <em>(default: <code>text</code>)</em> -- Output format: <code>text</code> or <code>json</code>.</li>
+<li><strong><code>-l</code>, <code>--log-level</code></strong> <em>(default: <code>INFO</code>)</em> -- Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF.</li>
+</ul>
+<p>When the document does not load, the errors are listed first:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>OpenAPI document: openapi.yaml
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>Errors (1)
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>   GET /orders: 'response[200].body.id': Schema 'id': 'not' is not supported in Contracteer. [unsupported]
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>The document does not load: 1 error, 0 warnings. Exclusions were not evaluated.
+</code></pre></div>
+<p>Contracteer decides which operations to exclude only once every operation is read.
+Fix the errors and run <code>lint</code> again to see what is excluded.</p>
+<h3 id="json-output_1">JSON output<a class="headerlink" href="#json-output_1" title="Permanent link">&para;</a></h3>
+<p><code>--format json</code> prints the load report as a single JSON document on stdout.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="s2">"openapi.yaml"</span><span class="p">,</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"loaded"</span><span class="p">,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="nt">"operationCount"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">      </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation excluded: no supported request body content type."</span><span class="p">,</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">      </span><span class="nt">"location"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">      </span><span class="nt">"keyword"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">      </span><span class="nt">"rule"</span><span class="p">:</span><span class="w"> </span><span class="s2">"operation-excluded"</span><span class="p">,</span>
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">      </span><span class="nt">"operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="p">,</span><span class="w"> </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/orders"</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="w">      </span><span class="nt">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"spec"</span><span class="p">,</span>
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">      </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span>
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="w">  </span><span class="nt">"truncated"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><strong><code>status</code></strong> -- <code>loaded</code> or <code>failed</code>.</li>
+<li><strong><code>operationCount</code></strong> -- the operations Contracteer keeps; <code>null</code> when the document does not load.</li>
+<li><strong><code>diagnostics</code></strong> -- the findings, errors first.</li>
+<li><strong><code>truncated</code></strong> -- the number of errors not shown; Contracteer lists at most 25.</li>
+</ul>
+<p>The JSON shape is experimental and may change between releases.
+Read <code>version</code> before relying on it.</p>
+<hr />
 <h2 id="try-it-now">Try It Now<a class="headerlink" href="#try-it-now" title="Permanent link">&para;</a></h2>
 <p>Start a mock server from the <a href="https://github.com/contracteer-dev/contracteer-examples">Musketeer API</a> OpenAPI document without cloning anything:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
 </code></pre></div>
 <p>Then send a request:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>curl<span class="w"> </span>http://localhost:8080/musketeers
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>curl<span class="w"> </span>http://localhost:8080/musketeers
 </code></pre></div>
 <p>The mock server returns a generated response conforming to the Musketeer schema.</p>
 <hr />

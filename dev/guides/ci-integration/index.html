@@ -1027,6 +1027,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#check-the-openapi-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check the OpenAPI Document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-openapi-document-as-a-shared-artifact" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1169,6 +1180,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#check-the-openapi-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check the OpenAPI Document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-openapi-document-as-a-shared-artifact" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1248,7 +1270,7 @@ Your existing test step already runs contract tests.</p>
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Contracteer</span>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.2.0/contracteer-4.2.0-linux-x86_64.zip -o contracteer.zip</span>
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">          </span><span class="no">unzip contracteer.zip</span>
 <a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">          </span><span class="no">sudo mv contracteer /usr/local/bin/</span>
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
@@ -1281,7 +1303,7 @@ See <a href="../../getting-started/cli/#json-output">JSON output</a>.</p>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Contracteer</span>
 <a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.2.0/contracteer-4.2.0-linux-x86_64.zip -o contracteer.zip</span>
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">          </span><span class="no">unzip contracteer.zip</span>
 <a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">          </span><span class="no">sudo mv contracteer /usr/local/bin/</span>
 <a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
@@ -1298,6 +1320,16 @@ See <a href="../../getting-started/cli/#json-output">JSON output</a>.</p>
 </code></pre></div>
 <p>The mock server runs in the background for the duration of the job.
 Your client tests point to it via the <code>API_BASE_URL</code> environment variable (or however your client is configured).</p>
+<hr />
+<h2 id="check-the-openapi-document">Check the OpenAPI Document<a class="headerlink" href="#check-the-openapi-document" title="Permanent link">&para;</a></h2>
+<p>In a repository that holds only the OpenAPI document, there is no server to verify.
+<code>contracteer lint</code> checks the document on its own:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Check the OpenAPI document</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">contracteer lint openapi.yaml --fail-on warning</span>
+</code></pre></div>
+<p>The step fails when Contracteer cannot load the document.
+With <code>--fail-on warning</code>, it also fails when Contracteer would skip an operation or ignore a constraint.
+See <a href="../../getting-started/cli/#check-an-openapi-document">Check an OpenAPI Document</a>.</p>
 <hr />
 <h2 id="the-openapi-document-as-a-shared-artifact">The OpenAPI Document as a Shared Artifact<a class="headerlink" href="#the-openapi-document-as-a-shared-artifact" title="Permanent link">&para;</a></h2>
 <p>The strongest CI setup treats the OpenAPI document as a <strong>versioned, published artifact</strong>.
