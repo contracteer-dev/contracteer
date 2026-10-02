@@ -35,7 +35,7 @@ class OpenApiLoaderWarningsTest {
 
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
-    assert(loaded.diagnostics.filter { it.operation != null } == listOf(
+    assert(loaded.diagnostics == listOf(
       operationWarning(OPERATION_EXCLUDED, "Operation excluded: parameter content has no schema.", "GET", "/null-schema"),
       operationWarning(OPERATION_EXCLUDED, "Operation excluded: parameter content has no schema.", "GET", "/empty-schema")
     )) { loaded.diagnostics.toString() }
@@ -48,7 +48,7 @@ class OpenApiLoaderWarningsTest {
 
     // then
     val loaded = assertIs<LoadReport.Loaded>(report)
-    assert(loaded.diagnostics.filter { it.operation != null } == listOf(
+    assert(loaded.diagnostics == listOf(
       operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported request body content type.", "POST", "/null-schema"),
       operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported request body content type.", "POST", "/empty-schema")
     )) { loaded.diagnostics.toString() }
@@ -120,6 +120,16 @@ class OpenApiLoaderWarningsTest {
   }
 
   @Test
+  fun `allOf branch holding only annotations is not reported as an empty schema`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/annotation_only_allof_branch.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.isEmpty()) { loaded.diagnostics.toString() }
+  }
+
+  @Test
   fun `example key targeting an undefined status code is reported as a spec warning carrying its operation`() {
     // when
     val report = OpenApiLoader.load("src/test/resources/warning/unresolvable_example_key.yaml")
@@ -187,6 +197,31 @@ class OpenApiLoaderWarningsTest {
     assert(loaded.diagnostics == listOf(
       operationWarning(BODY_EXCLUDED, "Response 200 body 'application/json' excluded: its schema is empty or missing.", "GET", "/products")
     )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `body excluded for an empty schema is reported once, as an excluded body`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/excluded_body_with_empty_schema.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning(BODY_EXCLUDED, "Request body 'application/json' excluded: its schema is empty or missing.", "POST", "/products"),
+      operationWarning(BODY_EXCLUDED, "Response 200 body 'application/json' excluded: its schema is empty or missing.", "POST", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `response header content with an empty schema is reported as an empty schema`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/response_header_content_with_empty_schema.yaml")
+
+    // then
+    val warnings = assertSchemaWarnings(report)
+    assert(warnings == listOf(
+      "Schema '' is empty (anyType) and will be interpreted as accepting any type."
+    )) { warnings.toString() }
   }
 
   @Test

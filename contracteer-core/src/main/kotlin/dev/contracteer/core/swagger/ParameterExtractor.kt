@@ -112,7 +112,7 @@ internal class ParameterExtractor(
     val (mediaTypeString, mediaTypeObj) = parameter.content.entries.first()
     val contentType = ContentType(mediaTypeString)
     return result {
-      val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj).bind()
+      val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj, reportsEmptySchema = false).bind()
       dataType.ensureNotStandaloneNull("Parameter '${parameter.name}' (in: ${parameter.`in`})").bind()
       val examples = sharedComponents.resolveExampleValues(parameter.safeExamples()).bind()
 
@@ -162,7 +162,7 @@ internal class ParameterExtractor(
     val (mediaTypeString, mediaTypeObj) = header.content.entries.first()
     val contentType = ContentType(mediaTypeString)
     return result {
-      val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj).bind()
+      val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj, reportsEmptySchema = true).bind()
       dataType.ensureNotStandaloneNull("Response header '$name'").bind()
       val examples = sharedComponents.resolveExampleValues(header.safeExamples()).bind()
 

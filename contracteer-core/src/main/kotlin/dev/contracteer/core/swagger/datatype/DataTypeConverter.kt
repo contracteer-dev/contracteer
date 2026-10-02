@@ -57,9 +57,14 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
 
   }
 
-  fun convertMediaTypeSchema(mediaType: MediaType): Result<DataType<out Any>> =
-    if (mediaType.schema == null) success(AnyDataType)
-    else convertToDataType(mediaType.schema, "")
+  fun convertMediaTypeSchema(mediaType: MediaType, reportsEmptySchema: Boolean): Result<DataType<out Any>> {
+    val schema = mediaType.schema
+    return when {
+      schema == null        -> success(AnyDataType)
+      schema.`$ref` != null -> convertToDataType(schema, "")
+      else                  -> convertSchema(schema, "", reportsEmptySchema = reportsEmptySchema)
+    }
+  }
 
   fun convertToDiscriminator(schema: Schema<*>) =
     if (schema.`$ref` != null) discriminatorCache[schema.`$ref`]
@@ -90,7 +95,8 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
 
   private fun convertSchema(schema: Schema<*>,
                             schemaName: String,
-                            localRequiredOnly: Boolean = false): Result<DataType<out Any>> {
+                            inlineAllOfBranch: Boolean = false,
+                            reportsEmptySchema: Boolean = !inlineAllOfBranch): Result<DataType<out Any>> {
     schema.name = schemaName
     logger.debug { "Creating Datatype for Schema '${schema.name}'" }
     val convert = { s: Schema<*>, name: String -> convertToDataType(s, name) }
@@ -105,7 +111,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
       contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema, warnings)
       contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
       contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema, warnings)
-      schema.isObjectLike()                                         -> ObjectDataTypeConverter.convert(schema, convert, warnings, localRequiredOnly)
+      schema.isObjectLike()                                         -> ObjectDataTypeConverter.convert(schema, convert, warnings, localRequiredOnly = inlineAllOfBranch)
       schema.isArrayLike()                                          -> ArrayDataTypeConverter.convert(schema, convert)
       type == "boolean"                                             -> BooleanDataTypeConverter.convert(schema)
       type == "integer"                                             -> IntegerDataTypeConverter.convert(schema, warnings)
@@ -113,7 +119,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
       schema.hasStructuredTextContent()                             -> unsupportedStructuredTextContentMediaType(schema)
       type == "string"                                              -> convertStringSchema(schema)
       schema.isNullOnly()                                           -> success(NullDataType)
-      else                                                          -> tryToInferSchemaType(schema)
+      else                                                          -> tryToInferSchemaType(schema, reportsEmptySchema)
     }
   }
 
@@ -185,7 +191,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
   }
 
   private fun convertAllOfBranch(schema: Schema<*>, schemaName: String): Result<DataType<out Any>> =
-    convertSchema(schema, schemaName, localRequiredOnly = true)
+    convertSchema(schema, schemaName, inlineAllOfBranch = true)
 
   private fun unsupportedContentEncoding(schema: Schema<*>, value: String): Result<DataType<out Any>> =
     unsupported("Schema '${schema.name}': contentEncoding='$value' is not supported. Only 'base64' is supported in OAS 3.1.", "contentEncoding")
@@ -201,11 +207,13 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
   private fun unsupported(message: String, keyword: String?): Result<DataType<out Any>> =
     failure(Diagnostic(message, keyword = keyword, rule = UNSUPPORTED))
 
-  private fun tryToInferSchemaType(schema: Schema<*>): Result<DataType<out Any>> =
-    if (schema.isAnyType())
-      success(AnyDataType).also { warnings.warn(EMPTY_SCHEMA, "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.") }
-    else
-      failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
+  private fun tryToInferSchemaType(schema: Schema<*>, reportsEmptySchema: Boolean): Result<DataType<out Any>> =
+    when {
+      !schema.isAnyType() -> failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
+      reportsEmptySchema  ->
+        success(AnyDataType).also { warnings.warn(EMPTY_SCHEMA, "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.") }
+      else                -> success(AnyDataType)
+    }
 
   private fun validateNoInfiniteCycle(proxy: ProxyDataType, ref: String, dataType: DataType<out Any>): Result<DataType<out Any>> {
     val cyclePath = findNonBreakablePath(proxy.delegate, proxy, listOf(proxy.name))

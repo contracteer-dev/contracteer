@@ -1,0 +1,28 @@
+openapi: 3.0.0
+info:
+  title: Annotation Only allOf Branch
+  version: '1.0'
+paths:
+  /jobs:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    allOf:
+                      - $ref: '#/components/schemas/Mode'
+                      - xml:
+                          name: mode
+                        description: Specify the conditions when the mode applies.
+components:
+  schemas:
+    Mode:
+      type: string
+      enum:
+        - ENABLED
+        - DISABLED

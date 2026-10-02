@@ -1,0 +1,20 @@
+openapi: "3.0.3"
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /products:
+    get:
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prop1:
+                    allOf:
+                      - type: string
+                      - not:
+                          type: integer

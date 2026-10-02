@@ -1,0 +1,19 @@
+openapi: 3.0.0
+info:
+  title: Response Header Content With Empty Schema
+  version: '1.0'
+paths:
+  /products:
+    get:
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Metadata:
+              content:
+                application/json:
+                  schema: {}
+          content:
+            text/plain:
+              schema:
+                type: string

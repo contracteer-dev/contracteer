@@ -57,7 +57,7 @@ internal class BodyExtractor(
         if (contentType.isBinary() && (mediaType.schema == null || mediaType.schema.isAnyType()))
           BinaryDataType.create(name = "binary").bind()
         else
-          dataTypeConverter.convertMediaTypeSchema(mediaType).bind()
+          dataTypeConverter.convertMediaTypeSchema(mediaType, reportsEmptySchema = false).bind()
 
       dataType.ensureNotStandaloneNull("Body '${contentType.value}'").bind()
       val examples = sharedComponents.resolveExampleValues(mediaType.safeExamples()).bind()

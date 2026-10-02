@@ -144,6 +144,18 @@ class SchemaConversionTest {
   }
 
   @Test
+  fun `rejects not keyword in an allOf branch declaring nothing else`() {
+    // when
+    val result = loadOperations("3.0", "not_in_allof_branch_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("'not'") && it.contains("not supported") }) {
+      "Expected an error naming the 'not' keyword but got: $errors"
+    }
+  }
+
+  @Test
   fun `merges 3 1 ref-with-sibling by taking the tighter minLength`() {
     // when
     val dataType = getDataType("3.1", "ref_with_sibling_min_length.yaml") as StringDataType
