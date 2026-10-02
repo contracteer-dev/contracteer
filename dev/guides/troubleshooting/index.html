@@ -1026,6 +1026,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#every-case-fails-with-could-not-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Every case fails with "could not connect"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#all-verification-cases-fail-with-the-wrong-status-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1140,6 +1151,17 @@
     <span class="md-ellipsis">
       
         Polymorphic body passes validation without checking child-specific properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-format-json-prints-nothing-on-stdout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --format json prints nothing on stdout
       
     </span>
   </a>
@@ -1625,6 +1647,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#every-case-fails-with-could-not-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Every case fails with "could not connect"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#all-verification-cases-fail-with-the-wrong-status-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1739,6 +1772,17 @@
     <span class="md-ellipsis">
       
         Polymorphic body passes validation without checking child-specific properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-format-json-prints-nothing-on-stdout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --format json prints nothing on stdout
       
     </span>
   </a>
@@ -2198,6 +2242,12 @@ This shows every request and response exchanged between Contracteer and the serv
 At startup, the mock server logs at WARN each operation that answers <code>418</code> or an error status to a valid request no scenario matches.</p>
 <hr />
 <h2 id="verifier-issues">Verifier Issues<a class="headerlink" href="#verifier-issues" title="Permanent link">&para;</a></h2>
+<h3 id="every-case-fails-with-could-not-connect">Every case fails with "could not connect"<a class="headerlink" href="#every-case-fails-with-could-not-connect" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Every verification case fails with <code>Request failed: could not connect to http://localhost:8080</code>.</p>
+<p><strong>Cause:</strong> No server answers at the base URL: the server is not started, it listens on another port, or the host name does not resolve.</p>
+<p><strong>Fix:</strong> Start the server before the verification runs.
+Check the base URL given to the verifier: <code>--base-url</code> on the CLI, <code>baseUrl</code> on <code>VerifierConfiguration</code>, <code>serverUrl</code> and <code>serverPort</code> on <code>@ContracteerTest</code>.
+When the server starts on a random port, check that the field annotated with <code>@ContracteerServerPort</code> holds that port.</p>
 <h3 id="all-verification-cases-fail-with-the-wrong-status-code">All verification cases fail with the wrong status code<a class="headerlink" href="#all-verification-cases-fail-with-the-wrong-status-code" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Every scenario-based case expects <code>200</code> but the server returns <code>404</code>.</p>
 <p><strong>Cause:</strong> The test data is not seeded, or the seeded IDs do not match the OpenAPI example values.</p>
@@ -2273,6 +2323,13 @@ To distinguish variants, add <code>required</code> properties unique to each var
 The OpenAPI Specification defines this form as non-validating: "The <code>allOf</code> form of <code>discriminator</code> is <em>only</em> useful for non-validation use cases."</p>
 <p><strong>Fix:</strong> Replace the direct <code>$ref</code> to the parent with a <code>oneOf</code> or <code>anyOf</code> listing the child schemas explicitly, and keep the discriminator at that usage site.
 See <a href="../../concepts/openapi-coverage/#discriminator-on-a-parent-schema-used-via-ref">Discriminator on a parent schema used via <code>$ref</code></a> for an example.</p>
+<h3 id="-format-json-prints-nothing-on-stdout"><code>--format json</code> prints nothing on stdout<a class="headerlink" href="#-format-json-prints-nothing-on-stdout" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> <code>contracteer verify --format json</code> exits with a non-zero code and stdout is empty.</p>
+<p><strong>Cause:</strong> The command could not run.
+Exit code <code>2</code> means an invalid option or value; the message is on stderr.
+Exit code <code>1</code> with empty stdout means the command stopped before verifying, for example on a base URL without a scheme; the error is on stderr.</p>
+<p><strong>Fix:</strong> Read stderr.
+A failed verification or a document that does not load always prints a JSON document.</p>
 <hr />
 <h2 id="mock-server-issues">Mock Server Issues<a class="headerlink" href="#mock-server-issues" title="Permanent link">&para;</a></h2>
 <h3 id="getting-418-instead-of-the-expected-response">Getting 418 instead of the expected response<a class="headerlink" href="#getting-418-instead-of-the-expected-response" title="Permanent link">&para;</a></h3>
@@ -2358,7 +2415,8 @@ This describes an infinite structure that cannot be instantiated.</p>
 <p><strong>Fix:</strong> Break the cycle by making at least one property in the chain optional (remove it from <code>required</code>), nullable (<code>nullable: true</code> on the referenced schema), or a collection (<code>type: array</code>).
 Any of these gives Contracteer a finite stopping point.</p>
 <h3 id="sibling-keyword-on-ref-is-rejected">Sibling keyword on <code>$ref</code> is rejected<a class="headerlink" href="#sibling-keyword-on-ref-is-rejected" title="Permanent link">&para;</a></h3>
-<p><strong>Symptom:</strong> Loading an OpenAPI 3.1 document fails with a message such as <code>Schema 'X': sibling 'propertyNames' on '$ref' is not supported.</code></p>
+<p><strong>Symptom:</strong> Loading an OpenAPI 3.1 document fails with a message such as <code>Schema 'X': sibling 'propertyNames' on '$ref' is not supported.</code>
+Each unsupported sibling is reported on its own line.</p>
 <p><strong>Cause:</strong> A Schema Object combines <code>$ref</code> with a sibling keyword Contracteer does not merge.
 Supported siblings cover type, length and numeric bounds, enum and const, required, properties, items, additionalProperties, multipleOf, pattern, uniqueItems, and item/property count bounds.
 Other keywords are rejected as siblings -- even when Contracteer supports them standalone (for example <code>propertyNames</code>) and even when JSON Schema 2020-12 itself defines them (<code>if</code>/<code>then</code>/<code>else</code>, <code>dependentRequired</code>, JSON Schema applicators, and so on).</p>

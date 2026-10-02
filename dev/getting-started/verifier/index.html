@@ -816,6 +816,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#verify-a-whole-document-at-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify a Whole Document at Once
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prepare-test-data" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1218,6 +1229,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#verify-a-whole-document-at-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify a Whole Document at Once
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prepare-test-data" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1453,6 +1475,42 @@ The operation may still produce cases, from its scenarios or a type mismatch.
 <code>message</code> names the operation and the reason:
 <code>POST /orders -&gt; primary response not verified: 200 and 201 both qualify; declare a scenario for each of them</code>
 An unverified primary response is not a failure: the OpenAPI document is valid, and the verifier reports what it could not assert.</p>
+<hr />
+<h2 id="verify-a-whole-document-at-once">Verify a Whole Document at Once<a class="headerlink" href="#verify-a-whole-document-at-once" title="Permanent link">&para;</a></h2>
+<p><code>OpenApiLoader.load()</code> returns a load report, and <code>verifier.verify(loaded)</code> runs every case of every operation and returns one report.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Kotlin</label><label for="__tabbed_3_2">Java</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">loaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenApiLoader</span><span class="p">.</span><span class="na">load</span><span class="p">(</span><span class="s">"classpath:openapi.yaml"</span><span class="p">)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">check</span><span class="p">(</span><span class="n">loaded</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">LoadReport</span><span class="p">.</span><span class="na">Loaded</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">"Failed to load OpenAPI document: </span><span class="si">${</span><span class="n">loaded</span><span class="p">.</span><span class="na">diagnostics</span><span class="si">}</span><span class="s">"</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">val</span><span class="w"> </span><span class="nv">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenApiVerifier</span><span class="p">(</span><span class="n">VerifierConfiguration</span><span class="p">(</span><span class="s">"http://localhost:8080"</span><span class="p">)).</span><span class="na">verify</span><span class="p">(</span><span class="n">loaded</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="kd">val</span><span class="w"> </span><span class="nv">failures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="na">outcomes</span><span class="p">.</span><span class="na">filter</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">it</span><span class="p">.</span><span class="na">result</span><span class="p">.</span><span class="na">isFailure</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">println</span><span class="p">(</span><span class="n">report</span><span class="p">.</span><span class="na">toJson</span><span class="p">())</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">var</span><span class="w"> </span><span class="n">loadReport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenApiLoader</span><span class="p">.</span><span class="na">load</span><span class="p">(</span><span class="s">"classpath:openapi.yaml"</span><span class="p">);</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">loadReport</span><span class="w"> </span><span class="k">instanceof</span><span class="w"> </span><span class="n">LoadReport</span><span class="p">.</span><span class="na">Loaded</span><span class="w"> </span><span class="n">loaded</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">"Failed to load OpenAPI document: "</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">loadReport</span><span class="p">.</span><span class="na">getDiagnostics</span><span class="p">());</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">}</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="kd">var</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">OpenApiVerifier</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">VerifierConfiguration</span><span class="p">(</span><span class="s">"http://localhost:8080"</span><span class="p">)).</span><span class="na">verify</span><span class="p">(</span><span class="n">loaded</span><span class="p">);</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="kd">var</span><span class="w"> </span><span class="n">failures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">report</span><span class="p">.</span><span class="na">getOutcomes</span><span class="p">().</span><span class="na">stream</span><span class="p">()</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="p">.</span><span class="na">filter</span><span class="p">(</span><span class="n">outcome</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">outcome</span><span class="p">.</span><span class="na">getResult</span><span class="p">().</span><span class="na">isFailure</span><span class="p">())</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="p">.</span><span class="na">toList</span><span class="p">();</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">report</span><span class="p">.</span><span class="na">toJson</span><span class="p">());</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><code>report.outcomes</code> holds one <code>VerificationOutcome</code> per case, and <code>report.unverifiedPrimaryResponses</code> the primary responses no case asserts.
+<code>report.toJson()</code> renders the same document as the CLI's <a href="../cli/#json-output">JSON output</a>.
+Every case runs.
+To run a subset, verify the cases one by one as shown above.
+This entry point and its JSON shape are experimental and may change between releases.</p>
 <hr />
 <h2 id="prepare-test-data">Prepare Test Data<a class="headerlink" href="#prepare-test-data" title="Permanent link">&para;</a></h2>
 <p>Before each verification case, your server must have the right data to return the expected responses.</p>

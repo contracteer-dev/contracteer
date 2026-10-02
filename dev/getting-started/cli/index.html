@@ -942,6 +942,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Verify a Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1199,6 +1216,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Verify a Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1291,6 +1325,7 @@ Unverified primary responses do not change the exit code.</p>
 <li><strong><code>-u</code>, <code>--base-url</code></strong> <em>(default: <code>http://localhost:8080</code>)</em> -- Absolute base URL of the server (scheme, host, and port).</li>
 <li><strong><code>-l</code>, <code>--log-level</code></strong> <em>(default: <code>INFO</code>)</em> -- Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF.</li>
 <li><strong><code>-t</code>, <code>--http-traffic</code></strong> -- Enable HTTP request/response logging.</li>
+<li><strong><code>--format</code></strong> <em>(default: <code>text</code>)</em> -- Output format: <code>text</code> or <code>json</code>.</li>
 </ul>
 <p>Example with a custom base URL:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>-u<span class="w"> </span>http://localhost:3000
@@ -1323,11 +1358,55 @@ The summary lists the operation with the reason:</p>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>   ⚠️ POST /orders -&gt; primary response not verified: 200 and 201 both qualify; declare a scenario for each of them
 </code></pre></div>
 <p>An unverified primary response is not a failure: the OpenAPI document is valid, and Contracteer reports what it could not assert.</p>
+<h3 id="json-output">JSON output<a class="headerlink" href="#json-output" title="Permanent link">&para;</a></h3>
+<p><code>--format json</code> prints the result as a single JSON document on stdout.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>--format<span class="w"> </span>json<span class="w"> </span>&gt;<span class="w"> </span>report.json
+</code></pre></div>
+<p>Logs go to stderr, so stdout holds only the document.
+Exit codes are the same as in the text format.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="s2">"openapi.yaml"</span><span class="p">,</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"cases"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">"failed"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="nt">"load"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="nt">"operations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"declared"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">"gaps"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="nt">"cases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST /musketeers (application/json) -&gt; 400 (auto: body type mismatch)"</span><span class="p">,</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">      </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type-mismatch"</span><span class="p">,</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">      </span><span class="nt">"operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="p">,</span><span class="w"> </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/musketeers"</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"failed"</span><span class="p">,</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">      </span><span class="nt">"mutatedElement"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"in"</span><span class="p">:</span><span class="w"> </span><span class="s2">"body"</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">      </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">        </span><span class="p">{</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">          </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Status code does not match. Expected: 400, Actual: 500"</span><span class="p">,</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">          </span><span class="nt">"location"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">          </span><span class="nt">"keyword"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">          </span><span class="nt">"rule"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">          </span><span class="nt">"operation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">          </span><span class="nt">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"contract-violation"</span><span class="p">,</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">          </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">      </span><span class="p">],</span>
+<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="w">      </span><span class="nt">"truncated"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><strong><code>summary</code></strong> -- the number of verification cases, and how many passed and failed.</li>
+<li><strong><code>load.diagnostics</code></strong> -- the warnings raised while loading the OpenAPI document.</li>
+<li><strong><code>operations</code></strong> -- the number of operations the document declares, and the <code>gaps</code>: operations excluded at load, and operations whose primary response no case verifies.</li>
+<li><strong><code>cases</code></strong> -- one entry per verification case, with what it found when it failed.</li>
+</ul>
+<p>When the OpenAPI document does not load, the document is the load report instead: it has a top-level <code>"status": "failed"</code> and the errors in <code>diagnostics</code>.</p>
+<p>The JSON shape is experimental and may change between releases.
+Read <code>version</code> before relying on it.</p>
 <hr />
 <h2 id="start-a-mock-server">Start a Mock Server<a class="headerlink" href="#start-a-mock-server" title="Permanent link">&para;</a></h2>
 <p><code>contracteer mock</code> starts a mock server that validates requests and returns spec-compliant responses.
 It runs until terminated (<code>Ctrl+C</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml
 </code></pre></div>
 <p>The OpenAPI document can be a local file path or an HTTP(S) URL.</p>
 <p><strong>Options:</strong></p>
@@ -1337,7 +1416,7 @@ It runs until terminated (<code>Ctrl+C</code>).</p>
 <li><strong><code>-t</code>, <code>--http-traffic</code></strong> -- Enable HTTP request/response logging.</li>
 </ul>
 <p>Example on a custom port with traffic logging:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span><span class="w"> </span>-t
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span><span class="w"> </span>-t
 </code></pre></div>
 <p>The mock server validates every incoming request against the OpenAPI schema.
 If the request matches a scenario defined in the OpenAPI document, it returns that scenario's response.
@@ -1351,10 +1430,10 @@ The 418 body explains what happened -- read it before investigating further.</p>
 <hr />
 <h2 id="try-it-now">Try It Now<a class="headerlink" href="#try-it-now" title="Permanent link">&para;</a></h2>
 <p>Start a mock server from the <a href="https://github.com/contracteer-dev/contracteer-examples">Musketeer API</a> OpenAPI document without cloning anything:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
 </code></pre></div>
 <p>Then send a request:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>curl<span class="w"> </span>http://localhost:8080/musketeers
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>curl<span class="w"> </span>http://localhost:8080/musketeers
 </code></pre></div>
 <p>The mock server returns a generated response conforming to the Musketeer schema.</p>
 <hr />
