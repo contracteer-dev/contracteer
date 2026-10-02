@@ -1,0 +1,18 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+paths:
+  /orders:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id:
+                    type: string

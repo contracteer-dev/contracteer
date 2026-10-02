@@ -24,7 +24,14 @@ class MockCli: BaseCliCommand() {
   )
   private var port = 8080
 
-  override fun runCommand() {
-    MockServer(loadOperations(path), port).start()
+  override fun runCommand(): Int =
+    withOperations(path) { operations ->
+      MockServer(operations, port).start()
+      serveUntilKilled()
+    }
+
+  private fun serveUntilKilled(): Int {
+    Thread.currentThread().join()
+    return 0
   }
 }

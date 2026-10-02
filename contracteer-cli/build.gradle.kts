@@ -13,6 +13,7 @@ dependencies {
   kapt(libs.picocli.codegen)
 
   testImplementation(testFixtures(project(":contracteer-core")))
+  testImplementation(libs.jackson.databind)
 }
 
 kapt {

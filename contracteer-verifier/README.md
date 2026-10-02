@@ -53,6 +53,9 @@ assertThat(failures)
     .isEmpty()
 ```
 
+To verify every operation in one call, load the document with `OpenApiLoader.load()` and pass the result to `verifier.verify(loaded)`.
+It returns a report of every case, which `toJson()` renders as JSON.
+
 ## Documentation
 
 See [Verify Your API Programmatically](https://contracteer.dev/latest/getting-started/verifier/) for the full guide -- result interpretation, test data preparation, and debugging.

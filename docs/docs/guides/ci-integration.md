@@ -67,6 +67,9 @@ The `contracteer verify` command exits with code `0` when all cases pass and `1`
 GitHub Actions treats a non-zero exit code as a failed step.
 Unverified primary responses are [listed in the summary](../getting-started/cli.md#verify-a-server) and do not fail the step.
 
+To keep the result as a build artifact or feed it to another tool, add `--format json` and redirect stdout to a file.
+See [JSON output](../getting-started/cli.md#json-output).
+
 ### Start a mock server for client tests
 
 For client-side pipelines, start a mock server as a background service and run your client tests against it:

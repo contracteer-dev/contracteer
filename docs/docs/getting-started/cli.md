@@ -57,6 +57,7 @@ Unverified primary responses do not change the exit code.
 - **`-u`, `--base-url`** *(default: `http://localhost:8080`)* -- Absolute base URL of the server (scheme, host, and port).
 - **`-l`, `--log-level`** *(default: `INFO`)* -- Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF.
 - **`-t`, `--http-traffic`** -- Enable HTTP request/response logging.
+- **`--format`** *(default: `text`)* -- Output format: `text` or `json`.
 
 Example with a custom base URL:
 
@@ -102,6 +103,58 @@ Result Summary:
 ```
 
 An unverified primary response is not a failure: the OpenAPI document is valid, and Contracteer reports what it could not assert.
+
+### JSON output
+
+`--format json` prints the result as a single JSON document on stdout.
+
+```bash
+contracteer verify openapi.yaml --format json > report.json
+```
+
+Logs go to stderr, so stdout holds only the document.
+Exit codes are the same as in the text format.
+
+```json
+{
+  "version": 1,
+  "source": "openapi.yaml",
+  "summary": { "cases": 5, "passed": 4, "failed": 1 },
+  "load": { "diagnostics": [] },
+  "operations": { "declared": 3, "gaps": [] },
+  "cases": [
+    {
+      "name": "POST /musketeers (application/json) -> 400 (auto: body type mismatch)",
+      "kind": "type-mismatch",
+      "operation": { "method": "POST", "path": "/musketeers" },
+      "status": "failed",
+      "mutatedElement": { "in": "body", "name": null },
+      "diagnostics": [
+        {
+          "message": "Status code does not match. Expected: 400, Actual: 500",
+          "location": null,
+          "keyword": null,
+          "rule": null,
+          "operation": null,
+          "category": "contract-violation",
+          "severity": "error"
+        }
+      ],
+      "truncated": 0
+    }
+  ]
+}
+```
+
+- **`summary`** -- the number of verification cases, and how many passed and failed.
+- **`load.diagnostics`** -- the warnings raised while loading the OpenAPI document.
+- **`operations`** -- the number of operations the document declares, and the `gaps`: operations excluded at load, and operations whose primary response no case verifies.
+- **`cases`** -- one entry per verification case, with what it found when it failed.
+
+When the OpenAPI document does not load, the document is the load report instead: it has a top-level `"status": "failed"` and the errors in `diagnostics`.
+
+The JSON shape is experimental and may change between releases.
+Read `version` before relying on it.
 
 ---
 

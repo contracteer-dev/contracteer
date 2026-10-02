@@ -149,6 +149,46 @@ An unverified primary response is not a failure: the OpenAPI document is valid, 
 
 ---
 
+## Verify a Whole Document at Once
+
+`OpenApiLoader.load()` returns a load report, and `verifier.verify(loaded)` runs every case of every operation and returns one report.
+
+=== "Kotlin"
+
+    ```kotlin
+    val loaded = OpenApiLoader.load("classpath:openapi.yaml")
+    check(loaded is LoadReport.Loaded) { "Failed to load OpenAPI document: ${loaded.diagnostics}" }
+
+    val report = OpenApiVerifier(VerifierConfiguration("http://localhost:8080")).verify(loaded)
+
+    val failures = report.outcomes.filter { it.result.isFailure() }
+    println(report.toJson())
+    ```
+
+=== "Java"
+
+    ```java
+    var loadReport = OpenApiLoader.load("classpath:openapi.yaml");
+    if (!(loadReport instanceof LoadReport.Loaded loaded)) {
+        throw new IllegalStateException("Failed to load OpenAPI document: " + loadReport.getDiagnostics());
+    }
+
+    var report = new OpenApiVerifier(new VerifierConfiguration("http://localhost:8080")).verify(loaded);
+
+    var failures = report.getOutcomes().stream()
+        .filter(outcome -> outcome.getResult().isFailure())
+        .toList();
+    System.out.println(report.toJson());
+    ```
+
+`report.outcomes` holds one `VerificationOutcome` per case, and `report.unverifiedPrimaryResponses` the primary responses no case asserts.
+`report.toJson()` renders the same document as the CLI's [JSON output](cli.md#json-output).
+Every case runs.
+To run a subset, verify the cases one by one as shown above.
+This entry point and its JSON shape are experimental and may change between releases.
+
+---
+
 ## Prepare Test Data
 
 Before each verification case, your server must have the right data to return the expected responses.

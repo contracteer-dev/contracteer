@@ -163,6 +163,17 @@ The OpenAPI Specification defines this form as non-validating: "The `allOf` form
 **Fix:** Replace the direct `$ref` to the parent with a `oneOf` or `anyOf` listing the child schemas explicitly, and keep the discriminator at that usage site.
 See [Discriminator on a parent schema used via `$ref`](../concepts/openapi-coverage.md#discriminator-on-a-parent-schema-used-via-ref) for an example.
 
+### `--format json` prints nothing on stdout
+
+**Symptom:** `contracteer verify --format json` exits with a non-zero code and stdout is empty.
+
+**Cause:** The command could not run.
+Exit code `2` means an invalid option or value; the message is on stderr.
+Exit code `1` with empty stdout means the command stopped before verifying, for example on a base URL without a scheme; the error is on stderr.
+
+**Fix:** Read stderr.
+A failed verification or a document that does not load always prints a JSON document.
+
 ---
 
 ## Mock Server Issues
