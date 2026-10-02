@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import dev.contracteer.core.Result.Success
 import dev.contracteer.core.swagger.OpenApiLoader
 import dev.contracteer.mockserver.MockServer
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import kotlin.test.Test
 
 class VerifyCliTest {
@@ -105,24 +103,6 @@ class VerifyCliTest {
       mockServer.stop()
     }
   }
-
-  private fun execute(vararg args: String): Execution {
-    val stdout = ByteArrayOutputStream()
-    val stderr = ByteArrayOutputStream()
-    val originalOut = System.out
-    val originalErr = System.err
-    System.setOut(PrintStream(stdout, true))
-    System.setErr(PrintStream(stderr, true))
-    return try {
-      val exitCode = commandLine().execute(*args)
-      Execution(exitCode, stdout.toString(), stderr.toString())
-    } finally {
-      System.setOut(originalOut)
-      System.setErr(originalErr)
-    }
-  }
-
-  private data class Execution(val exitCode: Int, val stdout: String, val stderr: String)
 
   private companion object {
     const val ORDERS = "classpath:verify/orders.yaml"

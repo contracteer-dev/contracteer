@@ -27,6 +27,8 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 | Unknown integer/number formats              | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints.                                                                                                                                                                                                                                                             |
 
 If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the OpenAPI document.
+`contracteer lint` lists these warnings, and the errors that stop a load, without a running server.
+See [Check an OpenAPI Document](../getting-started/cli.md#check-an-openapi-document).
 
 ---
 

@@ -8,7 +8,6 @@ import picocli.CommandLine.Help.Ansi.AUTO
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import dev.contracteer.cli.LevelConverter.Companion.configureLogging
-import dev.contracteer.cli.LevelConverter.Companion.enableHttpTrafficLogging
 import dev.contracteer.core.operation.ApiOperation
 import dev.contracteer.core.Result.Success
 import dev.contracteer.core.swagger.OpenApiLoader
@@ -29,19 +28,11 @@ abstract class BaseCliCommand: Callable<Int> {
   )
   protected var logLevel: Level = INFO
 
-  @Option(
-    names = ["-t", "--http-traffic"],
-    description = ["Enable HTTP request/response logging."],
-    defaultValue = "false"
-  )
-  private var httpTraffic: Boolean = false
-
   /** Where the logs are written. Standard output unless a command keeps it for its own result. */
   protected open val logTarget: ConsoleTarget get() = SystemOut
 
   override fun call(): Int {
     configureLogging(logLevel, logTarget)
-    if (httpTraffic) enableHttpTrafficLogging()
     return runCommand()
   }
 

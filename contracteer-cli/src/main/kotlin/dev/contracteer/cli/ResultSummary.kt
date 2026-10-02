@@ -32,4 +32,4 @@ private fun caseLines(caseCount: Int, failureCount: Int, everyPrimaryResponseVer
 private fun passedLine(passedCount: Int) =
   "   ✅ @|yellow $passedCount|@ ${plural(passedCount, "verification case")} passed."
 
-private fun plural(count: Int, noun: String) = if (count == 1) noun else "${noun}s"
+internal fun plural(count: Int, noun: String) = if (count == 1) noun else "${noun}s"

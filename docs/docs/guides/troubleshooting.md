@@ -278,6 +278,25 @@ See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
 
 ## OpenAPI Document Issues
 
+### `lint` reports "Exclusions were not evaluated"
+
+**Symptom:** `contracteer lint` lists errors and ends with `The document does not load: ... Exclusions were not evaluated.`
+
+**Cause:** Contracteer decides which operations, bodies and scenarios to exclude once every operation is read.
+An error stops the load before that step, so the report cannot say what would be excluded.
+
+**Fix:** Fix the listed errors and run `lint` again.
+A document that loads may then report warnings the failed run did not show.
+
+### A `lint` warning names a schema but no operation
+
+**Symptom:** A warning such as `Schema 'reference': 'minLength' ignored because 'format: uuid' takes precedence.` has no `METHOD /path` prefix.
+
+**Cause:** A component schema is read once and shared by every operation that references it.
+The warning is about the schema, not about one use of it.
+
+**Fix:** Search the document for the schema or property name the message quotes.
+
 ### Equivalent paths rejected
 
 **Symptom:** Loading the OpenAPI document fails with "Equivalent paths found: '/resources/{resourceId}/items' and '/resources/{parentId}/items'."
@@ -642,7 +661,7 @@ See [Creating Scenarios](../concepts/scenarios.md) for the correct placement.
 
 ### Warning about ignored pattern or length constraints
 
-**Symptom:** Contracteer logs a warning like "pattern ignored because format takes precedence" or "minLength/maxLength ignored because pattern takes precedence."
+**Symptom:** Contracteer logs a warning like `Schema 'reference': 'minLength' ignored because 'format: uuid' takes precedence.`
 
 **Cause:** Your schema combines constraints that Contracteer applies in precedence order: `format` > `pattern` > `minLength`/`maxLength`.
 The lower-priority constraint is ignored for both validation and generation.

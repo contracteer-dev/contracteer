@@ -19,7 +19,7 @@ import kotlin.system.exitProcess
   commandListHeading = "\n@|bold,cyan Commands|@:\n",
   mixinStandardHelpOptions = true,
   usageHelpAutoWidth = true,
-  subcommands = [VerifyCli::class, MockCli::class]
+  subcommands = [VerifyCli::class, MockCli::class, LintCli::class]
 )
 class Cli
 

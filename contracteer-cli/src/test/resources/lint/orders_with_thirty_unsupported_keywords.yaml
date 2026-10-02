@@ -1,0 +1,105 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+paths:
+  /orders:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  p0:
+                    not:
+                      type: string
+                  p1:
+                    not:
+                      type: string
+                  p2:
+                    not:
+                      type: string
+                  p3:
+                    not:
+                      type: string
+                  p4:
+                    not:
+                      type: string
+                  p5:
+                    not:
+                      type: string
+                  p6:
+                    not:
+                      type: string
+                  p7:
+                    not:
+                      type: string
+                  p8:
+                    not:
+                      type: string
+                  p9:
+                    not:
+                      type: string
+                  p10:
+                    not:
+                      type: string
+                  p11:
+                    not:
+                      type: string
+                  p12:
+                    not:
+                      type: string
+                  p13:
+                    not:
+                      type: string
+                  p14:
+                    not:
+                      type: string
+                  p15:
+                    not:
+                      type: string
+                  p16:
+                    not:
+                      type: string
+                  p17:
+                    not:
+                      type: string
+                  p18:
+                    not:
+                      type: string
+                  p19:
+                    not:
+                      type: string
+                  p20:
+                    not:
+                      type: string
+                  p21:
+                    not:
+                      type: string
+                  p22:
+                    not:
+                      type: string
+                  p23:
+                    not:
+                      type: string
+                  p24:
+                    not:
+                      type: string
+                  p25:
+                    not:
+                      type: string
+                  p26:
+                    not:
+                      type: string
+                  p27:
+                    not:
+                      type: string
+                  p28:
+                    not:
+                      type: string
+                  p29:
+                    not:
+                      type: string

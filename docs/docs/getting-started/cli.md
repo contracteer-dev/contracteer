@@ -1,6 +1,6 @@
 # Use the CLI
 
-The Contracteer CLI runs verification and starts mock servers from the command line.
+The Contracteer CLI runs verification, starts mock servers and checks OpenAPI documents from the command line.
 It is a standalone native binary -- no JVM installation required.
 
 **Develop against an OpenAPI document before the server exists.**
@@ -15,7 +15,7 @@ If it speaks HTTP and has an OpenAPI document, Contracteer can verify it.
 
 **Integrate into CI/CD pipelines.**
 For non-JVM projects, add a verification step to your pipeline without any build tool integration.
-The CLI exits with code `0` when all cases pass and `1` when any case fails -- standard CI behavior.
+`contracteer verify` exits with code `0` when all cases pass and `1` when any case fails -- standard CI behavior.
 
 ---
 
@@ -192,6 +192,97 @@ It is Contracteer telling you that something is wrong or ambiguous.
 The 418 body explains what happened -- read it before investigating further.
 
 See [Testing Your Client](../concepts/testing-your-client.md) for a detailed explanation of mock server behavior.
+
+---
+
+## Check an OpenAPI Document
+
+`contracteer lint` reports what Contracteer cannot execute in an OpenAPI document, and what it skips or ignores.
+It needs no running server, so it can run on the pull request that changes the document.
+
+```bash
+contracteer lint openapi.yaml
+```
+
+The OpenAPI document can be a local file path or an HTTP(S) URL.
+
+Example output:
+
+```
+OpenAPI document: openapi.yaml
+
+Warnings (2)
+   Schema 'reference': 'minLength' ignored because 'format: uuid' takes precedence. [conflicting-constraints]
+   POST /orders: Operation excluded: no supported request body content type. [operation-excluded]
+
+The document loads: 2 operations declared, 1 excluded. 0 errors, 2 warnings.
+```
+
+Each finding ends with its rule in brackets, when it has one.
+An **error** means Contracteer cannot load the document: neither the verifier nor the mock server can use it.
+A **warning** means the document loads, but a part of it is left out or a declared constraint is not applied.
+The closing line states what was checked.
+The report is the only output on stdout; logs go to stderr.
+
+`lint` reports only what affects execution.
+It does not check naming, descriptions or other style conventions.
+
+The command exits with code `0` when the document loads and `1` when it does not, including when the document cannot be read.
+With `--fail-on warning`, it also exits with `1` when the document loads with a warning.
+A usage error exits with `2`.
+
+**Options:**
+
+- **`--fail-on`** *(default: `error`)* -- Lowest severity that makes the command exit with `1`: `error` or `warning`.
+- **`--format`** *(default: `text`)* -- Output format: `text` or `json`.
+- **`-l`, `--log-level`** *(default: `INFO`)* -- Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF.
+
+When the document does not load, the errors are listed first:
+
+```
+OpenAPI document: openapi.yaml
+
+Errors (1)
+   GET /orders: 'response[200].body.id': Schema 'id': 'not' is not supported in Contracteer. [unsupported]
+
+The document does not load: 1 error, 0 warnings. Exclusions were not evaluated.
+```
+
+Contracteer decides which operations to exclude only once every operation is read.
+Fix the errors and run `lint` again to see what is excluded.
+
+### JSON output
+
+`--format json` prints the load report as a single JSON document on stdout.
+
+```json
+{
+  "version": 1,
+  "source": "openapi.yaml",
+  "status": "loaded",
+  "operationCount": 1,
+  "diagnostics": [
+    {
+      "message": "Operation excluded: no supported request body content type.",
+      "location": null,
+      "keyword": null,
+      "rule": "operation-excluded",
+      "operation": { "method": "POST", "path": "/orders" },
+      "category": "spec",
+      "severity": "warning"
+    }
+  ],
+  "truncated": 0
+}
+```
+
+- **`status`** -- `loaded` or `failed`.
+- **`operationCount`** -- the operations Contracteer keeps; `null` when the document does not load.
+- **`diagnostics`** -- the findings, errors first.
+- **`truncated`** -- the number of errors not shown; Contracteer lists at most 25.
+
+The JSON shape is experimental and may change between releases.
+Read `version` before relying on it.
 
 ---
 

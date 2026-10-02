@@ -15,7 +15,7 @@ import dev.contracteer.mockserver.MockServer
   usageHelpAutoWidth = true,
   abbreviateSynopsis = false
 )
-class MockCli: BaseCliCommand() {
+class MockCli: HttpCliCommand() {
 
   @Option(
     names = ["-p", "--port"],

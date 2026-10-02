@@ -4,8 +4,8 @@ import ch.qos.logback.classic.Level.DEBUG
 import ch.qos.logback.core.joran.spi.ConsoleTarget
 import ch.qos.logback.core.joran.spi.ConsoleTarget.SystemErr
 import ch.qos.logback.core.joran.spi.ConsoleTarget.SystemOut
-import dev.contracteer.cli.VerifyCli.OutputFormat.JSON
-import dev.contracteer.cli.VerifyCli.OutputFormat.TEXT
+import dev.contracteer.cli.OutputFormat.JSON
+import dev.contracteer.cli.OutputFormat.TEXT
 import dev.contracteer.core.operation.ApiOperation
 import dev.contracteer.core.swagger.LoadReport
 import dev.contracteer.core.swagger.OpenApiLoader
@@ -30,7 +30,7 @@ import picocli.CommandLine.Option
   usageHelpAutoWidth = true,
   abbreviateSynopsis = false
 )
-class VerifyCli: BaseCliCommand() {
+class VerifyCli: HttpCliCommand() {
   @Option(
     names = ["-u", "--base-url"],
     required = false,
@@ -96,11 +96,5 @@ class VerifyCli: BaseCliCommand() {
       println(AUTO.string("<===========================================================================================>"))
       println()
     }
-  }
-
-  internal enum class OutputFormat {
-    TEXT, JSON;
-
-    override fun toString() = name.lowercase()
   }
 }

@@ -34,5 +34,11 @@ class LevelConverter: ITypeConverter<Level> {
       val httpLogger = LoggerFactory.getLogger("dev.contracteer.http") as Logger
       httpLogger.level = Level.DEBUG
     }
+
+    /** Stops the loader from logging each warning it reports, for a command that prints the load report itself. */
+    fun muteLoadWarningLogs() {
+      val loadWarningsLogger = LoggerFactory.getLogger("dev.contracteer.core.swagger.LoadWarnings") as Logger
+      loadWarningsLogger.level = Level.ERROR
+    }
   }
 }

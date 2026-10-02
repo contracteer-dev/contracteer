@@ -139,6 +139,12 @@ Start a mock server:
 contracteer mock openapi.yaml
 ```
 
+Check an OpenAPI document without a server:
+
+```bash
+contracteer lint openapi.yaml
+```
+
 The CLI works with any language or stack -- no JVM required.
 
 ### Other integrations

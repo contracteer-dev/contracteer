@@ -1,6 +1,6 @@
 # contracteer-cli
 
-Run the Contracteer verifier or mock server from the command line.
+Run the Contracteer verifier or mock server, or check an OpenAPI document, from the command line.
 Works with any language or stack -- no JVM required.
 
 ## Installation
@@ -23,6 +23,12 @@ Start a mock server:
 
 ```bash
 contracteer mock openapi.yaml
+```
+
+Check an OpenAPI document without a server:
+
+```bash
+contracteer lint openapi.yaml
 ```
 
 The OpenAPI document can be a local file path or an HTTP(S) URL.

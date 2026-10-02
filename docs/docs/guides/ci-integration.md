@@ -48,7 +48,7 @@ jobs:
 
       - name: Install Contracteer
         run: |
-          curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip
+          curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.2.0/contracteer-4.2.0-linux-x86_64.zip -o contracteer.zip
           unzip contracteer.zip
           sudo mv contracteer /usr/local/bin/
 
@@ -87,7 +87,7 @@ jobs:
 
       - name: Install Contracteer
         run: |
-          curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip
+          curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.2.0/contracteer-4.2.0-linux-x86_64.zip -o contracteer.zip
           unzip contracteer.zip
           sudo mv contracteer /usr/local/bin/
 
@@ -105,6 +105,22 @@ jobs:
 
 The mock server runs in the background for the duration of the job.
 Your client tests point to it via the `API_BASE_URL` environment variable (or however your client is configured).
+
+---
+
+## Check the OpenAPI Document
+
+In a repository that holds only the OpenAPI document, there is no server to verify.
+`contracteer lint` checks the document on its own:
+
+```yaml
+      - name: Check the OpenAPI document
+        run: contracteer lint openapi.yaml --fail-on warning
+```
+
+The step fails when Contracteer cannot load the document.
+With `--fail-on warning`, it also fails when Contracteer would skip an operation or ignore a constraint.
+See [Check an OpenAPI Document](../getting-started/cli.md#check-an-openapi-document).
 
 ---
 
