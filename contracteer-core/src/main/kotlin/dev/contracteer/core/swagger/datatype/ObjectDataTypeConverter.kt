@@ -10,7 +10,6 @@ import dev.contracteer.core.datatype.ObjectDataType
 import dev.contracteer.core.datatype.StringDataType
 import dev.contracteer.core.result
 import dev.contracteer.core.swagger.LoadWarnings
-import dev.contracteer.core.swagger.booleanSchemaValue
 import dev.contracteer.core.swagger.effectiveEnum
 import dev.contracteer.core.swagger.effectivePropertyNames
 import dev.contracteer.core.swagger.effectiveType
@@ -104,7 +103,7 @@ internal object ObjectDataTypeConverter {
   private fun additionalPropertiesAsBoolean(value: Any?): Boolean? =
     when (value) {
       is Boolean   -> value
-      is Schema<*> -> value.booleanSchemaValue()
+      is Schema<*> -> value.booleanSchemaValue
       else         -> null
     }
 }

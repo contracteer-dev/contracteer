@@ -6,7 +6,6 @@ import io.swagger.v3.oas.models.SpecVersion.V31
 import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.Discriminator
-import io.swagger.v3.oas.models.media.JsonSchema
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
@@ -117,9 +116,6 @@ internal fun Schema<*>.hasComposition(): Boolean =
 
 internal fun Schema<*>.hasNonNullableMultiType(): Boolean =
   (types?.count { it != "null" } ?: 0) > 1
-
-internal fun Schema<*>.booleanSchemaValue(): Boolean? =
-  (this as? JsonSchema)?.booleanSchemaValue
 
 internal fun Schema<*>.hasPrefixItems(): Boolean =
   !prefixItems.isNullOrEmpty()

@@ -127,7 +127,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
 
   private fun Schema<*>.unsupportedFeature(): UnsupportedFeature? =
     when {
-      booleanSchemaValue() != null -> UnsupportedFeature("boolean schema '${booleanSchemaValue()}'", null, "Use a schema object instead.")
+      booleanSchemaValue != null   -> UnsupportedFeature("boolean schema '$booleanSchemaValue'", null, "Use a schema object instead.")
       hasNonNullableMultiType()    -> UnsupportedFeature("non-nullable multi-type 'types: $types'", "type", "Use 'oneOf' or 'anyOf' to express a union of types.")
       hasPrefixItems()             -> unsupportedKeyword("prefixItems", "Use 'items' if all positions share a single type.")
       hasContains()                -> UnsupportedFeature("'contains/minContains/maxContains'", "contains")

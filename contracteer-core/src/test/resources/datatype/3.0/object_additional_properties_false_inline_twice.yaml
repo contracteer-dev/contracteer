@@ -1,0 +1,33 @@
+openapi: "3.0.3"
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /a:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                a:
+                  type: string
+      responses:
+        204:
+          description: ok
+  /b:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                b:
+                  type: string
+      responses:
+        204:
+          description: ok

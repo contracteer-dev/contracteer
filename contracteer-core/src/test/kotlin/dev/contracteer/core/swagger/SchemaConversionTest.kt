@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import dev.contracteer.core.assertFailure
 import dev.contracteer.core.assertSuccess
 import dev.contracteer.core.datatype.*
+import dev.contracteer.core.operation.ApiOperation
 
 class SchemaConversionTest {
 
@@ -775,6 +776,21 @@ class SchemaConversionTest {
     assert(objectDataType.additionalPropertiesDataType is StringDataType)
   }
 
+  @ParameterizedTest(name = "rejects additional properties on every inline object declaring additionalProperties false (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `rejects additional properties on every inline object declaring additionalProperties false`(version: String) {
+    // when
+    val operations = loadOperations(version, "object_additional_properties_false_inline_twice.yaml").assertSuccess()
+
+    // then
+    val first = operations.requestBodyOf("/a")
+    val second = operations.requestBodyOf("/b")
+    assert(!first.allowAdditionalProperties)
+    assert(!second.allowAdditionalProperties)
+    assert(first.validate(mapOf("a" to "x", "extra" to 1)).isFailure())
+    assert(second.validate(mapOf("b" to "x", "extra" to 1)).isFailure())
+  }
+
   @ParameterizedTest(name = "extract ArrayDataType from items without type (OAS {0})")
   @ValueSource(strings = ["3.0", "3.1"])
   fun `extract ArrayDataType from items without type`(version: String) {
@@ -1425,6 +1441,11 @@ class SchemaConversionTest {
       .asObjectDataType()
       .properties[propName]!!
 
+  private fun List<ApiOperation>.requestBodyOf(path: String): ObjectDataType =
+    single { it.path == path }
+      .requestSchema.bodies.first().dataType
+      .asObjectDataType()
+
   private fun loadOperations(version: String, yamlFile: String) =
     OpenApiLoader.loadOperations("src/test/resources/datatype/$version/$yamlFile")
 
@@ -1443,6 +1464,7 @@ class SchemaConversionTest {
     fun unsupportedKeywordFixtures() = listOf(
       Arguments.of("multi-type",            "multi_type_non_nullable_error.yaml"),
       Arguments.of("boolean schema",        "boolean_true_schema_error.yaml"),
+      Arguments.of("boolean schema",        "boolean_false_schema_after_first_occurrence_error.yaml"),
       Arguments.of("prefixItems",           "prefix_items_error.yaml"),
       Arguments.of("contains",              "contains_error.yaml"),
       Arguments.of("if/then/else",          "if_then_else_error.yaml"),
