@@ -286,7 +286,7 @@ The value for `400_INVALID_MUSKETEER` is not validated -- `KNIGHT` is intentiona
 
 When an operation defines multiple request or response content types, Contracteer produces one verification case per combination -- a **cartesian product**.
 
-If a request body supports `application/json` and `application/xml`, and a response body supports the same two, a single example key produces four verification cases.
+If a request body supports `application/json` and `text/plain`, and a response body supports the same two, a single example key produces four verification cases.
 Each combination of request and response content type becomes its own case.
 
 ---
