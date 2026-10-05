@@ -2,14 +2,17 @@ package dev.contracteer.mockserver
 
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
+import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterEach
+import dev.contracteer.core.assertSuccess
 import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.form
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
 import dev.contracteer.core.dsl.oneOfType
 import dev.contracteer.core.dsl.stringType
+import dev.contracteer.core.swagger.OpenApiLoader
 import kotlin.test.Test
 
 class RequestValidationTest {
@@ -377,6 +380,25 @@ class RequestValidationTest {
       .then()
       .assertThat()
       .statusCode(418)
+  }
+
+  @Test
+  fun `responds with 418 when form-urlencoded request body has a malformed percent-escape`() {
+    // Given
+    val operations = OpenApiLoader.loadOperations("src/test/resources/form_urlencoded/form_urlencoded_body.yaml").assertSuccess()
+    mockServer = MockServer(operations)
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .contentType("application/x-www-form-urlencoded")
+      .body("access_token=%ZZ")
+      .post("/token")
+      .then()
+      .assertThat()
+      .statusCode(418)
+      .body(containsString("Malformed percent-escape in 'access_token=%ZZ'"))
   }
 
   @Test

@@ -1,6 +1,7 @@
 package dev.contracteer.core.serde
 
 import dev.contracteer.core.Result
+import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.UrlEncoding
 import dev.contracteer.core.codec.DecodeView
@@ -11,7 +12,8 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 
 /**
- * [Serde] for `application/x-www-form-urlencoded` request bodies.
+ * [Serde] for `application/x-www-form-urlencoded` request and response bodies.
+ * Deserialization fails on a malformed percent-escape.
  *
  * Delegates to per-property [ParameterCodec]s for encoding/decoding individual properties
  * of the object.
@@ -38,8 +40,11 @@ class FormUrlEncodedSerde internal constructor(
   override fun doDeserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> {
     if (source == null) return success(null)
 
-    val values = parseValues(source)
-    return propertyEncodings.entries
+    return parseValues(source).flatMap { decodeProperties(it) }
+  }
+
+  private fun decodeProperties(values: Map<String, List<String>>): Result<Map<String, Any?>> =
+    propertyEncodings.entries
       .map { (propName, encoding) ->
         encoding.codec
           .decode(values, encoding.view.source)
@@ -47,16 +52,21 @@ class FormUrlEncodedSerde internal constructor(
       }
       .combineResults()
       .map { pairs -> pairs.filter { it.second != null }.toMap() }
-  }
 
-  private fun parseValues(source: String): Map<String, List<String>> =
+  private fun parseValues(source: String): Result<Map<String, List<String>>> =
     source
       .split("&")
-      .mapNotNull { entry ->
-        val parts = entry.split("=", limit = 2)
-        if (parts.size == 2) urlDecode(parts[0]) to urlDecode(parts[1]) else null
-      }
-      .groupBy({ it.first }, { it.second })
+      .filter { "=" in it }
+      .map { decodeEntry(it) }
+      .combineResults()
+      .map { pairs -> pairs.groupBy({ it.first }, { it.second }) }
+
+  private fun decodeEntry(entry: String): Result<Pair<String, String>> =
+    try {
+      success(urlDecode(entry.substringBefore("=")) to urlDecode(entry.substringAfter("=")))
+    } catch (_: IllegalArgumentException) {
+      failure("Malformed percent-escape in '$entry'")
+    }
 }
 
 internal data class PropertyEncoding(val codec: ParameterCodec, val view: DecodeView, val allowReserved: Boolean = false)

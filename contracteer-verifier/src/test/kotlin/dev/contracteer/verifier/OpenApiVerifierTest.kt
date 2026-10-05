@@ -11,6 +11,7 @@ import org.http4k.routing.routes
 import dev.contracteer.core.DiagnosticCategory.CONTRACT_VIOLATION
 import dev.contracteer.core.DiagnosticCategory.EXECUTION_ERROR
 import dev.contracteer.core.Severity.ERROR
+import dev.contracteer.core.assertSuccess
 import dev.contracteer.core.datatype.GenerationOutcome
 import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.cyclicObjectType
@@ -18,6 +19,7 @@ import dev.contracteer.core.dsl.form
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
 import dev.contracteer.core.dsl.stringType
+import dev.contracteer.core.swagger.OpenApiLoader
 import java.net.InetAddress
 import java.net.ServerSocket
 import kotlin.concurrent.thread
@@ -199,6 +201,29 @@ class OpenApiVerifierTest {
     // Then
     val diagnostics = outcome.result.diagnostics()
     assert(diagnostics.isNotEmpty())
+    assert(diagnostics.all { it.category == CONTRACT_VIOLATION && it.severity == ERROR })
+  }
+
+  @Test
+  fun `categorises a form-urlencoded response with a malformed percent-escape as a contract violation`() {
+    // Given
+    val operations = OpenApiLoader.loadOperations("src/test/resources/form_urlencoded/form_urlencoded_response.yaml").assertSuccess()
+    val case = VerificationCaseFactory.create(operations.single()).single()
+
+    val app = routes(
+      "/token" bind GET to {
+        Response(OK).header("Content-Type", "application/x-www-form-urlencoded").body("access_token=%ZZ")
+      }
+    )
+
+    // When
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port")).verify(case)
+    }
+
+    // Then
+    val diagnostics = outcome.result.diagnostics()
+    assert(diagnostics.any { it.message == "Malformed percent-escape in 'access_token=%ZZ'" })
     assert(diagnostics.all { it.category == CONTRACT_VIOLATION && it.severity == ERROR })
   }
 

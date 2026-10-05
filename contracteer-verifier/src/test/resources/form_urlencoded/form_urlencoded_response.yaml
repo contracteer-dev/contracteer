@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  title: Form URL-Encoded Response Body
+  version: '1.0'
+paths:
+  /token:
+    get:
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string

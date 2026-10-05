@@ -1,5 +1,6 @@
 package dev.contracteer.core.serde
 
+import dev.contracteer.core.assertFailure
 import dev.contracteer.core.assertSuccess
 import dev.contracteer.core.codec.DecodeView
 import dev.contracteer.core.codec.FormParameterCodec
@@ -176,6 +177,66 @@ class FormUrlEncodedSerdeTest {
 
     // then
     assert(result == "callback=https%3A%2F%2Fexample.com%2Fcallback%3Ftoken%3Dabc&name=John+Doe")
+  }
+
+  @Test
+  fun `deserialize fails when a value holds a malformed percent-escape`() {
+    // given
+    val serde = formUrlEncodedSerde("name" to stringType())
+    val dataType = objectType { properties { "name" to stringType() } }
+
+    // when
+    val result = serde.deserialize("name=%ZZ", dataType)
+
+    // then
+    assert(result.assertFailure() == listOf("Malformed percent-escape in 'name=%ZZ'"))
+  }
+
+  @Test
+  fun `deserialize fails when a value ends with an incomplete percent-escape`() {
+    // given
+    val serde = formUrlEncodedSerde("name" to stringType())
+    val dataType = objectType { properties { "name" to stringType() } }
+
+    // when
+    val result = serde.deserialize("name=John%2", dataType)
+
+    // then
+    assert(result.assertFailure() == listOf("Malformed percent-escape in 'name=John%2'"))
+  }
+
+  @Test
+  fun `deserialize fails when a key holds a malformed percent-escape`() {
+    // given
+    val serde = formUrlEncodedSerde("name" to stringType())
+    val dataType = objectType { properties { "name" to stringType() } }
+
+    // when
+    val result = serde.deserialize("na%ZZme=John", dataType)
+
+    // then
+    assert(result.assertFailure() == listOf("Malformed percent-escape in 'na%ZZme=John'"))
+  }
+
+  @Test
+  fun `deserialize reports every entry holding a malformed percent-escape`() {
+    // given
+    val serde = formUrlEncodedSerde("name" to stringType(), "city" to stringType())
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "city" to stringType()
+      }
+    }
+
+    // when
+    val result = serde.deserialize("name=%ZZ&city=%2", dataType)
+
+    // then
+    assert(result.assertFailure() == listOf(
+      "Malformed percent-escape in 'name=%ZZ'",
+      "Malformed percent-escape in 'city=%2'"
+    ))
   }
 
   @Test
