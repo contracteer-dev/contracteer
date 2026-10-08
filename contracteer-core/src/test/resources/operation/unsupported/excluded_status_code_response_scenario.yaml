@@ -1,0 +1,42 @@
+openapi: 3.0.0
+info:
+  title: Excluded Status Code Response Scenario Filter Test
+  version: '1.0'
+paths:
+  /products:
+    get:
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+          examples:
+            missing:
+              value: 9
+            409_CONFLICT:
+              value: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+        '404':
+          description: Not found
+          content:
+            application/json:
+              examples:
+                missing:
+                  value:
+                    reason: gone
+        4XX:
+          description: Client error
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [code]
+                properties:
+                  code:
+                    type: integer

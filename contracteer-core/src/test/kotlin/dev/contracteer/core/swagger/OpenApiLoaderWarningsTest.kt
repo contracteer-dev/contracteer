@@ -294,6 +294,58 @@ class OpenApiLoaderWarningsTest {
     )) { loaded.diagnostics.toString() }
   }
 
+  @Test
+  fun `scenario using a body excluded for having no schema is reported as excluded, naming the body`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/schemaless_response_body_scenario.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning(BODY_EXCLUDED, "Response 200 body 'application/json' excluded: its schema is empty or missing.", "GET", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario 'bad_scenario' excluded: its response body 'application/json' is excluded.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `scenario using a request body excluded for having no schema is reported as excluded, naming the body`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/schemaless_request_body_scenario.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning(BODY_EXCLUDED, "Request body 'application/json' excluded: its schema is empty or missing.", "POST", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario 'bad_scenario' excluded: its request body 'application/json' is excluded.", "POST", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `scenario targeting an excluded status code response is reported as excluded, naming it, even when a class response serves its status code`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/excluded_status_code_response_scenario.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning(BODY_EXCLUDED, "Response 404 excluded: no supported body.", "GET", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario 'missing' excluded: response 404 is excluded.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `scenario targeting an excluded class response is reported as excluded, naming it, even when the default response serves its status code`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/operation/unsupported/excluded_class_response_scenario.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning(BODY_EXCLUDED, "Response 4XX excluded: no supported body.", "GET", "/products"),
+      operationWarning(SCENARIO_EXCLUDED, "Scenario '418_TEAPOT' excluded: response 4XX is excluded.", "GET", "/products")
+    )) { loaded.diagnostics.toString() }
+  }
+
   private fun operationWarning(rule: DiagnosticRule, message: String, method: String, path: String, keyword: String? = null) =
     Diagnostic(message, keyword = keyword, rule = rule, operation = OperationRef(method, path), category = SPEC, severity = WARNING)
 

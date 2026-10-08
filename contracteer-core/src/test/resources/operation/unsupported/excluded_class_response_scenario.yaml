@@ -1,0 +1,37 @@
+openapi: 3.0.0
+info:
+  title: Excluded Class Response Scenario Filter Test
+  version: '1.0'
+paths:
+  /products:
+    get:
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+          examples:
+            418_TEAPOT:
+              value: 10
+            503_DOWN:
+              value: 11
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+        4XX:
+          description: Client error
+          content:
+            application/json: {}
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string

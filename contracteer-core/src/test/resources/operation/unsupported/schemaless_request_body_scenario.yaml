@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Schemaless Request Body Scenario Filter Test
+  version: '1.0'
+paths:
+  /products:
+    post:
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+            examples:
+              good_scenario:
+                value: widget
+          application/json:
+            schema: {}
+            examples:
+              bad_scenario:
+                value:
+                  name: widget
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+              examples:
+                good_scenario:
+                  value: 1
+                bad_scenario:
+                  value: 2

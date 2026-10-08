@@ -61,6 +61,46 @@ class UnsupportedOperationFilterTest {
   }
 
   @Test
+  fun `filters scenarios using a response body without schema`() {
+    // when
+    val result = loadResult("schemaless_response_body_scenario.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    assert(operations.single().scenarios.map { it.key } == listOf("good_scenario"))
+  }
+
+  @Test
+  fun `filters scenarios using a request body without schema`() {
+    // when
+    val result = loadResult("schemaless_request_body_scenario.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    assert(operations.single().scenarios.map { it.key } == listOf("good_scenario"))
+  }
+
+  @Test
+  fun `filters scenarios targeting an excluded status code response even when a class response serves their status code`() {
+    // when
+    val result = loadResult("excluded_status_code_response_scenario.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    assert(operations.single().scenarios.map { it.key } == listOf("409_CONFLICT"))
+  }
+
+  @Test
+  fun `filters scenarios targeting an excluded class response even when the default response serves their status code`() {
+    // when
+    val result = loadResult("excluded_class_response_scenario.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    assert(operations.single().scenarios.map { it.key } == listOf("503_DOWN"))
+  }
+
+  @Test
   fun `excludes operation whose only class response has an XML-only body`() {
     // when
     val result = loadResult("xml_class_response.yaml")

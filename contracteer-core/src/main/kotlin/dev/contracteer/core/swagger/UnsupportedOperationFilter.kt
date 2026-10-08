@@ -72,19 +72,25 @@ private fun filterUnsupportedBodies(schema: ResponseSchema): ResponseSchema? {
 }
 
 private fun ApiOperation.exclusionReason(scenario: Scenario, supportedResponses: ResponseSchemas): String? =
-  if (supportedResponses.responseFor(scenario.statusCode) == null) "${declaredResponse(scenario.statusCode)} is excluded"
-  else scenario.xmlBody()?.let { "its $it is excluded" }
+  if (supportedResponses.labelFor(scenario.statusCode) != responseSchemas.labelFor(scenario.statusCode))
+    "${declaredResponse(scenario.statusCode)} is excluded"
+  else excludedBody(scenario)?.let { "its $it is excluded" }
 
 private fun ApiOperation.declaredResponse(statusCode: Int): String {
   val label = responseSchemas.labelFor(statusCode) ?: statusCode.toString()
   return if (label == "default") "the default response" else "response $label"
 }
 
-private fun Scenario.xmlBody(): String? =
-  request.body.ifXml("request body") ?: response.body.ifXml("response body")
+private fun ApiOperation.excludedBody(scenario: Scenario): String? {
+  val responseBodies = responseSchemas.responseFor(scenario.statusCode)?.bodies.orEmpty()
+  return scenario.request.body.ifUnsupportedIn(requestSchema.bodies, "request body")
+    ?: scenario.response.body.ifUnsupportedIn(responseBodies, "response body")
+}
 
-private fun ScenarioBody?.ifXml(name: String): String? =
-  this?.contentType?.takeIf { it.isXml() }?.let { "$name '${it.value}'" }
+private fun ScenarioBody?.ifUnsupportedIn(declaredBodies: List<BodySchema>, name: String): String? =
+  this?.contentType
+    ?.takeIf { contentType -> declaredBodies.any { it.contentType == contentType && it.isUnsupported() } }
+    ?.let { "$name '${it.value}'" }
 
 private fun BodySchema.isUnsupported() = contentType.isXml() || dataType is AnyDataType
 
