@@ -1965,15 +1965,15 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 <tbody>
 <tr>
 <td><code>application/xml</code></td>
-<td>XML bodies are skipped with a warning, along with the scenarios that use them. A response with only XML bodies is skipped, along with the scenarios that target it. An operation is skipped when no request body or no response remains.</td>
+<td>XML bodies are skipped with a warning, along with the scenarios that use them. A response with only XML bodies is skipped, along with the scenarios that target it, even when a class or default response would serve their status code. An operation is skipped when no request body or no response remains.</td>
 </tr>
 <tr>
-<td>Missing schema on body or parameter content</td>
-<td>A body with no schema is skipped with a warning, under the same rules as XML. An operation with a parameter <code>content</code> entry that has no schema is skipped. Exception: bodies declared with a binary content type (<code>application/octet-stream</code>, <code>image/*</code>, etc.) default to binary content.</td>
+<td>Missing or empty schema on body or parameter content</td>
+<td>A body whose schema is missing or empty (<code>schema: {}</code>) is skipped with a warning, under the same rules as XML. An operation with a parameter <code>content</code> entry whose schema is missing or empty is skipped. Exception: bodies declared with a binary content type (<code>application/octet-stream</code>, <code>image/*</code>, etc.) default to binary content.</td>
 </tr>
 <tr>
 <td>Empty schema (<code>schema: {}</code>)</td>
-<td>Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.</td>
+<td>Treated as unconstrained ("any type"), except on a body or a parameter <code>content</code> entry (see the row above). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.</td>
 </tr>
 <tr>
 <td><code>externalValue</code> (Example Objects)</td>
