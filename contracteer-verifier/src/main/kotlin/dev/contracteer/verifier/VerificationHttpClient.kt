@@ -52,7 +52,7 @@ internal class VerificationHttpClient(serverUrl: String) {
         uri = resolvePathUri(scenario.path, pathParams))
         .withScenarioParameters(scenario.request.parameterValues, case.requestSchema).bind()
         .withScenarioRequestBody(scenario.request.body, bodySchema).bind()
-        .withAcceptHeader(scenario.response.body?.contentType)
+        .withAcceptHeader(case.responseContentType)
     }
 
   private fun buildSchemaBasedRequest(case: SchemaBased): Result<Request> =

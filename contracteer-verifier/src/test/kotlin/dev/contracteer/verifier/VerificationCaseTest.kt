@@ -15,7 +15,8 @@ class VerificationCaseTest {
   fun `display name for scenario based with request and response bodies`() {
     // Given
     val case = scenarioBasedCase("GET", "/users/{id}", statusCode = 200, key = "validUser",
-      requestContentType = ContentType("application/json")) {
+      requestContentType = ContentType("application/json"),
+      responseContentType = ContentType("application/json")) {
       request {
         pathParam("id", integerType())
         jsonBody(objectType { properties { "name" to stringType() } })
@@ -65,10 +66,37 @@ class VerificationCaseTest {
   }
 
   @Test
+  fun `display name for scenario based without response body example`() {
+    // Given
+    val case = scenarioBasedCase("GET", "/users/{id}", statusCode = 404, key = "404_UNKNOWN",
+      responseContentType = ContentType("text/plain")) {
+      request {
+        pathParam("id", integerType())
+      }
+      response(404) {
+        jsonBody(objectType { properties { "code" to stringType() } })
+        plainTextBody(stringType())
+      }
+      scenario("404_UNKNOWN", status = 404) {
+        request {
+          pathParam["id"] = 999
+        }
+      }
+    }
+
+    // When
+    val displayName = case.displayName
+
+    // Then
+    assert(displayName == "GET /users/{id} -> 404 (text/plain) with scenario '404_UNKNOWN'")
+  }
+
+  @Test
   fun `display name for scenario based with POST method`() {
     // Given
     val case = scenarioBasedCase("POST", "/orders", statusCode = 201, key = "success",
-      requestContentType = ContentType("application/json")) {
+      requestContentType = ContentType("application/json"),
+      responseContentType = ContentType("application/json")) {
       request {
         jsonBody(objectType {
           properties {
@@ -176,6 +204,7 @@ class VerificationCaseTest {
   private fun scenarioBasedCase(
     method: String, path: String, statusCode: Int, key: String,
     requestContentType: ContentType? = null,
+    responseContentType: ContentType? = null,
     block: ApiOperationBuilder.() -> Unit
   ): VerificationCase.ScenarioBased {
     val op = apiOperation(method, path, block)
@@ -183,7 +212,8 @@ class VerificationCaseTest {
       op.scenarios.first { it.key == key },
       op.requestSchema,
       op.responseSchemas.responseFor(statusCode)!!,
-      requestContentType
+      requestContentType,
+      responseContentType
     )
   }
 

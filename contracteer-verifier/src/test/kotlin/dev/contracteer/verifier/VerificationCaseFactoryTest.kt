@@ -4,6 +4,7 @@ import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
 import dev.contracteer.core.dsl.stringType
+import dev.contracteer.core.operation.ContentType
 import dev.contracteer.core.serde.JsonSerde
 import dev.contracteer.core.serde.PlainTextSerde
 import dev.contracteer.verifier.VerificationCase.ScenarioBased
@@ -215,6 +216,74 @@ class VerificationCaseFactoryTest {
     assert(cases[0] is ScenarioBased)
     assert(!cases[0].displayName.contains("application/json"))
     assert(!cases[0].displayName.contains("application/xml"))
+  }
+
+  @Test
+  fun `fans out scenario based cases per response content type when scenario has no response body example`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(404) {
+        jsonBody(objectType { properties { "code" to stringType() } })
+        plainTextBody(stringType())
+      }
+      scenario("404_UNKNOWN", status = 404) {
+        request { pathParam["id"] = 999 }
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation).filterIsInstance<ScenarioBased>()
+
+    // Then
+    assert(cases.map { it.responseContentType } == listOf(ContentType("application/json"), ContentType("text/plain")))
+  }
+
+  @Test
+  fun `uses the response body example content type when scenario has a response body example`() {
+    // Given
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+        plainTextBody(stringType())
+      }
+      scenario("john", status = 200) {
+        request { pathParam["id"] = 1 }
+        response { jsonBody { "id" to 1 } }
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation).filterIsInstance<ScenarioBased>()
+
+    // Then
+    assert(cases.map { it.responseContentType } == listOf(ContentType("application/json")))
+  }
+
+  @Test
+  fun `crosses request and response content types when scenario has neither body example`() {
+    // Given
+    val json = ContentType("application/json")
+    val text = ContentType("text/plain")
+    val apiOperation = apiOperation("POST", "/orders") {
+      request {
+        jsonBody(objectType { properties { "product" to stringType() } })
+        plainTextBody(stringType())
+      }
+      response(201) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+        plainTextBody(stringType())
+      }
+      scenario("K1", status = 201) {}
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation).filterIsInstance<ScenarioBased>()
+
+    // Then
+    assert(cases.map { it.requestContentType to it.responseContentType } ==
+             listOf(json to json, json to text, text to json, text to text))
   }
 
   @Test

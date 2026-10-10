@@ -356,6 +356,40 @@ class OpenApiVerifierTest {
   }
 
   @Test
+  fun `sends the response content type as Accept when scenario has no response body example`() {
+    // Given
+    val capturedAccepts = mutableListOf<String?>()
+
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(404) {
+        jsonBody(objectType { properties { "code" to stringType() } })
+        plainTextBody(stringType())
+      }
+      scenario("404_UNKNOWN", status = 404) {
+        request { pathParam["id"] = 999 }
+      }
+    }
+
+    val app = routes(
+      "/users/999" bind GET to { request ->
+        capturedAccepts += request.header("Accept")
+        Response(NOT_FOUND).header("Content-Type", "text/plain").body("unknown")
+      }
+    )
+
+    // When
+    withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
+      cases.forEach { verifier.verify(it) }
+    }
+
+    // Then
+    assert(capturedAccepts == listOf("application/json", "text/plain"))
+  }
+
+  @Test
   fun `succeeds when the request body cycle is absorbed via a nullable property`() {
     // given — Person is nullable, so the inner cycle re-entry produces Boundary which
     // the outer object absorbs as null instead of propagating; generation succeeds.

@@ -6,6 +6,7 @@ import dev.contracteer.conformance.Invariant.VIOLATED
 import dev.contracteer.core.dsl.apiOperation
 import dev.contracteer.core.dsl.integerType
 import dev.contracteer.core.dsl.objectType
+import dev.contracteer.core.dsl.stringType
 import dev.contracteer.core.operation.ApiOperation
 import dev.contracteer.mockserver.MockServer
 import dev.contracteer.verifier.OpenApiVerifier
@@ -224,6 +225,24 @@ class RoundTripInvariantTest {
         expectedMockStatus = 404,
         invariant = HOLDS,
         probePath = "/scenario-without-response-example/999"
+      ),
+      ConformanceRow(
+        declaredResponses = "200 + 404 with two content types and a scenario on 404 without response example",
+        operation = apiOperation("get", "/scenario-without-response-example-two-content-types/{id}") {
+          request { pathParam("id", integerType()) }
+          response(200) { jsonBody(responseBody()) }
+          response(404) {
+            jsonBody(responseBody())
+            plainTextBody(stringType())
+          }
+          scenario("404_UNKNOWN", status = 404) {
+            request { pathParam["id"] = BigDecimal(999) }
+          }
+        },
+        expectedCaseCount = 3,
+        expectedMockStatus = 200,
+        invariant = HOLDS,
+        probePath = "/scenario-without-response-example-two-content-types/1"
       ),
       ConformanceRow(
         declaredResponses = "4XX with a query parameter",

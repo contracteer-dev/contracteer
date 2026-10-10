@@ -15,7 +15,7 @@ import dev.contracteer.verifier.VerificationCase.*
  * reports an [UnverifiedPrimaryResponse] when no case can assert its primary response.
  *
  * Produces three kinds of verification cases:
- * - [VerificationCase.ScenarioBased]: one per scenario defined in the operation
+ * - [VerificationCase.ScenarioBased]: one per scenario and per combination of request and response content types
  * - [VerificationCase.SchemaBased]: generated from the schema when no scenario targets the operation's primary response
  * - [VerificationCase.TypeMismatch]: generated when the document covers status `400`, exactly or through `4XX` or `default`
  */
@@ -63,14 +63,18 @@ object VerificationCaseFactory {
     return apiOperation.scenarios.flatMap { scenario ->
       val responseSchema = apiOperation.responseSchemas.responseFor(scenario.statusCode)
                            ?: error("No response schema found for status code ${scenario.statusCode} in operation ${apiOperation.method} ${apiOperation.path}")
+      val responseContentTypes = responseContentTypesFor(scenario, responseSchema)
 
-      requestContentTypesFor(scenario, apiOperation.requestSchema).map { contentType ->
-        ScenarioBased(
-          scenario = scenario,
-          requestSchema = apiOperation.requestSchema,
-          responseSchema = responseSchema,
-          requestContentType = contentType
-        )
+      requestContentTypesFor(scenario, apiOperation.requestSchema).flatMap { requestContentType ->
+        responseContentTypes.map { responseContentType ->
+          ScenarioBased(
+            scenario = scenario,
+            requestSchema = apiOperation.requestSchema,
+            responseSchema = responseSchema,
+            requestContentType = requestContentType,
+            responseContentType = responseContentType
+          )
+        }
       }
     }
   }
@@ -80,6 +84,10 @@ object VerificationCaseFactory {
     val requiredBodies = requestSchema.bodies.filter { it.isRequired }
     return if (requiredBodies.isEmpty()) listOf(null) else requiredBodies.map { it.contentType }
   }
+
+  private fun responseContentTypesFor(scenario: Scenario, responseSchema: ResponseSchema): List<ContentType?> =
+    scenario.response.body?.let { listOf(it.contentType) }
+    ?: responseSchema.bodies.map { it.contentType }.ifEmpty { listOf(null) }
 
   private fun createSchemaBasedCasesIfNeeded(apiOperation: ApiOperation,
                                              primaryResponse: PrimaryResponse): List<SchemaBased> =

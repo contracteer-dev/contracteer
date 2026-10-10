@@ -26,17 +26,23 @@ sealed class VerificationCase {
    * no body example but the request schema declares a required body, it is the content type chosen
    * for schema-driven body generation at request time. When the request carries no body, it is
    * `null`.
+   *
+   * [responseContentType] is the content type sent in the `Accept` header. When the scenario carries
+   * an explicit response body example, it equals `scenario.response.body.contentType`. When the
+   * scenario has no response body example, it is one of the content types of [responseSchema], one
+   * case per content type. When [responseSchema] has no body, it is `null` and no `Accept` is sent.
    */
   data class ScenarioBased(
     val scenario: Scenario,
     val requestSchema: RequestSchema,
     val responseSchema: ResponseSchema,
-    val requestContentType: ContentType?
+    val requestContentType: ContentType?,
+    val responseContentType: ContentType?
   ): VerificationCase() {
     override val displayName: String
       get() {
         val requestCT = requestContentType?.let { " (${it.value})" } ?: ""
-        val responseCT = scenario.response.body?.contentType?.let { " (${it.value})" } ?: ""
+        val responseCT = responseContentType?.let { " (${it.value})" } ?: ""
         return "${scenario.method.uppercase()} ${scenario.path}$requestCT -> ${scenario.statusCode}$responseCT with scenario '${scenario.key}'"
       }
   }
