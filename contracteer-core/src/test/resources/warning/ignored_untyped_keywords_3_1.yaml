@@ -1,0 +1,32 @@
+openapi: 3.1.0
+info:
+  title: Ignored Keywords On Untyped Schemas
+  version: '1.0'
+paths:
+  /items:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  labels:
+                    allOf:
+                      - $ref: '#/components/schemas/Labels'
+                      - propertyNames:
+                          pattern: '^[a-z]+$'
+                  note:
+                    allOf:
+                      - $ref: '#/components/schemas/Id'
+                      - nullable: true
+components:
+  schemas:
+    Labels:
+      type: object
+      additionalProperties:
+        type: string
+    Id:
+      type: string

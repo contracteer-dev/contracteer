@@ -1,6 +1,7 @@
 package dev.contracteer.core.swagger.datatype
 
 import io.swagger.v3.oas.models.media.Schema
+import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
@@ -19,6 +20,7 @@ import dev.contracteer.core.swagger.effectiveEnum
 import dev.contracteer.core.swagger.hasComposition
 import dev.contracteer.core.swagger.isAnyType
 import dev.contracteer.core.swagger.isNullable
+import dev.contracteer.core.swagger.keywordsIgnoredWithoutType
 import dev.contracteer.core.swagger.safeProperties
 
 /**
@@ -34,6 +36,8 @@ internal object AllOfDataTypeConverter {
               discriminator: (Schema<*>) -> Discriminator?,
               warnings: LoadWarnings): Result<AllOfDataType> {
     if (schema.allOf == null) return failure("'allOf' must be defined.")
+
+    warnings.warnAccessModeIgnoredOnBranches(schema)
 
     val subTypeResults = schema.allOf
       .withIndex()
@@ -72,7 +76,20 @@ internal object AllOfDataTypeConverter {
     `$ref` == null && !hasComposition()
 
   private fun Schema<*>.isRequiredOnly(): Boolean =
-    isInline() && isAnyType() && !required.isNullOrEmpty()
+    isInline() && isAnyType() && keywordsIgnoredWithoutType().isEmpty() && !required.isNullOrEmpty()
+
+  /** `readOnly` and `writeOnly` apply only on a property schema, never on an `allOf` branch. */
+  private fun LoadWarnings.warnAccessModeIgnoredOnBranches(schema: Schema<*>) =
+    schema.allOf
+      .withIndex()
+      .filter { (_, subSchema) -> subSchema.isInline() }
+      .forEach { (index, subSchema) -> warnAccessModeIgnored(subSchema, "allOf #$index") }
+
+  private fun LoadWarnings.warnAccessModeIgnored(branch: Schema<*>, branchName: String) =
+    listOfNotNull(
+      "readOnly".takeIf { branch.readOnly == true },
+      "writeOnly".takeIf { branch.writeOnly == true })
+      .forEach { warn(UNSUPPORTED, "Schema '$branchName': '$it' is ignored inside 'allOf'; declare it beside 'allOf'.", it) }
 
   private fun Schema<*>.foreignRequiredProperties(): Set<String> =
     (allOf.filter { it.isInline() } + this)

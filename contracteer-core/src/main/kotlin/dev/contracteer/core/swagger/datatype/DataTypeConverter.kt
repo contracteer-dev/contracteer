@@ -208,12 +208,19 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     failure(Diagnostic(message, keyword = keyword, rule = UNSUPPORTED))
 
   private fun tryToInferSchemaType(schema: Schema<*>, reportsEmptySchema: Boolean): Result<DataType<out Any>> =
+    if (schema.isAnyType()) success(AnyDataType).also { reportAnyType(schema, reportsEmptySchema) }
+    else failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
+
+  private fun reportAnyType(schema: Schema<*>, reportsEmptySchema: Boolean) {
+    val ignoredKeywords = schema.keywordsIgnoredWithoutType()
     when {
-      !schema.isAnyType() -> failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
-      reportsEmptySchema  ->
-        success(AnyDataType).also { warnings.warn(EMPTY_SCHEMA, "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.") }
-      else                -> success(AnyDataType)
+      ignoredKeywords.isNotEmpty() -> ignoredKeywords.forEach { warnIgnoredWithoutType(schema, it) }
+      reportsEmptySchema           -> warnings.warn(EMPTY_SCHEMA, "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.")
     }
+  }
+
+  private fun warnIgnoredWithoutType(schema: Schema<*>, keyword: String) =
+    warnings.warn(UNSUPPORTED, "Schema '${schema.name}': '$keyword' is ignored because the schema declares no type.", keyword)
 
   private fun validateNoInfiniteCycle(proxy: ProxyDataType, ref: String, dataType: DataType<out Any>): Result<DataType<out Any>> {
     val cyclePath = findNonBreakablePath(proxy.delegate, proxy, listOf(proxy.name))

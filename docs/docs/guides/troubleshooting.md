@@ -671,6 +671,52 @@ See [String constraint precedence](../concepts/openapi-coverage.md#string-constr
 If you need the pattern to apply, remove the `format`.
 If you need length constraints to apply, remove the `pattern`.
 
+### Warning about a keyword ignored on a schema with no type
+
+**Symptom:** `contracteer lint` reports a warning like `Schema 'allOf #1': 'minItems' is ignored because the schema declares no type.`
+
+**Cause:** The schema declares a constraint but no `type`.
+A schema with no `type` and only such constraints accepts any value, so the constraint applies to neither validation nor generation.
+This usually happens in an `allOf` branch written next to a `$ref`:
+
+```yaml
+tags:
+  allOf:
+    - $ref: '#/components/schemas/Tags'
+    - minItems: 2
+```
+
+In OpenAPI 3.0, `nullable: true` in such a branch has the same cause.
+The OpenAPI Specification gives `nullable` no effect without `type`, so the value is not nullable.
+
+**Fix:** For `nullable`, declare `nullable: true` next to `allOf` instead of inside a branch.
+For other constraints in an `allOf` branch, declare them in the referenced schema.
+In OpenAPI 3.1, you can also write `minItems`, `maxItems`, `uniqueItems`, `minProperties` or `maxProperties` next to the `$ref`, without `allOf`:
+
+```yaml
+tags:
+  $ref: '#/components/schemas/Tags'
+  minItems: 2
+```
+
+On a schema outside `allOf`, declare the `type` the constraint applies to, for example `type: array` with `items`.
+
+### `readOnly` or `writeOnly` ignored inside `allOf`
+
+**Symptom:** `contracteer lint` reports a warning like `Schema 'allOf #1': 'readOnly' is ignored inside 'allOf'; declare it beside 'allOf'.`
+
+**Cause:** Contracteer applies `readOnly` and `writeOnly` only when they are declared on the property schema itself.
+An `allOf` branch is not the property schema, so the property is still sent in requests (`readOnly`) or expected in responses (`writeOnly`).
+
+**Fix:** Declare the keyword next to `allOf`:
+
+```yaml
+id:
+  allOf:
+    - $ref: '#/components/schemas/Id'
+  readOnly: true
+```
+
 ### Pattern not supported for value generation
 
 **Symptom:** Loading the OpenAPI document fails with "pattern is not supported for value generation."

@@ -212,10 +212,20 @@ internal fun Schema<*>.isAnyType() =
   minLength == null &&
   maxLength == null &&
   multipleOf == null &&
-  default == null &&
-  example == null &&
   `enum`.isNullOrEmpty() &&
   effectiveConst() == null
+
+/** The keywords declared on a schema [isAnyType] reads as accepting any value, which Contracteer does not apply without a type. */
+internal fun Schema<*>.keywordsIgnoredWithoutType(): List<String> =
+  buildList {
+    if (minItems != null) add("minItems")
+    if (maxItems != null) add("maxItems")
+    if (uniqueItems == true) add("uniqueItems")
+    if (minProperties != null) add("minProperties")
+    if (maxProperties != null) add("maxProperties")
+    if (effectivePropertyNames() != null) add("propertyNames")
+    if (specVersion != V31 && nullable == true) add("nullable")
+  }
 
 internal fun Schema<*>.isNullOnly(): Boolean =
   specVersion == V31 && effectiveType() == null && "null" in types.orEmpty()

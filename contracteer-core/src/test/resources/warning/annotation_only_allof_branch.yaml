@@ -19,6 +19,8 @@ paths:
                       - xml:
                           name: mode
                         description: Specify the conditions when the mode applies.
+                        example: ENABLED
+                        default: DISABLED
 components:
   schemas:
     Mode:

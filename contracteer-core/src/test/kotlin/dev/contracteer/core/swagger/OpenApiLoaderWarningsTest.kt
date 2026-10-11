@@ -4,10 +4,12 @@ import dev.contracteer.core.Diagnostic
 import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.DiagnosticRule
 import dev.contracteer.core.DiagnosticRule.BODY_EXCLUDED
+import dev.contracteer.core.DiagnosticRule.EMPTY_SCHEMA
 import dev.contracteer.core.DiagnosticRule.OPERATION_EXCLUDED
 import dev.contracteer.core.DiagnosticRule.SCENARIO_EXCLUDED
 import dev.contracteer.core.DiagnosticRule.UNKNOWN_FORMAT
 import dev.contracteer.core.DiagnosticRule.UNRESOLVED_EXAMPLE_KEY
+import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Severity.ERROR
 import dev.contracteer.core.Severity.WARNING
@@ -117,6 +119,52 @@ class OpenApiLoaderWarningsTest {
     assert(warnings == listOf(
       "Schema 'Payload' is empty (anyType) and will be interpreted as accepting any type."
     )) { warnings.toString() }
+  }
+
+  @Test
+  fun `keywords on a schema declaring no type are reported as ignored, once per keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/ignored_untyped_keywords.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.sortedBy { it.message } == listOf(
+      ignoredKeywordWarning("allOf #0", "minProperties"),
+      ignoredKeywordWarning("allOf #1", "maxItems"),
+      ignoredKeywordWarning("allOf #1", "maxProperties"),
+      ignoredKeywordWarning("allOf #1", "minItems"),
+      ignoredKeywordWarning("allOf #1", "minProperties"),
+      ignoredKeywordWarning("allOf #1", "nullable"),
+      ignoredKeywordWarning("allOf #1", "uniqueItems"),
+      ignoredKeywordWarning("bare", "minItems")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `readOnly and writeOnly are reported as ignored on an allOf branch and not on a property schema`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/read_write_only_inside_allof.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.sortedBy { it.message } == listOf(
+      ignoredInsideAllOfWarning("allOf #0", "writeOnly"),
+      ignoredInsideAllOfWarning("allOf #1", "readOnly"),
+      emptySchemaWarning("untypedReadOnly"),
+      emptySchemaWarning("untypedWriteOnly")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `propertyNames on an OAS 3 1 schema declaring no type is reported as ignored, and nullable is not a keyword there`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/ignored_untyped_keywords_3_1.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      ignoredKeywordWarning("allOf #1", "propertyNames")
+    )) { loaded.diagnostics.toString() }
   }
 
   @Test
@@ -348,6 +396,29 @@ class OpenApiLoaderWarningsTest {
 
   private fun operationWarning(rule: DiagnosticRule, message: String, method: String, path: String, keyword: String? = null) =
     Diagnostic(message, keyword = keyword, rule = rule, operation = OperationRef(method, path), category = SPEC, severity = WARNING)
+
+  private fun ignoredKeywordWarning(schemaName: String, keyword: String) =
+    Diagnostic(
+      "Schema '$schemaName': '$keyword' is ignored because the schema declares no type.",
+      keyword = keyword,
+      rule = UNSUPPORTED,
+      category = SPEC,
+      severity = WARNING)
+
+  private fun ignoredInsideAllOfWarning(schemaName: String, keyword: String) =
+    Diagnostic(
+      "Schema '$schemaName': '$keyword' is ignored inside 'allOf'; declare it beside 'allOf'.",
+      keyword = keyword,
+      rule = UNSUPPORTED,
+      category = SPEC,
+      severity = WARNING)
+
+  private fun emptySchemaWarning(schemaName: String) =
+    Diagnostic(
+      "Schema '$schemaName' is empty (anyType) and will be interpreted as accepting any type.",
+      rule = EMPTY_SCHEMA,
+      category = SPEC,
+      severity = WARNING)
 
   private fun assertSchemaWarnings(report: LoadReport): List<String> {
     val loaded = assertIs<LoadReport.Loaded>(report)
