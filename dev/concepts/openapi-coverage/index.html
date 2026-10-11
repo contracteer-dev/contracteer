@@ -3057,6 +3057,11 @@ A few do not produce an error -- they are simply not honored, and references tha
 <td>Union disambiguation requires runtime type dispatch. Use <code>anyOf</code>.</td>
 </tr>
 <tr>
+<td>Boolean schemas (<code>true</code> / <code>false</code>)</td>
+<td>Rejected at load time</td>
+<td>Boolean schema evaluation not implemented. Use a schema object, such as <code>{}</code> for <code>true</code>.</td>
+</tr>
+<tr>
 <td><code>$defs</code></td>
 <td>Rejected when referenced via <code>$ref</code></td>
 <td>Use <code>#/components/schemas</code> instead.</td>
