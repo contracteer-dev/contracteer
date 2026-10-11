@@ -1555,6 +1555,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#warning-about-an-anyof-or-oneof-branch-that-accepts-any-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warning about an anyOf or oneOf branch that accepts any value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#oneof-with-a-branch-that-accepts-any-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        oneOf with a branch that accepts any value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyword-next-to-a-composition-whose-branches-all-accept-any-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyword next to a composition whose branches all accept any value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pattern-not-supported-for-value-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2220,6 +2253,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#warning-about-an-anyof-or-oneof-branch-that-accepts-any-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warning about an anyOf or oneOf branch that accepts any value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#oneof-with-a-branch-that-accepts-any-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        oneOf with a branch that accepts any value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyword-next-to-a-composition-whose-branches-all-accept-any-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyword next to a composition whose branches all accept any value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pattern-not-supported-for-value-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2792,6 +2858,50 @@ An <code>allOf</code> branch is not the property schema, so the property is stil
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Id'</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nt">readOnly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </code></pre></div>
+<h3 id="warning-about-an-anyof-or-oneof-branch-that-accepts-any-value">Warning about an <code>anyOf</code> or <code>oneOf</code> branch that accepts any value<a class="headerlink" href="#warning-about-an-anyof-or-oneof-branch-that-accepts-any-value" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> <code>contracteer lint</code> reports a warning like <code>Schema 'mode': 'anyOf #1' accepts any value and is ignored; 'mode' accepts only its other branches.</code></p>
+<p><strong>Cause:</strong> Contracteer reads a branch with no <code>type</code> and no constraint it applies as accepting any value, and ignores it.
+The mock server generates values only from the other branches, and the verifier rejects a value that matches only the ignored branch.
+Under the OpenAPI Specification, such a branch makes an <code>anyOf</code> accept any value.
+In a <code>oneOf</code>, only a branch that declares <code>required</code> is ignored; any other fails the load (see <a href="#oneof-with-a-branch-that-accepts-any-value"><code>oneOf</code> with a branch that accepts any value</a>).
+In OpenAPI 3.0, this usually comes from a nullable value written as a branch:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nt">mode</span><span class="p">:</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Mode'</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">nullable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<p>A branch that declares only <code>required</code> is also reported with a warning like <code>Schema 'anyOf #0': 'required' is ignored because the schema declares no type.</code>
+This is the usual way to require at least one of several properties:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">anyOf</span><span class="p">:</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">description</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">files</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>Contracteer validates and generates the object without this requirement.</p>
+<p><strong>Fix:</strong> For a nullable value in OpenAPI 3.0, declare <code>nullable: true</code> next to <code>anyOf</code> instead of in a branch.
+In OpenAPI 3.1, write the branch as <code>{type: 'null'}</code>.
+If the value may be anything, remove the composition.
+Otherwise, declare the branch's <code>type</code>.
+For a branch that declares only <code>required</code>, no change is needed: the warning states that the requirement is not checked.</p>
+<h3 id="oneof-with-a-branch-that-accepts-any-value"><code>oneOf</code> with a branch that accepts any value<a class="headerlink" href="#oneof-with-a-branch-that-accepts-any-value" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the OpenAPI document fails with <code>'oneOf #1' is read as accepting any value, so 'choice' accepts only the values that match no other branch, which Contracteer cannot express.</code> With two such branches, the message is <code>'oneOf #0', 'oneOf #1' are read as accepting any value, so no value can match exactly one branch.</code></p>
+<p><strong>Cause:</strong> A <code>oneOf</code> value must match exactly one branch.
+Contracteer reads a branch with no <code>type</code> and no constraint it applies as accepting any value, so every value matches it.
+Under the OpenAPI Specification, the <code>oneOf</code> then accepts only the values that all its other branches reject; with two such branches it accepts none.
+A branch that declares <code>required</code> is not counted.
+In OpenAPI 3.1, this usually comes from a nullable value written the OpenAPI 3.0 way:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Contribution'</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">nullable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<p><code>nullable</code> is not a keyword in OpenAPI 3.1, so this branch accepts any value.</p>
+<p><strong>Fix:</strong> For a nullable value, write the branch as <code>{type: 'null'}</code> in OpenAPI 3.1, or declare <code>nullable: true</code> next to <code>oneOf</code> in OpenAPI 3.0.
+Otherwise, declare the <code>type</code> of each branch.
+If a value may match several branches, use <code>anyOf</code>.</p>
+<h3 id="keyword-next-to-a-composition-whose-branches-all-accept-any-value">Keyword next to a composition whose branches all accept any value<a class="headerlink" href="#keyword-next-to-a-composition-whose-branches-all-accept-any-value" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the OpenAPI document fails with <code>'enum' cannot be applied because every 'anyOf' branch is read as accepting any value.</code></p>
+<p><strong>Cause:</strong> Every branch of the composition is ignored, so the composition accepts any value.
+An <code>enum</code>, <code>const</code>, <code>nullable</code> or <code>discriminator</code> next to it has nothing to apply to.</p>
+<p><strong>Fix:</strong> Declare the <code>type</code> of the branch, or remove the composition and declare the keyword on a typed schema.</p>
 <h3 id="pattern-not-supported-for-value-generation">Pattern not supported for value generation<a class="headerlink" href="#pattern-not-supported-for-value-generation" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with "pattern is not supported for value generation."</p>
 <p><strong>Cause:</strong> The <code>pattern</code> is a valid regex but Contracteer cannot generate values that match it.
@@ -2810,9 +2920,9 @@ See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to provid
 Alternatively, simplify the pattern to use standard character classes and quantifiers without lookaround assertions.</p>
 <h3 id="header-pattern-enum-or-example-admits-invalid-http-characters">Header pattern, enum, or example admits invalid HTTP characters<a class="headerlink" href="#header-pattern-enum-or-example-admits-invalid-http-characters" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with an error naming a header and referencing RFC 7230 §3.2.6, for example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>correct example values to exclude control and non-ASCII characters.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>correct example values to exclude control and non-ASCII characters.
 </code></pre></div>
 <p><strong>Cause:</strong> The header schema declares a <code>pattern</code>, <code>enum</code>, or <code>example</code> that admits characters disallowed in HTTP header values.
 RFC 7230 §3.2.6 restricts header field-values to visible ASCII (<code>0x21-0x7E</code>), space (<code>0x20</code>), and horizontal tab (<code>0x09</code>).
@@ -2854,15 +2964,15 @@ Check the <a href="../../concepts/openapi-coverage/">OpenAPI Coverage</a> page f
 <h3 id="confusing-example-and-examples">Confusing <code>example</code> and <code>examples</code><a class="headerlink" href="#confusing-example-and-examples" title="Permanent link">&para;</a></h3>
 <p><code>example</code> provides a single value.
 <code>examples</code> is a named map where each entry has a <code>value</code> field:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Single value</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Named map -- each name is an example key</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="nt">examples</span><span class="p">:</span>
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
-<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Single value</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1"># Named map -- each name is an example key</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="nt">examples</span><span class="p">:</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
 </code></pre></div>
 <p>Both are valid.
 Contracteer uses both for scenario creation.

@@ -1995,6 +1995,10 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 <td><code>readOnly</code> / <code>writeOnly</code> inside <code>allOf</code></td>
 <td>Ignored with a warning on an <code>allOf</code> branch written in place. They apply only when declared on the property schema itself.</td>
 </tr>
+<tr>
+<td><code>anyOf</code> / <code>oneOf</code> branch that accepts any value</td>
+<td>A branch with no <code>type</code> and no constraint Contracteer applies, such as <code>{}</code>, <code>{required: [name]}</code> or, in OpenAPI 3.0, <code>{nullable: true}</code>, is ignored with a warning: the composition accepts only its other branches. If every branch is ignored, the composition accepts any value; with <code>properties</code> next to it, it accepts the object those properties describe, without the <code>required</code> of its branches. In a <code>oneOf</code> with other branches, such a branch that declares no <code>required</code> is rejected at load time: under the OpenAPI Specification the <code>oneOf</code> would accept only the values its other branches reject, which Contracteer cannot express.</td>
+</tr>
 </tbody>
 </table>
 <p>If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the OpenAPI document.
