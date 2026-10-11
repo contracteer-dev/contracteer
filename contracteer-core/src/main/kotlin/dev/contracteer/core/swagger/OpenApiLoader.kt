@@ -2,11 +2,13 @@ package dev.contracteer.core.swagger
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import io.swagger.v3.parser.util.DeserializationUtils
+import org.yaml.snakeyaml.LoaderOptions
 import dev.contracteer.core.Diagnostic
 import dev.contracteer.core.DiagnosticCategory.EXECUTION_ERROR
 import dev.contracteer.core.DiagnosticCategory.SPEC
@@ -29,7 +31,7 @@ import java.net.*
 object OpenApiLoader {
 
   init {
-    DeserializationUtils.getOptions().maxYamlCodePoints = 10 * 1024 * 1024
+    DeserializationUtils.getOptions().maxYamlCodePoints = MAX_YAML_CODE_POINTS
   }
 
   /**
@@ -82,7 +84,7 @@ object OpenApiLoader {
       is Failure -> LoadReport.Failed(source, withDefaults(SPEC, ERROR).diagnostics() + warnings, truncated)
     }
 
-  // Null when the content is not YAML: swagger-parser then reports the syntax error.
+  // Null when YAML_MAPPER cannot read the content: swagger-parser then reports the error.
   private fun readTree(content: String): JsonNode? =
     try {
       YAML_MAPPER.readTree(content) ?: MissingNode.getInstance()
@@ -134,14 +136,15 @@ object OpenApiLoader {
   private fun loadFromUrl(path: String) =
     path.toUrl().flatMap { it.loadOpenApiDocument() }
 
-  private fun parse(content: String): Result<OpenAPI> {
+  internal fun parse(content: String): Result<OpenAPI> {
     return try {
       val parseResult = OpenAPIV3Parser().readContents(content, emptyList(), ParseOptions().apply { isResolve = true })
       val fatalMessages = parseResult?.messages.orEmpty().filterNot(::isNonFatalRefWarning)
+      val openAPI = parseResult?.openAPI
       when {
-        parseResult == null        -> failure("Failed to parse OpenAPI 3 Document")
         fatalMessages.isNotEmpty() -> failure(*fatalMessages.toTypedArray())
-        else                       -> success(parseResult.openAPI)
+        openAPI == null            -> failure("Failed to parse OpenAPI 3 Document")
+        else                       -> success(openAPI)
       }
     } catch (t: Throwable) {
       failure("Failed to parse OpenAPI 3 Document: ${t::class.simpleName}: ${t.message}")
@@ -207,7 +210,11 @@ object OpenApiLoader {
 }
 
 private const val SUPPORTED_HINT = "Contracteer currently supports OpenAPI 3.0.x and 3.1.x."
-private val YAML_MAPPER = YAMLMapper()
+// Shared by swagger-parser and YAML_MAPPER: a document only one of them can read would skip the pre-parse checks.
+private const val MAX_YAML_CODE_POINTS = 10 * 1024 * 1024
+private val YAML_MAPPER = YAMLMapper(
+  YAMLFactory.builder().loaderOptions(LoaderOptions().apply { codePointLimit = MAX_YAML_CODE_POINTS }).build()
+)
 private val SUPPORTED_VERSION = Regex("^3\\.[01]\\.\\d+$")
 private val OPENAPI_31_VERSION = Regex("^3\\.1\\.\\d+$")
 

@@ -6,6 +6,7 @@ plugins {
 dependencies {
   implementation(libs.swagger.parser)
   implementation(libs.jackson.databind)
+  implementation(libs.jackson.dataformat.yaml)
   implementation(libs.rgxgen)
 
   testImplementation(libs.logback.classic)

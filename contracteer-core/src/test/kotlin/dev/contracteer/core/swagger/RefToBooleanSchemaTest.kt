@@ -4,10 +4,12 @@ import dev.contracteer.core.Diagnostic
 import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.Severity.ERROR
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertIs
 
@@ -51,6 +53,19 @@ class RefToBooleanSchemaTest {
       unsupportedBooleanRef("#/components/schemas/Foo/properties/b", false),
       unsupportedBooleanRef("#/components/schemas/Foo/properties/c", false)
     )) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `rejects a reference to a boolean schema in a document larger than 3 MB`(@TempDir dir: Path) {
+    // given
+    val path = dir.largeCopyOf("error/ref_to_boolean_property_31.yaml")
+
+    // when
+    val report = OpenApiLoader.load(path)
+
+    // then
+    assertIs<LoadReport.Failed>(report)
+    assert(report.diagnostics == listOf(unsupportedBooleanRef("#/components/schemas/Foo/properties/forbidden", false))) { report.diagnostics.toString() }
   }
 
   @ParameterizedTest(name = "{0}")
