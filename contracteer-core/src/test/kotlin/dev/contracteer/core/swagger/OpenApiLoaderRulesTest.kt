@@ -60,6 +60,22 @@ class OpenApiLoaderRulesTest {
   }
 
   @Test
+  fun `oneOf with a branch read as accepting any value beside other branches is reported as unsupported with the oneOf keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/datatype/3.0/oneOf_any_value_branches_error.yaml")
+
+    // then
+    val errors = report.errors()
+    assert(errors.map { it.rule to it.keyword } == List(4) { UNSUPPORTED to "oneOf" }) { report.diagnostics.toString() }
+    assert(errors.map { it.message }.sorted() == listOf(
+      "Schema 'besideRequired': 'oneOf #0' is read as accepting any value, so 'besideRequired' accepts only the values that match no other branch, which Contracteer cannot express.",
+      "Schema 'mixed': 'oneOf #1', 'oneOf #2' are read as accepting any value, so no value can match exactly one branch.",
+      "Schema 'pair': 'oneOf #0', 'oneOf #1' are read as accepting any value, so no value can match exactly one branch.",
+      "Schema 'single': 'oneOf #1' is read as accepting any value, so 'single' accepts only the values that match no other branch, which Contracteer cannot express."
+    )) { report.diagnostics.toString() }
+  }
+
+  @Test
   fun `multi-type sibling of a reference is reported as unsupported with the type keyword`() {
     // when
     val report = OpenApiLoader.load("src/test/resources/datatype/3.1/ref_with_sibling_multi_type_error.yaml")
@@ -223,6 +239,12 @@ class OpenApiLoaderRulesTest {
       Arguments.of("3.1/boolean_true_schema_error.yaml",                  null),
       Arguments.of("3.1/non_base64_content_encoding_error.yaml",          "contentEncoding"),
       Arguments.of("3.1/structured_text_content_media_type_error.yaml",   "contentMediaType"),
+      Arguments.of("3.0/all_dropped_anyOf_enum_error.yaml",               "enum"),
+      Arguments.of("3.0/all_dropped_anyOf_nullable_error.yaml",           "nullable"),
+      Arguments.of("3.0/all_dropped_anyOf_discriminator_error.yaml",      "discriminator"),
+      Arguments.of("3.1/all_dropped_anyOf_const_error.yaml",              "const"),
+      Arguments.of("3.1/all_dropped_anyOf_null_type_error.yaml",          "type"),
+      Arguments.of("3.0/all_dropped_allOf_enum_error.yaml",               "enum"),
     )
   }
 }

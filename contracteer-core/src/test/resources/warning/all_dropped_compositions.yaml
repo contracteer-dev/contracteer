@@ -1,0 +1,42 @@
+openapi: 3.0.0
+info:
+  title: Compositions Whose Every Branch Accepts Any Value
+  version: '1.0'
+paths:
+  /values:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  anyValue:
+                    anyOf:
+                      - {}
+                  singleBranch:
+                    oneOf:
+                      - description: any value
+                  merged:
+                    allOf:
+                      - {}
+                  composedAllOfBranch:
+                    allOf:
+                      - $ref: '#/components/schemas/Named'
+                      - anyOf:
+                          - {}
+                  besideProperties:
+                    anyOf:
+                      - {}
+                    properties:
+                      name:
+                        type: string
+components:
+  schemas:
+    Named:
+      type: object
+      properties:
+        name:
+          type: string

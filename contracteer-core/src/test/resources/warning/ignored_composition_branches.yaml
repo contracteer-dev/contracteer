@@ -1,0 +1,34 @@
+openapi: 3.0.0
+info:
+  title: Composition Branches Read As Accepting Any Value
+  version: '1.0'
+paths:
+  /settings:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    anyOf:
+                      - $ref: '#/components/schemas/Mode'
+                      - {}
+                  shared:
+                    anyOf:
+                      - $ref: '#/components/schemas/Mode'
+                      - $ref: '#/components/schemas/Anything'
+                  nested:
+                    anyOf:
+                      - $ref: '#/components/schemas/Mode'
+                      - oneOf:
+                          - {}
+components:
+  schemas:
+    Mode:
+      type: string
+      enum: [fast, slow]
+    Anything: {}

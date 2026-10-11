@@ -106,7 +106,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     val contentMediaType = schema.effectiveContentMediaType()?.let(::ContentType)
     val unsupportedFeature = schema.unsupportedFeature()
     return when {
-      schema.hasComposition()                                       -> convertComposedSchema(schema, convert, discriminator)
+      schema.hasComposition()                                       -> convertComposedSchema(schema, convert, discriminator, reportsEmptySchema)
       unsupportedFeature != null                                    -> unsupported(schema, unsupportedFeature)
       contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema, warnings)
       contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
@@ -162,7 +162,8 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
 
   private fun convertComposedSchema(schema: Schema<*>,
                                     convert: (Schema<*>, String) -> Result<DataType<out Any>>,
-                                    discriminator: (Schema<*>) -> Discriminator?): Result<DataType<out Any>> {
+                                    discriminator: (Schema<*>) -> Discriminator?,
+                                    reportsEmptySchema: Boolean): Result<DataType<out Any>> {
     val keywords = listOfNotNull(
       if (schema.allOf != null) "allOf" else null,
       if (schema.anyOf != null) "anyOf" else null,
@@ -172,26 +173,40 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     if (keywords.size > 1)
       return failure("Schema '${schema.name}' combines multiple composition keywords (${keywords.joinToString(", ")}). Only one of 'allOf', 'anyOf', or 'oneOf' per schema is supported.")
 
-    if (schema.allOf != null)
-      return AllOfDataTypeConverter.convert(schema, convert, ::convertAllOfBranch, discriminator, warnings)
-
     val compositionResult =
-      if (schema.anyOf != null) AnyOfDataTypeConverter.convert(schema, convert, discriminator)
-      else OneOfDataTypeConverter.convert(schema, convert, discriminator)
+      if (schema.allOf != null) AllOfDataTypeConverter.convert(schema, convert, ::convertAllOfBranch, discriminator, warnings)
+      else withSiblingObject(schema, convertAnyOfOrOneOf(schema, discriminator), convert)
+    return compositionResult.map { it.alsoWarnIfEmpty(schema, reportsEmptySchema) }
+  }
 
+  private fun convertAnyOfOrOneOf(schema: Schema<*>, discriminator: (Schema<*>) -> Discriminator?): Result<DataType<out Any>> =
+    if (schema.anyOf != null) AnyOfDataTypeConverter.convert(schema, ::convertAnyOfOrOneOfBranch, discriminator, warnings)
+    else OneOfDataTypeConverter.convert(schema, ::convertAnyOfOrOneOfBranch, discriminator, warnings)
+
+  /** The object declared beside `anyOf` or `oneOf` applies too; beside a composition read as accepting any value, it applies alone. */
+  private fun withSiblingObject(schema: Schema<*>,
+                                compositionResult: Result<DataType<out Any>>,
+                                convert: (Schema<*>, String) -> Result<DataType<out Any>>): Result<DataType<out Any>> {
     val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert, warnings)
                         ?: return compositionResult
-
     if (compositionResult !is Success || siblingResult !is Success)
       return (compositionResult combineWith siblingResult).retypeError()
-
-    return AllOfDataType.create(
-      name = schema.name,
-      subTypes = listOf(compositionResult.value, siblingResult.value))
+    return when (compositionResult.value) {
+      is AnyDataType -> siblingResult
+      else           -> AllOfDataType.create(name = schema.name, subTypes = listOf(compositionResult.value, siblingResult.value))
+    }
   }
+
+  private fun DataType<out Any>.alsoWarnIfEmpty(schema: Schema<*>, reportsEmptySchema: Boolean): DataType<out Any> =
+    also { if (it is AnyDataType && reportsEmptySchema) warnEmptySchema(schema) }
 
   private fun convertAllOfBranch(schema: Schema<*>, schemaName: String): Result<DataType<out Any>> =
     convertSchema(schema, schemaName, inlineAllOfBranch = true)
+
+  /** An inline branch read as accepting any value is reported by the composition that drops it, not as an empty schema. */
+  private fun convertAnyOfOrOneOfBranch(schema: Schema<*>, schemaName: String): Result<DataType<out Any>> =
+    if (schema.`$ref` != null) convertToDataType(schema, schemaName)
+    else convertSchema(schema, schemaName, reportsEmptySchema = false)
 
   private fun unsupportedContentEncoding(schema: Schema<*>, value: String): Result<DataType<out Any>> =
     unsupported("Schema '${schema.name}': contentEncoding='$value' is not supported. Only 'base64' is supported in OAS 3.1.", "contentEncoding")
@@ -215,9 +230,12 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     val ignoredKeywords = schema.keywordsIgnoredWithoutType()
     when {
       ignoredKeywords.isNotEmpty() -> ignoredKeywords.forEach { warnIgnoredWithoutType(schema, it) }
-      reportsEmptySchema           -> warnings.warn(EMPTY_SCHEMA, "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.")
+      reportsEmptySchema           -> warnEmptySchema(schema)
     }
   }
+
+  private fun warnEmptySchema(schema: Schema<*>) =
+    warnings.warn(EMPTY_SCHEMA, "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type.")
 
   private fun warnIgnoredWithoutType(schema: Schema<*>, keyword: String) =
     warnings.warn(UNSUPPORTED, "Schema '${schema.name}': '$keyword' is ignored because the schema declares no type.", keyword)

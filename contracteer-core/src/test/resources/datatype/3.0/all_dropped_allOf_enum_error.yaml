@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /test:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  allOf:
+                    - {}
+                  enum: [a, b]
+      responses:
+        '200':
+          description: OK

@@ -894,6 +894,28 @@ class SchemaConversionTest {
     assert(anyDataType is AnyDataType)
   }
 
+  @ParameterizedTest(name = "extract AnyDataType from a {0} whose every branch accepts any value")
+  @ValueSource(strings = ["anyOf", "oneOf", "allOf"])
+  fun `extract AnyDataType from a composition whose every branch accepts any value`(composition: String) {
+    // when
+    val dataType = getDataType("3.0", "all_dropped_composition.yaml", composition)
+
+    // then
+    assert(dataType is AnyDataType)
+  }
+
+  @Test
+  fun `extract the sibling object from an anyOf whose every branch accepts any value`() {
+    // when
+    val dataType = getDataType("3.0", "all_dropped_composition.yaml", "besideProperties")
+
+    // then
+    assert(dataType is ObjectDataType)
+    assert(dataType.validate(mapOf("name" to "Kitty")).isSuccess())
+    assert(dataType.validate(mapOf("name" to 42)).isFailure())
+    assert(dataType.validate(dataType.randomValue()).isSuccess())
+  }
+
   @Test
   fun `does not extract AllOfDataType when there are multiple discriminators`() {
     // when

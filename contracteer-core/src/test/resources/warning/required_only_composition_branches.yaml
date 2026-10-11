@@ -1,0 +1,47 @@
+openapi: 3.0.0
+info:
+  title: Required-Only Composition Branches
+  version: '1.0'
+paths:
+  /gists:
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                files:
+                  type: string
+              anyOf:
+                - required: [description]
+                - required: [files]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exactlyOne:
+                    type: object
+                    properties:
+                      org:
+                        type: string
+                      orgID:
+                        type: string
+                    oneOf:
+                      - required: [org]
+                      - required: [orgID]
+                  mixed:
+                    oneOf:
+                      - $ref: '#/components/schemas/Mode'
+                      - type: integer
+                      - required: [mode]
+components:
+  schemas:
+    Mode:
+      type: string

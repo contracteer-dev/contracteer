@@ -168,6 +168,65 @@ class OpenApiLoaderWarningsTest {
   }
 
   @Test
+  fun `anyOf or oneOf branch read as accepting any value is reported as ignored instead of as an empty schema`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/ignored_composition_branches.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.sortedBy { it.message } == listOf(
+      emptySchemaWarning("Anything"),
+      ignoredBranchWarning("mode", "anyOf #1", "anyOf"),
+      ignoredBranchWarning("nested", "anyOf #1", "anyOf"),
+      ignoredBranchWarning("shared", "anyOf #1", "anyOf")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `composition whose every branch accepts any value is reported as an empty schema, except beside sibling properties`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/all_dropped_compositions.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.sortedBy { it.message } == listOf(
+      emptySchemaWarning("anyValue"),
+      emptySchemaWarning("merged"),
+      emptySchemaWarning("singleBranch")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `required on an anyOf or oneOf branch read as accepting any value is reported as ignored`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/required_only_composition_branches.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics.sortedBy { it.message } == listOf(
+      ignoredKeywordWarning("anyOf #0", "required"),
+      ignoredKeywordWarning("anyOf #1", "required"),
+      ignoredBranchWarning("mixed", "oneOf #2", "oneOf"),
+      ignoredKeywordWarning("oneOf #0", "required"),
+      ignoredKeywordWarning("oneOf #1", "required"),
+      ignoredKeywordWarning("oneOf #2", "required")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
+  fun `body or parameter content whose composition has every branch accepting any value is excluded like an empty schema`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/all_dropped_composition_bodies.yaml")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported request body content type.", "POST", "/body"),
+      operationWarning(OPERATION_EXCLUDED, "Operation excluded: parameter content has no schema.", "GET", "/parameter")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @Test
   fun `allOf branch holding only annotations is not reported as an empty schema`() {
     // when
     val report = OpenApiLoader.load("src/test/resources/warning/annotation_only_allof_branch.yaml")
@@ -408,6 +467,14 @@ class OpenApiLoaderWarningsTest {
   private fun ignoredInsideAllOfWarning(schemaName: String, keyword: String) =
     Diagnostic(
       "Schema '$schemaName': '$keyword' is ignored inside 'allOf'; declare it beside 'allOf'.",
+      keyword = keyword,
+      rule = UNSUPPORTED,
+      category = SPEC,
+      severity = WARNING)
+
+  private fun ignoredBranchWarning(compositeName: String, branchName: String, keyword: String) =
+    Diagnostic(
+      "Schema '$compositeName': '$branchName' accepts any value and is ignored; '$compositeName' accepts only its other branches.",
       keyword = keyword,
       rule = UNSUPPORTED,
       category = SPEC,

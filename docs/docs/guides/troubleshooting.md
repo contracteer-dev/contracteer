@@ -717,6 +717,71 @@ id:
   readOnly: true
 ```
 
+### Warning about an `anyOf` or `oneOf` branch that accepts any value
+
+**Symptom:** `contracteer lint` reports a warning like `Schema 'mode': 'anyOf #1' accepts any value and is ignored; 'mode' accepts only its other branches.`
+
+**Cause:** Contracteer reads a branch with no `type` and no constraint it applies as accepting any value, and ignores it.
+The mock server generates values only from the other branches, and the verifier rejects a value that matches only the ignored branch.
+Under the OpenAPI Specification, such a branch makes an `anyOf` accept any value.
+In a `oneOf`, only a branch that declares `required` is ignored; any other fails the load (see [`oneOf` with a branch that accepts any value](#oneof-with-a-branch-that-accepts-any-value)).
+In OpenAPI 3.0, this usually comes from a nullable value written as a branch:
+
+```yaml
+mode:
+  anyOf:
+    - $ref: '#/components/schemas/Mode'
+    - nullable: true
+```
+
+A branch that declares only `required` is also reported with a warning like `Schema 'anyOf #0': 'required' is ignored because the schema declares no type.`
+This is the usual way to require at least one of several properties:
+
+```yaml
+anyOf:
+  - required: [description]
+  - required: [files]
+```
+
+Contracteer validates and generates the object without this requirement.
+
+**Fix:** For a nullable value in OpenAPI 3.0, declare `nullable: true` next to `anyOf` instead of in a branch.
+In OpenAPI 3.1, write the branch as `{type: 'null'}`.
+If the value may be anything, remove the composition.
+Otherwise, declare the branch's `type`.
+For a branch that declares only `required`, no change is needed: the warning states that the requirement is not checked.
+
+### `oneOf` with a branch that accepts any value
+
+**Symptom:** Loading the OpenAPI document fails with `'oneOf #1' is read as accepting any value, so 'choice' accepts only the values that match no other branch, which Contracteer cannot express.` With two such branches, the message is `'oneOf #0', 'oneOf #1' are read as accepting any value, so no value can match exactly one branch.`
+
+**Cause:** A `oneOf` value must match exactly one branch.
+Contracteer reads a branch with no `type` and no constraint it applies as accepting any value, so every value matches it.
+Under the OpenAPI Specification, the `oneOf` then accepts only the values that all its other branches reject; with two such branches it accepts none.
+A branch that declares `required` is not counted.
+In OpenAPI 3.1, this usually comes from a nullable value written the OpenAPI 3.0 way:
+
+```yaml
+oneOf:
+  - $ref: '#/components/schemas/Contribution'
+  - nullable: true
+```
+
+`nullable` is not a keyword in OpenAPI 3.1, so this branch accepts any value.
+
+**Fix:** For a nullable value, write the branch as `{type: 'null'}` in OpenAPI 3.1, or declare `nullable: true` next to `oneOf` in OpenAPI 3.0.
+Otherwise, declare the `type` of each branch.
+If a value may match several branches, use `anyOf`.
+
+### Keyword next to a composition whose branches all accept any value
+
+**Symptom:** Loading the OpenAPI document fails with `'enum' cannot be applied because every 'anyOf' branch is read as accepting any value.`
+
+**Cause:** Every branch of the composition is ignored, so the composition accepts any value.
+An `enum`, `const`, `nullable` or `discriminator` next to it has nothing to apply to.
+
+**Fix:** Declare the `type` of the branch, or remove the composition and declare the keyword on a typed schema.
+
 ### Pattern not supported for value generation
 
 **Symptom:** Loading the OpenAPI document fails with "pattern is not supported for value generation."

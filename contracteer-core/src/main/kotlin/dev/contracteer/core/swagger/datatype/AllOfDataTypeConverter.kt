@@ -34,7 +34,7 @@ internal object AllOfDataTypeConverter {
               convert: (Schema<*>, String) -> Result<DataType<out Any>>,
               convertInlineBranch: (Schema<*>, String) -> Result<DataType<out Any>>,
               discriminator: (Schema<*>) -> Discriminator?,
-              warnings: LoadWarnings): Result<AllOfDataType> {
+              warnings: LoadWarnings): Result<DataType<out Any>> {
     if (schema.allOf == null) return failure("'allOf' must be defined.")
 
     warnings.warnAccessModeIgnoredOnBranches(schema)
@@ -43,7 +43,7 @@ internal object AllOfDataTypeConverter {
       .withIndex()
       .filterNot { (_, subSchema) -> subSchema.isRequiredOnly() }
       .map { (index, subSchema) ->
-        if (subSchema.isInline()) convertInlineBranch(subSchema, "allOf #$index")
+        if (subSchema.`$ref` == null) convertInlineBranch(subSchema, "allOf #$index")
         else convert(subSchema, "allOf #$index")
       }
 
@@ -59,8 +59,9 @@ internal object AllOfDataTypeConverter {
       val enum = schema.effectiveEnum().bind()
       val discriminators = schema.allOf.mapNotNull { discriminator(it) }
       when {
-        discriminators.size > 1 -> failure<AllOfDataType>("Only 1 discriminator is allowed in 'allOf'.").bind()
-        else                    ->
+        discriminators.size > 1        -> failure<AllOfDataType>("Only 1 discriminator is allowed in 'allOf'.").bind()
+        requiredSubDataTypes.isEmpty() -> schema.readAsAnyValue("allOf", discriminators.firstOrNull()).bind()
+        else                           ->
           AllOfDataType.create(
             name = schema.name,
             subTypes = requiredSubDataTypes,
