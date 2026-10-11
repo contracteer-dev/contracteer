@@ -1,0 +1,102 @@
+openapi: 3.1.0
+x-flag: false
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  x-meta:
+    $ref: '#/components/schemas/Foo/properties/forbidden'
+  /x:
+    get:
+      responses:
+        x-meta:
+          $ref: '#/components/schemas/Foo/properties/forbidden'
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotated'
+          links:
+            byLiteral:
+              operationId: siblings
+              parameters:
+                literal:
+                  $ref: '#/components/schemas/Foo/properties/forbidden'
+                schemaShaped:
+                  schema:
+                    $ref: '#/components/schemas/Foo/properties/forbidden'
+  /siblings:
+    post:
+      operationId: siblings
+      callbacks:
+        onEvent:
+          $ref: '#/x-flag'
+      parameters:
+        - $ref: '#/components/parameters/Q'
+          schema:
+            $ref: '#/components/schemas/Foo/properties/forbidden'
+      requestBody:
+        $ref: '#/components/requestBodies/Body'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Foo/properties/forbidden'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Foo/properties/forbidden'
+components:
+  parameters:
+    Q:
+      name: q
+      in: query
+      schema:
+        type: string
+  requestBodies:
+    Body:
+      content:
+        application/json:
+          schema:
+            type: string
+  responses:
+    Ok:
+      description: ok
+  schemas:
+    Foo:
+      type: object
+      properties:
+        forbidden: false
+    Str:
+      type: string
+    Annotated:
+      type: string
+      myAnnotation:
+        $ref: '#/components/schemas/Foo/properties/forbidden'
+      $defs:
+        unused:
+          $ref: '#/components/schemas/Foo/properties/forbidden'
+    UnusedNames:
+      type: object
+      propertyNames:
+        $ref: '#/components/schemas/Foo/properties/forbidden'
+    UnusedUnevaluated:
+      type: object
+      unevaluatedProperties:
+        $ref: '#/components/schemas/Foo/properties/forbidden'
+    UnusedSiblings:
+      $ref: '#/components/schemas/Str'
+      properties:
+        a:
+          $ref: '#/components/schemas/Foo/properties/forbidden'
+      items:
+        $ref: '#/components/schemas/Foo/properties/forbidden'
+    UnusedAdditionalItems:
+      type: array
+      items:
+        type: string
+      additionalItems:
+        $ref: '#/components/schemas/Foo/properties/forbidden'

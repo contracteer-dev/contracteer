@@ -1,0 +1,28 @@
+openapi: 3.1.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /x:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  first:
+                    $ref: '#/components/schemas/Foo/properties/zeta'
+                  second:
+                    $ref: '#/components/schemas/Foo/properties/alpha'
+                  third:
+                    $ref: '#/components/schemas/Foo/properties/zeta'
+components:
+  schemas:
+    Foo:
+      type: object
+      properties:
+        alpha: true
+        zeta: false

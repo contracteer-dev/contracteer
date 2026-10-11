@@ -1,5 +1,7 @@
 package dev.contracteer.core.swagger
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
@@ -58,7 +60,10 @@ object OpenApiLoader {
   private fun extractOperations(path: String, warnings: LoadWarnings): Result<List<ApiOperation>> =
     result {
       val content = path.loadOpenApiDocument().withDefaults(EXECUTION_ERROR, ERROR).bind()
-      checkSupportedVersion(content).bind()
+      val document = readTree(content)
+      val version = readDeclaredVersion(document)
+      checkSupportedVersion(version).bind()
+      checkBooleanSchemaReferences(document, version).bind()
       val openAPI = parse(content).bind()
       val sharedComponents = SharedComponents(
         schemas = openAPI.components.safeSchemas(),
@@ -77,24 +82,39 @@ object OpenApiLoader {
       is Failure -> LoadReport.Failed(source, withDefaults(SPEC, ERROR).diagnostics() + warnings, truncated)
     }
 
-  private fun checkSupportedVersion(content: String): Result<Unit> =
-    when (val declared = readDeclaredVersion(content)) {
+  // Null when the content is not YAML: swagger-parser then reports the syntax error.
+  private fun readTree(content: String): JsonNode? =
+    try {
+      YAML_MAPPER.readTree(content) ?: MissingNode.getInstance()
+    } catch (_: Throwable) {
+      null
+    }
+
+  private fun checkSupportedVersion(declared: VersionRead): Result<Unit> =
+    when (declared) {
       Missing                                                 -> failure("OpenAPI document does not declare a version. $SUPPORTED_HINT")
       is Declared if SUPPORTED_VERSION matches declared.value -> success()
       is Declared                                             -> failure("OpenAPI version '${declared.value}' is not supported. $SUPPORTED_HINT")
       Unparseable                                             -> success()
     }
 
-  private fun readDeclaredVersion(content: String): VersionRead =
-    try {
-      val versionNode = YAML_MAPPER.readTree(content)?.get("openapi")
-      when {
-        versionNode == null || versionNode.isNull -> Missing
-        else                                      -> Declared(versionNode.asText())
-      }
-    } catch (_: Throwable) {
-      Unparseable
+  private fun readDeclaredVersion(document: JsonNode?): VersionRead {
+    val versionNode = document?.get("openapi")
+    return when {
+      document == null                          -> Unparseable
+      versionNode == null || versionNode.isNull -> Missing
+      else                                      -> Declared(versionNode.asText())
     }
+  }
+
+  private fun checkBooleanSchemaReferences(document: JsonNode?, version: VersionRead): Result<Unit> =
+    when {
+      document != null && version.isOpenApi31() -> document.rejectReferencesToBooleanSchemas()
+      else                                      -> success()
+    }
+
+  private fun VersionRead.isOpenApi31() =
+    this is Declared && OPENAPI_31_VERSION matches value
 
   private fun String.loadOpenApiDocument() =
     when {
@@ -189,6 +209,7 @@ object OpenApiLoader {
 private const val SUPPORTED_HINT = "Contracteer currently supports OpenAPI 3.0.x and 3.1.x."
 private val YAML_MAPPER = YAMLMapper()
 private val SUPPORTED_VERSION = Regex("^3\\.[01]\\.\\d+$")
+private val OPENAPI_31_VERSION = Regex("^3\\.1\\.\\d+$")
 
 private sealed interface VersionRead
 private data object Missing : VersionRead

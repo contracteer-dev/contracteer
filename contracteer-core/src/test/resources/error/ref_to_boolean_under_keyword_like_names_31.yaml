@@ -1,0 +1,33 @@
+openapi: 3.1.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /x:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  default:
+                    $ref: '#/components/schemas/Foo/properties/b'
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Foo/properties/a'
+components:
+  schemas:
+    Foo:
+      type: object
+      properties:
+        a: false
+        b: false
+        c: false
+    enum:
+      $ref: '#/components/schemas/Foo/properties/c'

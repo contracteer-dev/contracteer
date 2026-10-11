@@ -778,6 +778,7 @@ A few do not produce an error -- they are simply not honored, and references tha
 | Non-base64 `contentEncoding`                 | Rejected at load time               | Only `base64` is supported today.                                                                       |
 | Structured-text `contentMediaType`           | Rejected at load time               | Inline content validation for `application/json`, `application/xml`, etc. is not implemented.           |
 | Multi-type schemas (multiple non-null types) | Rejected at load time               | Union disambiguation requires runtime type dispatch. Use `anyOf`.                                       |
+| Boolean schemas (`true` / `false`)           | Rejected at load time               | Boolean schema evaluation not implemented. Use a schema object, such as `{}` for `true`.                |
 | `$defs`                                      | Rejected when referenced via `$ref` | Use `#/components/schemas` instead.                                                                     |
 | `$anchor` / `$id`                            | Not honored                         | Use `$ref` to `#/components/schemas` paths instead.                                                     |
 | `$dynamicRef` / `$dynamicAnchor`             | Not honored                         | Use `$ref`.                                                                                             |

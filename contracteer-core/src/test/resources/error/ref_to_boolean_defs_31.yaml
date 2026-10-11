@@ -1,0 +1,20 @@
+openapi: 3.1.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /x:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Foo/$defs/never'
+components:
+  schemas:
+    Foo:
+      type: object
+      $defs:
+        never: false

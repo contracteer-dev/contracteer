@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /example:
+    get:
+      x-note:
+        $ref: '#/components/schemas/Foo/properties/forbidden'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+              example:
+                $ref: '#/components/schemas/Foo/properties/forbidden'
+  /examples:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+              examples:
+                sample:
+                  value:
+                    $ref: '#/components/schemas/Foo/properties/forbidden'
+  /const:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstLink'
+components:
+  schemas:
+    Foo:
+      type: object
+      properties:
+        forbidden: false
+    Link:
+      type: object
+      properties:
+        $ref:
+          type: string
+      default:
+        $ref: '#/components/schemas/Foo/properties/forbidden'
+      enum:
+        - $ref: '#/components/schemas/Foo/properties/forbidden'
+      examples:
+        - $ref: '#/components/schemas/Foo/properties/forbidden'
+    ConstLink:
+      type: object
+      properties:
+        $ref:
+          type: string
+      const:
+        $ref: '#/components/schemas/Foo/properties/forbidden'
