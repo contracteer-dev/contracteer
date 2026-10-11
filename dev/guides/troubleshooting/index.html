@@ -1533,6 +1533,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#warning-about-a-keyword-ignored-on-a-schema-with-no-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warning about a keyword ignored on a schema with no type
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readonly-or-writeonly-ignored-inside-allof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        readOnly or writeOnly ignored inside allOf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pattern-not-supported-for-value-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2176,6 +2198,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#warning-about-a-keyword-ignored-on-a-schema-with-no-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warning about a keyword ignored on a schema with no type
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readonly-or-writeonly-ignored-inside-allof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        readOnly or writeOnly ignored inside allOf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pattern-not-supported-for-value-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2718,6 +2762,36 @@ The lower-priority constraint is ignored for both validation and generation.</p>
 See <a href="../../concepts/openapi-coverage/#string-constraint-precedence">String constraint precedence</a> for the full explanation.
 If you need the pattern to apply, remove the <code>format</code>.
 If you need length constraints to apply, remove the <code>pattern</code>.</p>
+<h3 id="warning-about-a-keyword-ignored-on-a-schema-with-no-type">Warning about a keyword ignored on a schema with no type<a class="headerlink" href="#warning-about-a-keyword-ignored-on-a-schema-with-no-type" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> <code>contracteer lint</code> reports a warning like <code>Schema 'allOf #1': 'minItems' is ignored because the schema declares no type.</code></p>
+<p><strong>Cause:</strong> The schema declares a constraint but no <code>type</code>.
+A schema with no <code>type</code> and only such constraints accepts any value, so the constraint applies to neither validation nor generation.
+This usually happens in an <code>allOf</code> branch written next to a <code>$ref</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">tags</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Tags'</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">minItems</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</code></pre></div>
+<p>In OpenAPI 3.0, <code>nullable: true</code> in such a branch has the same cause.
+The OpenAPI Specification gives <code>nullable</code> no effect without <code>type</code>, so the value is not nullable.</p>
+<p><strong>Fix:</strong> For <code>nullable</code>, declare <code>nullable: true</code> next to <code>allOf</code> instead of inside a branch.
+For other constraints in an <code>allOf</code> branch, declare them in the referenced schema.
+In OpenAPI 3.1, you can also write <code>minItems</code>, <code>maxItems</code>, <code>uniqueItems</code>, <code>minProperties</code> or <code>maxProperties</code> next to the <code>$ref</code>, without <code>allOf</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">tags</span><span class="p">:</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Tags'</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">minItems</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</code></pre></div>
+<p>On a schema outside <code>allOf</code>, declare the <code>type</code> the constraint applies to, for example <code>type: array</code> with <code>items</code>.</p>
+<h3 id="readonly-or-writeonly-ignored-inside-allof"><code>readOnly</code> or <code>writeOnly</code> ignored inside <code>allOf</code><a class="headerlink" href="#readonly-or-writeonly-ignored-inside-allof" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> <code>contracteer lint</code> reports a warning like <code>Schema 'allOf #1': 'readOnly' is ignored inside 'allOf'; declare it beside 'allOf'.</code></p>
+<p><strong>Cause:</strong> Contracteer applies <code>readOnly</code> and <code>writeOnly</code> only when they are declared on the property schema itself.
+An <code>allOf</code> branch is not the property schema, so the property is still sent in requests (<code>readOnly</code>) or expected in responses (<code>writeOnly</code>).</p>
+<p><strong>Fix:</strong> Declare the keyword next to <code>allOf</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">id</span><span class="p">:</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">'#/components/schemas/Id'</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nt">readOnly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
 <h3 id="pattern-not-supported-for-value-generation">Pattern not supported for value generation<a class="headerlink" href="#pattern-not-supported-for-value-generation" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with "pattern is not supported for value generation."</p>
 <p><strong>Cause:</strong> The <code>pattern</code> is a valid regex but Contracteer cannot generate values that match it.
@@ -2736,9 +2810,9 @@ See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to provid
 Alternatively, simplify the pattern to use standard character classes and quantifiers without lookaround assertions.</p>
 <h3 id="header-pattern-enum-or-example-admits-invalid-http-characters">Header pattern, enum, or example admits invalid HTTP characters<a class="headerlink" href="#header-pattern-enum-or-example-admits-invalid-http-characters" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the OpenAPI document fails with an error naming a header and referencing RFC 7230 §3.2.6, for example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>correct example values to exclude control and non-ASCII characters.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>correct example values to exclude control and non-ASCII characters.
 </code></pre></div>
 <p><strong>Cause:</strong> The header schema declares a <code>pattern</code>, <code>enum</code>, or <code>example</code> that admits characters disallowed in HTTP header values.
 RFC 7230 §3.2.6 restricts header field-values to visible ASCII (<code>0x21-0x7E</code>), space (<code>0x20</code>), and horizontal tab (<code>0x09</code>).
@@ -2780,15 +2854,15 @@ Check the <a href="../../concepts/openapi-coverage/">OpenAPI Coverage</a> page f
 <h3 id="confusing-example-and-examples">Confusing <code>example</code> and <code>examples</code><a class="headerlink" href="#confusing-example-and-examples" title="Permanent link">&para;</a></h3>
 <p><code>example</code> provides a single value.
 <code>examples</code> is a named map where each entry has a <code>value</code> field:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Single value</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># Named map -- each name is an example key</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="nt">examples</span><span class="p">:</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
-<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Single value</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Named map -- each name is an example key</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="nt">examples</span><span class="p">:</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
 </code></pre></div>
 <p>Both are valid.
 Contracteer uses both for scenario creation.

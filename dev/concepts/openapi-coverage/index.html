@@ -1987,6 +1987,14 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 <td>Unknown integer/number formats</td>
 <td>Ignored with a warning. Only <code>int32</code>, <code>int64</code>, <code>float</code>, <code>double</code> apply range constraints.</td>
 </tr>
+<tr>
+<td>Keywords on a schema with no <code>type</code></td>
+<td><code>minItems</code>, <code>maxItems</code>, <code>uniqueItems</code>, <code>minProperties</code>, <code>maxProperties</code> and <code>propertyNames</code> (OpenAPI 3.1) on a schema with no <code>type</code>, <code>properties</code>, <code>additionalProperties</code> or <code>items</code> are ignored with a warning, and so is <code>nullable</code> in OpenAPI 3.0, where it has no effect without <code>type</code>. This includes an <code>allOf</code> branch such as <code>{minItems: 2}</code> next to a <code>$ref</code>.</td>
+</tr>
+<tr>
+<td><code>readOnly</code> / <code>writeOnly</code> inside <code>allOf</code></td>
+<td>Ignored with a warning on an <code>allOf</code> branch written in place. They apply only when declared on the property schema itself.</td>
+</tr>
 </tbody>
 </table>
 <p>If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the OpenAPI document.
