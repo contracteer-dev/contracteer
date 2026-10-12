@@ -4,6 +4,8 @@ import dev.contracteer.core.DiagnosticCategory.EXECUTION_ERROR
 import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Severity.ERROR
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertIs
 
@@ -20,6 +22,19 @@ class OpenApiLoaderReportTest {
     assert(loaded.operations.map { it.path } == listOf("/products/{id}"))
     assert(loaded.diagnostics.isEmpty()) { loaded.diagnostics.toString() }
     assert(loaded.truncated == 0)
+  }
+
+  @Test
+  fun `valid document larger than 3 MB loads with its operations`(@TempDir dir: Path) {
+    // given
+    val path = dir.largeCopyOf("operation/single_operation_31.yaml")
+
+    // when
+    val report = OpenApiLoader.load(path)
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report, report.diagnostics.toString())
+    assert(loaded.operations.map { it.path } == listOf("/products/{id}"))
   }
 
   @Test

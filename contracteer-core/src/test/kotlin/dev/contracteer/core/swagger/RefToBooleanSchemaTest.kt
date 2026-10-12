@@ -68,6 +68,16 @@ class RefToBooleanSchemaTest {
     assert(report.diagnostics == listOf(unsupportedBooleanRef("#/components/schemas/Foo/properties/forbidden", false))) { report.diagnostics.toString() }
   }
 
+  @Test
+  fun `rejects a reference to a boolean schema in a JSON document that escapes a slash`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/error/ref_to_boolean_property_escaped_slash_31.json")
+
+    // then
+    assertIs<LoadReport.Failed>(report)
+    assert(report.diagnostics == listOf(unsupportedBooleanRef("#/components/schemas/Foo/properties/forbidden", false))) { report.diagnostics.toString() }
+  }
+
   @ParameterizedTest(name = "{0}")
   @ValueSource(strings = ["ref_to_boolean_in_literal_values.yaml", "ref_to_boolean_in_unresolved_positions.yaml"])
   fun `loads a document whose references to a boolean schema are never resolved`(fixture: String) {

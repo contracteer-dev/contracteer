@@ -32,6 +32,16 @@ class OpenApiLoaderVersionTest {
   }
 
   @Test
+  fun `rejects OpenAPI 3 2 as unsupported in a JSON document that escapes a slash`() {
+    // when
+    val result = OpenApiLoader.loadOperations("classpath:error/openapi_32_unsupported_escaped_slash.json")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it == "OpenAPI version '3.2.0' is not supported. Contracteer currently supports OpenAPI 3.0.x and 3.1.x." })
+  }
+
+  @Test
   fun `fails to parse a version for which swagger-parser returns no model and no message`() {
     // when
     val result = OpenApiLoader.parse(File("src/test/resources/error/openapi_32_unsupported.yaml").readText())

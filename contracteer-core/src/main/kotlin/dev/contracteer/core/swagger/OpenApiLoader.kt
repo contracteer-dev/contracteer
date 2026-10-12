@@ -1,10 +1,12 @@
 package dev.contracteer.core.swagger
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.parser.ObjectMapperFactory
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import io.swagger.v3.parser.util.DeserializationUtils
@@ -84,12 +86,19 @@ object OpenApiLoader {
       is Failure -> LoadReport.Failed(source, withDefaults(SPEC, ERROR).diagnostics() + warnings, truncated)
     }
 
-  // Null when YAML_MAPPER cannot read the content: swagger-parser then reports the error.
+  // Picks JSON or YAML as swagger-parser does, and reads JSON with its mapper: valid JSON is not always valid YAML.
+  // Null when the content cannot be read: swagger-parser then reports the error.
   private fun readTree(content: String): JsonNode? =
     try {
-      YAML_MAPPER.readTree(content) ?: MissingNode.getInstance()
+      treeMapperFor(content).readTree(content) ?: MissingNode.getInstance()
     } catch (_: Throwable) {
       null
+    }
+
+  private fun treeMapperFor(content: String): ObjectMapper =
+    when {
+      DeserializationUtils.isJson(content) -> JSON_MAPPER
+      else                                 -> YAML_MAPPER
     }
 
   private fun checkSupportedVersion(declared: VersionRead): Result<Unit> =
@@ -215,6 +224,7 @@ private const val MAX_YAML_CODE_POINTS = 10 * 1024 * 1024
 private val YAML_MAPPER = YAMLMapper(
   YAMLFactory.builder().loaderOptions(LoaderOptions().apply { codePointLimit = MAX_YAML_CODE_POINTS }).build()
 )
+private val JSON_MAPPER = ObjectMapperFactory.createJson()
 private val SUPPORTED_VERSION = Regex("^3\\.[01]\\.\\d+$")
 private val OPENAPI_31_VERSION = Regex("^3\\.1\\.\\d+$")
 

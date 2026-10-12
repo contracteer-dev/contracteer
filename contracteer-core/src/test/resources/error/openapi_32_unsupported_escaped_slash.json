@@ -1,0 +1,9 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "probe",
+    "version": "1",
+    "description": "Escapes a slash, which JSON allows and YAML does not: http:\/\/example.com"
+  },
+  "paths": {}
+}
