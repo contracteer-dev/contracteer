@@ -1,26 +1,30 @@
-openapi: "3.0.0"
+openapi: 3.0.0
 info:
-  title: Test API
+  title: Shared Infinite Circular Ref AllOf API
   version: '1.0'
 servers:
   - url: 'http://localhost:3000'
 paths:
-  /test:
-    get:
+  /a:
+    post:
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                first:
-                  $ref: '#/components/schemas/First'
-                delegated:
-                  $ref: '#/components/schemas/DelegatedSecond'
+              $ref: '#/components/schemas/First'
       responses:
         200:
           description: OK
-
+  /b:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Second'
+      responses:
+        200:
+          description: OK
 components:
   schemas:
     First:
@@ -31,11 +35,5 @@ components:
         - $ref: '#/components/schemas/First'
         - type: object
           properties:
-            label:
+            x:
               type: string
-    DelegatedSecond:
-      allOf:
-        - $ref: '#/components/schemas/Second'
-        - type: object
-          required:
-            - middle_name

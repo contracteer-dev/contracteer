@@ -15,12 +15,15 @@ import dev.contracteer.core.Result.Success
 import dev.contracteer.core.datatype.*
 import dev.contracteer.core.operation.ContentType
 import dev.contracteer.core.swagger.*
+import java.util.IdentityHashMap
 
 internal class DataTypeConverter(private val sharedComponents: SharedComponents,
                                  private val warnings: LoadWarnings) {
 
   private val logger = KotlinLogging.logger {}
-  private val dataTypeCache: MutableMap<String, DataType<out Any>> = mutableMapOf()
+  private val dataTypeCache: LinkedHashMap<String, DataType<out Any>> = linkedMapOf()
+  /** Cached data types by identity, to name the components a cycle path crosses. */
+  private val componentNames: MutableMap<DataType<out Any>, String> = IdentityHashMap()
   private val refsBeingResolved: MutableMap<String, ProxyDataType> = mutableMapOf()
   private val refsBeingMerged: MutableSet<String> = linkedSetOf()
   private val discriminatorCache: MutableMap<String, Discriminator> = mutableMapOf()
@@ -78,6 +81,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
   private fun resolveReferencedSchema(ref: String): Result<DataType<out Any>> {
     val name = displayName(ref)
     val proxy = ProxyDataType(name)
+    val cachedBefore = dataTypeCache.size
     refsBeingResolved[ref] = proxy
 
     return sharedComponents
@@ -86,9 +90,16 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
       .also { refsBeingResolved.remove(ref) }
       .flatMap { dataType ->
         proxy.delegate = dataType
-        validateNoInfiniteCycle(proxy, ref, dataType)
+        validateNoInfiniteCycle(proxy, ref)
       }
+      .also { if (it !is Success) evictCachedSince(cachedBefore) }
   }
+
+  /** Schemas converted inside a failed resolution may hold its proxy; they are converted afresh when used again. */
+  private fun evictCachedSince(cachedCount: Int) =
+    dataTypeCache.keys.drop(cachedCount).forEach { ref ->
+      dataTypeCache.remove(ref)?.let { componentNames.remove(it, displayName(ref)) }
+    }
 
   private fun displayName(ref: String): String =
     ref.removePrefix(Components.COMPONENTS_SCHEMAS_REF)
@@ -240,37 +251,59 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
   private fun warnIgnoredWithoutType(schema: Schema<*>, keyword: String) =
     warnings.warn(UNSUPPORTED, "Schema '${schema.name}': '$keyword' is ignored because the schema declares no type.", keyword)
 
-  private fun validateNoInfiniteCycle(proxy: ProxyDataType, ref: String, dataType: DataType<out Any>): Result<DataType<out Any>> {
-    val cyclePath = findNonBreakablePath(proxy.delegate, proxy, listOf(proxy.name))
-    return when {
-      cyclePath != null ->
-        failure(Diagnostic(
-          "Circular reference with no optional, nullable, or collection exit point: ${cyclePath.joinToString(" → ")}",
-          keyword = $$"$ref",
-          rule = INFINITE_CYCLE))
+  private fun validateNoInfiniteCycle(proxy: ProxyDataType, ref: String): Result<DataType<out Any>> =
+    infiniteCycleError(proxy) ?: cacheResolved(ref, proxy.delegate)
 
-      else              -> {
-        dataTypeCache[ref] = dataType
-        success(dataType)
-      }
-    }
+  private fun infiniteCycleError(proxy: ProxyDataType): Result<DataType<out Any>>? {
+    val start = listOf(proxy.name)
+    return findCompositionOnlyPath(proxy.delegate, proxy, start)
+             ?.let { infiniteCycle("Circular reference through 'allOf', 'anyOf' or 'oneOf' only, which applies the same schemas to the same value without end", it) }
+           ?: findNonBreakablePath(proxy.delegate, proxy, start)
+             ?.let { infiniteCycle("Circular reference with no optional, nullable, or collection exit point", it) }
   }
+
+  private fun cacheResolved(ref: String, dataType: DataType<out Any>): Result<DataType<out Any>> {
+    dataTypeCache[ref] = dataType
+    componentNames.putIfAbsent(dataType, displayName(ref))
+    return success(dataType)
+  }
+
+  private fun infiniteCycle(description: String, path: List<String>): Result<DataType<out Any>> =
+    failure(Diagnostic("$description: ${path.joinToString(" → ")}", keyword = $$"$ref", rule = INFINITE_CYCLE))
+
+  private fun findCompositionOnlyPath(current: DataType<out Any>,
+                                      target: ProxyDataType,
+                                      path: List<String>): List<String>? =
+    when (current) {
+      is ProxyDataType        -> followProxy(current, target, path, ::findCompositionOnlyPath)
+      is CompositeDataType<*> -> followSubTypes(current, target, path.enteringComponent(current), ::findCompositionOnlyPath)
+      else                    -> null
+    }
 
   private fun findNonBreakablePath(current: DataType<out Any>,
                                    target: ProxyDataType,
                                    path: List<String>): List<String>? =
     when (current) {
-      is ProxyDataType  -> followProxy(current, target, path)
-      is ObjectDataType -> followRequiredNonNullableProperties(current, target, path)
-      is AllOfDataType  -> followAllOfSubTypes(current, target, path)
+      is ProxyDataType  -> followProxy(current, target, path, ::findNonBreakablePath)
+      is ObjectDataType -> followRequiredNonNullableProperties(current, target, path.enteringComponent(current))
+      is AllOfDataType  -> followSubTypes(current, target, path.enteringComponent(current), ::findNonBreakablePath)
       else              -> null
     }
 
-  private fun followProxy(current: ProxyDataType, target: ProxyDataType, path: List<String>): List<String>? =
+  private fun List<String>.enteringComponent(dataType: DataType<out Any>): List<String> =
+    componentNames[dataType]?.let { this + it } ?: this
+
+  private fun List<String>.throughProperty(name: String): List<String> =
+    dropLast(1) + "${last()}.$name"
+
+  private fun followProxy(current: ProxyDataType,
+                          target: ProxyDataType,
+                          path: List<String>,
+                          walk: (DataType<out Any>, ProxyDataType, List<String>) -> List<String>?): List<String>? =
     when {
       current === target  -> path + current.name
       !current.isResolved -> null
-      else                -> findNonBreakablePath(current.delegate, target, path)
+      else                -> walk(current.delegate, target, path)
     }
 
   private fun followRequiredNonNullableProperties(current: ObjectDataType,
@@ -280,10 +313,13 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
       .filter { (name, _) -> name in current.requiredProperties }
       .filterValues { it.isNonBreakableEdge() }
       .entries
-      .firstNotNullOfOrNull { (name, dataType) -> findNonBreakablePath(dataType, target, path + name) }
+      .firstNotNullOfOrNull { (name, dataType) -> findNonBreakablePath(dataType, target, path.throughProperty(name)) }
 
-  private fun followAllOfSubTypes(current: AllOfDataType, target: ProxyDataType, path: List<String>): List<String>? =
-    current.subTypes.firstNotNullOfOrNull { findNonBreakablePath(it, target, path) }
+  private fun followSubTypes(current: CompositeDataType<*>,
+                             target: ProxyDataType,
+                             path: List<String>,
+                             walk: (DataType<out Any>, ProxyDataType, List<String>) -> List<String>?): List<String>? =
+    current.subTypes.firstNotNullOfOrNull { walk(it, target, path) }
 
   private fun DataType<out Any>.isNonBreakableEdge() =
     (this is ProxyDataType && !isResolved) || !isNullable

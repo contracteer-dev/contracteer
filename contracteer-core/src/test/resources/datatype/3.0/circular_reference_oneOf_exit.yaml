@@ -1,0 +1,40 @@
+openapi: 3.0.0
+info:
+  title: Circular Ref With oneOf Exit API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /nodes:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Node'
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    Node:
+      type: object
+      required:
+        - value
+        - next
+      properties:
+        value:
+          type: string
+        next:
+          $ref: '#/components/schemas/Link'
+    Link:
+      oneOf:
+        - $ref: '#/components/schemas/Node'
+        - $ref: '#/components/schemas/Terminal'
+    Terminal:
+      type: object
+      required:
+        - end
+      properties:
+        end:
+          type: boolean

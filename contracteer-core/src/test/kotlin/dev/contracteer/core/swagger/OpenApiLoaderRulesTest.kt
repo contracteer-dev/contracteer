@@ -103,7 +103,7 @@ class OpenApiLoaderRulesTest {
   }
 
   @ParameterizedTest(name = "{0}")
-  @ValueSource(strings = ["circular_reference_infinite.yaml", "circular_reference_infinite_allof.yaml"])
+  @ValueSource(strings = ["circular_reference_infinite.yaml", "circular_reference_infinite_allof.yaml", "circular_reference_infinite_oneOf.yaml"])
   fun `circular reference without an exit point is reported as an infinite cycle with the ref keyword`(fixture: String) {
     // when
     val report = OpenApiLoader.load("src/test/resources/datatype/3.0/$fixture")

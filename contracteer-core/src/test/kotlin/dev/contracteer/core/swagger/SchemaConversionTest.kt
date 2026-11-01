@@ -5,6 +5,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import dev.contracteer.core.DiagnosticRule.INFINITE_CYCLE
+import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.assertFailure
 import dev.contracteer.core.assertSuccess
 import dev.contracteer.core.datatype.*
@@ -1064,13 +1066,16 @@ class SchemaConversionTest {
   }
 
   @Test
-  fun `does not extract AllOfDataType when a required property is declared by no branch of an allOf cycle`() {
+  fun `fail a sibling property that uses a schema converted inside a failed circular reference`() {
     // when
-    val result = loadOperations("3.0", "allOf_required_behind_allOf_cycle_error.yaml")
+    val result = loadOperations("3.0", "circular_reference_infinite_allof_sibling_property.yaml")
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains("The following required properties are not defined in the schema: 'middle_name'") })
+    assert(errors == listOf(
+      "GET /test: 'request.body.first': Circular reference through 'allOf', 'anyOf' or 'oneOf' only, which applies the same schemas to the same value without end: First → Second → First",
+      "GET /test: 'request.body.delegated': Circular reference through 'allOf', 'anyOf' or 'oneOf' only, which applies the same schemas to the same value without end: Second → First → Second",
+    )) { errors.toString() }
   }
 
   @Test
@@ -1413,7 +1418,7 @@ class SchemaConversionTest {
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains("Circular") && it.contains("Node") })
+    assert(errors.any { it.contains("Circular reference with no optional, nullable, or collection exit point: Node.next → Link.target → Node") }) { errors.toString() }
   }
 
   @Test
@@ -1423,7 +1428,55 @@ class SchemaConversionTest {
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains("Circular") })
+    assert(errors.any { it.contains("Circular reference with no optional, nullable, or collection exit point: ExtendedItem → BaseItem.child → ExtendedItem") }) { errors.toString() }
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @ValueSource(strings = [
+    "circular_reference_infinite_allof_shared.yaml",
+    "circular_reference_infinite_allof_shared_single_branch.yaml",
+    "circular_reference_infinite_allof_shared_direct.yaml",
+  ])
+  fun `fail every operation that uses a schema converted inside a failed circular reference`(fixture: String) {
+    // when
+    val result = loadOperations("3.0", fixture)
+
+    // then
+    val failedOperations = result.diagnostics().map { it.operation?.path to it.rule }
+    assert(failedOperations == listOf("/a" to INFINITE_CYCLE, "/b" to INFINITE_CYCLE)) { result.diagnostics().toString() }
+  }
+
+  @Test
+  fun `fail every operation that uses a schema converted inside a circular reference that failed for an unsupported keyword`() {
+    // when
+    val result = loadOperations("3.0", "circular_reference_with_unsupported_keyword.yaml")
+
+    // then
+    val failedOperations = result.diagnostics().map { it.operation?.path to it.rule }
+    assert(failedOperations == listOf("/a" to UNSUPPORTED, "/b" to UNSUPPORTED)) { result.diagnostics().toString() }
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("compositionOnlyCycleFixtures")
+  fun `fail to load spec with a circular reference through allOf, anyOf or oneOf only`(fixture: String, cyclePath: String) {
+    // when
+    val result = loadOperations("3.0", fixture)
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.single().endsWith("Circular reference through 'allOf', 'anyOf' or 'oneOf' only, which applies the same schemas to the same value without end: $cyclePath")) { errors.toString() }
+  }
+
+  @Test
+  fun `extract a circular reference that exits through a oneOf alternative`() {
+    // when
+    val node = loadOperations("3.0", "circular_reference_oneOf_exit.yaml")
+      .assertSuccess()
+      .single()
+      .requestSchema.bodies.single().dataType
+
+    // then
+    assert(node.validate(mapOf("value" to "a", "next" to mapOf("value" to "b", "next" to mapOf("end" to true)))).isSuccess())
   }
 
   @Test
@@ -1474,6 +1527,13 @@ class SchemaConversionTest {
   private fun DataType<*>.asObjectDataType() = this as ObjectDataType
 
   companion object {
+    @JvmStatic
+    fun compositionOnlyCycleFixtures() = listOf(
+      Arguments.of("circular_reference_infinite_oneOf.yaml", "Pet → Cat → Pet"),
+      Arguments.of("circular_reference_infinite_anyOf.yaml", "Pet → Cat → Pet"),
+      Arguments.of("circular_reference_infinite_oneOf_allOf_subtype.yaml", "Pet → Dog → Pet"),
+    )
+
     @JvmStatic
     fun constFixtures() = listOf(
       Arguments.of("string_const.yaml", "active", "inactive"),

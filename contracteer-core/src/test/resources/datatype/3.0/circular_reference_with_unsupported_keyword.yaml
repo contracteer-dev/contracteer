@@ -1,0 +1,43 @@
+openapi: 3.0.0
+info:
+  title: Circular Reference With Unsupported Keyword API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /a:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Node'
+      responses:
+        200:
+          description: OK
+  /b:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Link'
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    Node:
+      allOf:
+        - type: object
+          properties:
+            next:
+              $ref: '#/components/schemas/Link'
+        - type: object
+          not:
+            type: string
+    Link:
+      type: object
+      properties:
+        target:
+          $ref: '#/components/schemas/Node'

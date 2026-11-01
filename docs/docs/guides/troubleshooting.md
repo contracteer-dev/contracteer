@@ -311,15 +311,70 @@ Parameter types and constraints do not matter -- equivalence is purely structura
 
 ### Circular schema reference rejected
 
-**Symptom:** Loading the OpenAPI document fails with "Circular reference with no optional, nullable, or collection exit point."
+**Symptom:** Loading the OpenAPI document fails with a message such as `Circular reference with no optional, nullable, or collection exit point: Node.next → Link.target → Node`.
 
 **Cause:** The OpenAPI document contains a circular `$ref` chain where every property in the cycle is required and non-nullable.
 This describes an infinite structure that cannot be instantiated.
 
 For example, `Node.next → Link.target → Node` where both `next` and `target` are required and non-nullable creates a structure with no valid finite value.
+The message ends with this path: each schema in the cycle, and each property as `Schema.property`.
 
 **Fix:** Break the cycle by making at least one property in the chain optional (remove it from `required`), nullable (`nullable: true` on the referenced schema), or a collection (`type: array`).
 Any of these gives Contracteer a finite stopping point.
+
+### Circular reference through `allOf`, `anyOf` or `oneOf` rejected
+
+**Symptom:** Loading the OpenAPI document fails with a message such as `Circular reference through 'allOf', 'anyOf' or 'oneOf' only, which applies the same schemas to the same value without end: Pet → Cat → Pet`.
+
+**Cause:** The schemas in the cycle refer to each other only through `allOf`, `anyOf` or `oneOf`, never through a property.
+Each schema applies the next one to the same value, so validating the value never ends.
+JSON Schema leaves this behavior undefined, so Contracteer rejects the cycle even when a `oneOf` or `anyOf` alternative does not cycle.
+A common source is a base schema that lists its subtypes in `oneOf` while each subtype extends the base schema with `allOf`.
+
+**Fix:** Make the base schema a plain object that the subtypes extend, and use `oneOf` where the value is used.
+A `discriminator` on the base schema tells Contracteer which subtype a value belongs to.
+
+```yaml
+# Rejected -- Pet lists Cat, and Cat extends Pet (Dog is declared like Cat)
+Pet:
+  oneOf:
+    - $ref: '#/components/schemas/Cat'
+    - $ref: '#/components/schemas/Dog'
+Cat:
+  allOf:
+    - $ref: '#/components/schemas/Pet'
+    - type: object
+      properties:
+        huntingSkill:
+          type: string
+
+# Accepted -- Pet is a plain object (Dog is declared like Cat)
+Pet:
+  type: object
+  required:
+    - petType
+  properties:
+    petType:
+      type: string
+  discriminator:
+    propertyName: petType
+Cat:
+  allOf:
+    - $ref: '#/components/schemas/Pet'
+    - type: object
+      properties:
+        huntingSkill:
+          type: string
+```
+
+Where the value is used, for example in a request body, list the subtypes:
+
+```yaml
+schema:
+  oneOf:
+    - $ref: '#/components/schemas/Cat'
+    - $ref: '#/components/schemas/Dog'
+```
 
 ### Sibling keyword on `$ref` is rejected
 
