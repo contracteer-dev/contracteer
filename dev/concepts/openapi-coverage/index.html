@@ -2695,7 +2695,7 @@ This matches the OpenAPI rule: "The <code>allOf</code> form of <code>discriminat
 </tr>
 <tr>
 <td>Recursive / chained <code>$ref</code></td>
-<td>Supported, including circular references. Infinite cycles (all properties in the cycle are required and non-nullable) are rejected at load time</td>
+<td>Supported, including circular references. Infinite cycles are rejected at load time: every property in the cycle is required and non-nullable, or the cycle goes through <code>allOf</code>, <code>anyOf</code> or <code>oneOf</code> only</td>
 </tr>
 <tr>
 <td>External <code>$ref</code> (other files)</td>
