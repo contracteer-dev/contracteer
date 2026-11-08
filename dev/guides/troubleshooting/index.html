@@ -2995,7 +2995,8 @@ Alternatively, simplify the pattern to use standard character classes and quanti
 <p><strong>Cause:</strong> The header schema declares a <code>pattern</code>, <code>enum</code>, or <code>example</code> that admits characters disallowed in HTTP header values.
 RFC 7230 §3.2.6 restricts header field-values to visible ASCII (<code>0x21-0x7E</code>), space (<code>0x20</code>), and horizontal tab (<code>0x09</code>).
 Patterns like <code>\p{ASCII}*</code> or <code>\p{Print}*</code> legally admit NUL, CR, LF, DEL, and non-ASCII characters that no HTTP client will accept on the wire.</p>
-<p>Contracteer samples generated values at load time to catch the problem before verification or mock-server startup, rather than at runtime when the transport layer rejects the value.</p>
+<p>Contracteer checks the schema at load time, without generating sample values, to catch the problem before verification or mock-server startup, rather than at runtime when the transport layer rejects the value.
+The error names the lowest disallowed character the schema admits, so the same document always reports the same character.</p>
 <p><strong>Fix:</strong> Tighten the schema so that no generated value can contain a disallowed character.
 Common replacements:</p>
 <ul>
