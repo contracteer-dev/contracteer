@@ -185,6 +185,19 @@ class ExtractionErrorTest {
   }
 
   @Test
+  fun `fails on every load and names the lowest invalid code point when a header pattern rarely produces invalid chars`() {
+    // when
+    val errors = (1..20).map {
+      OpenApiLoader.loadOperations("src/test/resources/error/request_header_pattern_with_rare_invalid_chars.yaml")
+    }.map { it.assertFailure() }
+
+    // then
+    assert(errors.all { loadErrors -> loadErrors.any { it.contains("X-Tag") && it.contains("U+0001") } }) {
+      errors.toString()
+    }
+  }
+
+  @Test
   fun `fails when response header pattern admits HTTP-invalid chars`() {
     // when
     val result = OpenApiLoader.loadOperations(

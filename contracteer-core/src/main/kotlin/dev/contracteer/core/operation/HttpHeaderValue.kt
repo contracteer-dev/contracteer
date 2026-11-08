@@ -18,8 +18,8 @@ object HttpHeaderValue {
    * Returns [value] if it contains only RFC 7230 §3.2.6 field-value characters.
    *
    * Throws [IllegalStateException] otherwise, naming [headerName], the offending code point,
-   * and the RFC rule. Used as a runtime safety net when a generated header value escapes
-   * the load-time sampling check (e.g., a pattern that happens not to hit an invalid char in N samples).
+   * and the RFC rule. Used as a runtime safety net should a generated header value escape
+   * the load-time check.
    */
   fun requireValid(headerName: String, value: String): String {
     val invalid = firstInvalidChar(value) ?: return value
@@ -28,6 +28,6 @@ object HttpHeaderValue {
       "Tighten the schema pattern or provide explicit example values.")
   }
 
-  private fun isFieldValueChar(c: Char): Boolean =
+  internal fun isFieldValueChar(c: Char): Boolean =
     c == '\t' || c.code in 0x20..0x7E
 }

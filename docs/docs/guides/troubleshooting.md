@@ -871,7 +871,8 @@ correct example values to exclude control and non-ASCII characters.
 RFC 7230 §3.2.6 restricts header field-values to visible ASCII (`0x21-0x7E`), space (`0x20`), and horizontal tab (`0x09`).
 Patterns like `\p{ASCII}*` or `\p{Print}*` legally admit NUL, CR, LF, DEL, and non-ASCII characters that no HTTP client will accept on the wire.
 
-Contracteer samples generated values at load time to catch the problem before verification or mock-server startup, rather than at runtime when the transport layer rejects the value.
+Contracteer checks the schema at load time, without generating sample values, to catch the problem before verification or mock-server startup, rather than at runtime when the transport layer rejects the value.
+The error names the lowest disallowed character the schema admits, so the same document always reports the same character.
 
 **Fix:** Tighten the schema so that no generated value can contain a disallowed character.
 Common replacements:

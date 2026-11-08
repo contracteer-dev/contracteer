@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: Request Header Rare Invalid Charset Test
+  version: '1.0'
+paths:
+  /items:
+    get:
+      parameters:
+        - in: header
+          name: X-Tag
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9 \x13\x01]$'
+      responses:
+        '200':
+          description: Success

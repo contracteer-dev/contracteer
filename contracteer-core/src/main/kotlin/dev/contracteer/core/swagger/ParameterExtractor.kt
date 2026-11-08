@@ -10,10 +10,7 @@ import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.codec.ContentCodec
 import dev.contracteer.core.combineResults
 import dev.contracteer.core.datatype.AnyDataType
-import dev.contracteer.core.datatype.DataType
-import dev.contracteer.core.datatype.GenerationOutcome
-import dev.contracteer.core.datatype.GenerationContext
-import dev.contracteer.core.datatype.StringDataType
+import dev.contracteer.core.datatype.GeneratableChars
 import dev.contracteer.core.operation.ContentType
 import dev.contracteer.core.operation.HttpHeaderValue
 import dev.contracteer.core.operation.ParameterElement
@@ -195,35 +192,19 @@ internal class ParameterExtractor(
   private fun ensureHeaderValuesAreHttpSafe(extracted: ExtractedParameterSchema): Result<ExtractedParameterSchema> {
     val schema = extracted.schema
     val name = (schema.element as? ParameterElement.Header)?.name ?: return success(extracted)
-    val invalid = candidateHeaderValues(extracted)
-      .firstNotNullOfOrNull { candidate -> firstInvalidHeaderChar(schema, candidate) }
+    val invalid = listOfNotNull(
+      lowestInvalidHeaderCharInExamples(extracted),
+      GeneratableChars.lowestOutside(schema.dataType, HttpHeaderValue::isFieldValueChar)
+    ).minOrNull()
     return if (invalid != null) failure(headerCharsetError(name, invalid)) else success(extracted)
   }
 
-  private fun firstInvalidHeaderChar(schema: ParameterSchema, candidate: Any?): Char? =
-    schema.codec.encode(candidate).firstNotNullOfOrNull { (_, encoded) ->
-      HttpHeaderValue.firstInvalidChar(encoded)
-    }
-
-  private fun candidateHeaderValues(extracted: ExtractedParameterSchema): Sequence<Any?> {
-    val examples = extracted.examples.values.filterNotNull().asSequence()
-    val schemaCandidates = schemaCandidates(extracted.schema.dataType)
-    return examples + schemaCandidates
-  }
-
-  private fun schemaCandidates(dataType: DataType<out Any>): Sequence<Any?> = when {
-    dataType.allowedValues != null       -> dataType.allowedValues!!.asSequence()
-    isHeaderSafeByConstruction(dataType) -> emptySequence()
-    else                                 -> generateSequence {
-      when (val result = dataType.randomValue(GenerationContext.default())) {
-        is GenerationOutcome.Value    -> result.value
-        is GenerationOutcome.Boundary -> null
-      }
-    }.take(HEADER_SAMPLE_COUNT)
-  }
-
-  private fun isHeaderSafeByConstruction(dataType: DataType<out Any>): Boolean =
-    dataType is StringDataType && dataType.pattern == null && dataType.allowedValues == null
+  private fun lowestInvalidHeaderCharInExamples(extracted: ExtractedParameterSchema): Char? =
+    extracted.examples.values
+      .filterNotNull()
+      .flatMap { example -> extracted.schema.codec.encode(example).map { (_, encoded) -> encoded } }
+      .mapNotNull { encoded -> encoded.filterNot(HttpHeaderValue::isFieldValueChar).minOrNull() }
+      .minOrNull()
 
   private fun headerCharsetError(name: String, invalid: Char): String {
     val codePoint = "U+%04X".format(invalid.code)
@@ -233,6 +214,5 @@ internal class ParameterExtractor(
 
   companion object {
     private val IGNORED_REQUEST_HEADERS = setOf("Accept", "Content-Type", "Authorization")
-    private const val HEADER_SAMPLE_COUNT = 50
   }
 }

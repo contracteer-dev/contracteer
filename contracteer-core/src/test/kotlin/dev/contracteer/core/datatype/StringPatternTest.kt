@@ -4,6 +4,8 @@ import dev.contracteer.core.assertFailure
 import dev.contracteer.core.assertSuccess
 import kotlin.test.Test
 
+internal val printableAscii: (Char) -> Boolean = { it.code in 0x20..0x7E }
+
 class StringPatternTest {
 
   // --- Happy path ---
@@ -173,5 +175,103 @@ class StringPatternTest {
 
     // then
     assert(result.assertSuccess() == longValue)
+  }
+
+  // --- Generatable characters ---
+
+  @Test
+  fun `lowestCharOutside returns the lowest generatable char outside the allowed set`() {
+    // given
+    val pattern = StringPattern.create("^[a-z\\x13\\x01]$").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside(printableAscii)
+
+    // then
+    assert(lowest == '\u0001') { "Expected U+0001 but got $lowest" }
+  }
+
+  @Test
+  fun `lowestCharOutside returns null when every generatable char is allowed`() {
+    // given
+    val pattern = StringPattern.create("^[a-z]+ [A-Z0-9]{2}$").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside(printableAscii)
+
+    // then
+    assert(lowest == null) { "Expected null but got $lowest" }
+  }
+
+  @Test
+  fun `lowestCharOutside sees literals inside groups, alternations and repetitions`() {
+    // given
+    val pattern = StringPattern.create("^(ab|café)+$").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside(printableAscii)
+
+    // then
+    assert(lowest == 'é') { "Expected U+00E9 but got $lowest" }
+  }
+
+  @Test
+  fun `lowestCharOutside sees characters admitted by a rewritten POSIX class`() {
+    // given
+    val pattern = StringPattern.create("\\p{ASCII}*").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside(printableAscii)
+
+    // then
+    assert(lowest == '\u0000') { "Expected U+0000 but got $lowest" }
+  }
+
+  @Test
+  fun `lowestCharOutside draws a negated class from printable ASCII`() {
+    // given
+    val pattern = StringPattern.create("^[^a]{3}$").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside { it == 'b' }
+
+    // then
+    assert(lowest == ' ') { "Expected U+0020 but got $lowest" }
+  }
+
+  @Test
+  fun `lowestCharOutside draws a literal under a negative lookahead from printable ASCII`() {
+    // given
+    val pattern = StringPattern.create("(?!\\x01)b").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside { it == 'b' }
+
+    // then
+    assert(lowest == ' ') { "Expected U+0020 but got $lowest" }
+  }
+
+  @Test
+  fun `lowestCharOutside sees literals under a negative lookahead nested in another`() {
+    // given
+    val pattern = StringPattern.create("(?!a(?!\\x01))b").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside(printableAscii)
+
+    // then
+    assert(lowest == '\u0001') { "Expected U+0001 but got $lowest" }
+  }
+
+  @Test
+  fun `lowestCharOutside draws a back-reference under a negative lookahead from printable ASCII`() {
+    // given
+    val pattern = StringPattern.create("(?!([^b])\\1)b").assertSuccess()
+
+    // when
+    val lowest = pattern.lowestCharOutside { it == 'b' }
+
+    // then
+    assert(lowest == ' ') { "Expected U+0020 but got $lowest" }
   }
 }
