@@ -1328,7 +1328,7 @@ Your client tests point to it via the <code>API_BASE_URL</code> environment vari
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">contracteer lint openapi.yaml --fail-on warning</span>
 </code></pre></div>
 <p>The step fails when Contracteer cannot load the document.
-With <code>--fail-on warning</code>, it also fails when Contracteer would skip an operation or ignore a constraint.
+With <code>--fail-on warning</code>, it also fails when Contracteer would skip an operation or ignore a constraint, or when the document declares no operation.
 See <a href="../../getting-started/cli/#check-an-openapi-document">Check an OpenAPI Document</a>.</p>
 <hr />
 <h2 id="the-openapi-document-as-a-shared-artifact">The OpenAPI Document as a Shared Artifact<a class="headerlink" href="#the-openapi-document-as-a-shared-artifact" title="Permanent link">&para;</a></h2>

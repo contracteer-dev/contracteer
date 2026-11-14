@@ -1501,7 +1501,7 @@ It needs no running server, so it can run on the pull request that changes the d
 </code></pre></div>
 <p>Each finding ends with its rule in brackets, when it has one.
 An <strong>error</strong> means Contracteer cannot load the document: neither the verifier nor the mock server can use it.
-A <strong>warning</strong> means the document loads, but a part of it is left out or a declared constraint is not applied.
+A <strong>warning</strong> means the document loads, but a part of it is left out, a declared constraint is not applied, or the document declares no operation to run.
 The closing line states what was checked.
 The report is the only output on stdout; logs go to stderr.</p>
 <p><code>lint</code> reports only what affects execution.
