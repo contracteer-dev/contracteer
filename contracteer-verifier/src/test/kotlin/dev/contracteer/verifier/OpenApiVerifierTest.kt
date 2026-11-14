@@ -3,11 +3,13 @@ package dev.contracteer.verifier
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Response
+import org.http4k.core.Status.Companion.GATEWAY_TIMEOUT
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
+import org.junit.jupiter.api.Timeout
 import dev.contracteer.core.DiagnosticCategory.CONTRACT_VIOLATION
 import dev.contracteer.core.DiagnosticCategory.EXECUTION_ERROR
 import dev.contracteer.core.Severity.ERROR
@@ -22,6 +24,9 @@ import dev.contracteer.core.dsl.stringType
 import dev.contracteer.core.swagger.OpenApiLoader
 import java.net.InetAddress
 import java.net.ServerSocket
+import java.net.Socket
+import java.time.Duration
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.thread
 import kotlin.test.Test
 
@@ -529,9 +534,61 @@ class OpenApiVerifierTest {
     assert(diagnostic.severity == ERROR)
   }
 
+  @Test
+  @Timeout(5)
+  fun `fails the case with a timeout failure when the server sends no response`() {
+    // given
+    val apiOperation = apiOperation("GET", "/gateway") {
+      response(504) {}
+    }
+    val case = VerificationCaseFactory.create(apiOperation).single()
+
+    // when
+    val (baseUrl, outcome) = withServerNeverAnswering { port ->
+      val baseUrl = "http://localhost:$port"
+      baseUrl to OpenApiVerifier(VerifierConfiguration(baseUrl, Duration.ofMillis(200))).verify(case)
+    }
+
+    // then
+    val diagnostic = outcome.result.diagnostics().single()
+    assert(diagnostic.message == "Request failed: no response from $baseUrl within 200ms") {
+      "Expected a timeout failure but got: ${outcome.result}"
+    }
+    assert(diagnostic.category == EXECUTION_ERROR)
+  }
+
+  @Test
+  fun `validates a 504 sent by the server as a response`() {
+    // given
+    val apiOperation = apiOperation("GET", "/gateway") {
+      response(504) {}
+    }
+    val case = VerificationCaseFactory.create(apiOperation).single()
+    val app = routes("/gateway" bind GET to { Response(GATEWAY_TIMEOUT) })
+
+    // when
+    val outcome = withHttpServer(app) { port ->
+      OpenApiVerifier(VerifierConfiguration("http://localhost:$port", Duration.ofMillis(200))).verify(case)
+    }
+
+    // then
+    outcome.result.assertSuccess()
+  }
+
   // --- helpers ---
 
   private fun releasedPort(): Int = ServerSocket(0).use { it.localPort }
+
+  private fun <T> withServerNeverAnswering(block: (port: Int) -> T): T =
+    ServerSocket(0, 0, InetAddress.getLoopbackAddress()).use { socket ->
+      val connections = ConcurrentLinkedQueue<Socket>()
+      thread(isDaemon = true) { runCatching { generateSequence { socket.accept() }.forEach { connections.add(it) } } }
+      try {
+        block(socket.localPort)
+      } finally {
+        connections.forEach { it.close() }
+      }
+    }
 
   // The client throws on a connection closed before any response byte, where it answers a refused one with a synthetic 503.
   private fun <T> withServerClosingEveryConnection(block: (port: Int) -> T): T =

@@ -16,6 +16,7 @@ import dev.contracteer.verifier.VerifierConfiguration
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi.AUTO
 import picocli.CommandLine.Option
+import java.time.Duration
 
 @Command(
   name = "verify",
@@ -39,6 +40,16 @@ class VerifyCli: HttpCliCommand() {
   private var baseUrl = "http://localhost:8080"
 
   @Option(
+    names = ["--timeout"],
+    required = false,
+    paramLabel = "<seconds>",
+    converter = [TimeoutSecondsConverter::class],
+    defaultValue = "10",
+    description = [$$"Seconds each case waits for the response headers before it fails. Default: @|bold ${DEFAULT-VALUE}|@."],
+  )
+  private lateinit var timeout: Duration
+
+  @Option(
     names = ["--format"],
     required = false,
     description = [$$"Output format: text or json. With json, the report is the only output on stdout and logs go to stderr. Default: @|bold ${DEFAULT-VALUE}|@."],
@@ -60,14 +71,14 @@ class VerifyCli: HttpCliCommand() {
     }
 
   private fun verifyAndPrint(loaded: LoadReport.Loaded): Int {
-    val report = OpenApiVerifier(VerifierConfiguration(baseUrl)).verify(loaded)
+    val report = OpenApiVerifier(VerifierConfiguration(baseUrl, timeout)).verify(loaded)
     println(report.toJson())
     return if (report.outcomes.any { it.result.isFailure() }) 1 else 0
   }
 
   private fun runVerification(operations: List<ApiOperation>): Int {
     val plans = operations.map { VerificationCaseFactory.plan(it) }
-    val verifier = OpenApiVerifier(VerifierConfiguration(baseUrl))
+    val verifier = OpenApiVerifier(VerifierConfiguration(baseUrl, timeout))
     println()
     println(AUTO.string("🚀 Starting contract verification..."))
     println(AUTO.string("Target Server: @|bold,green $baseUrl|@"))

@@ -4,6 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import dev.contracteer.core.Result.Success
 import dev.contracteer.core.swagger.OpenApiLoader
 import dev.contracteer.mockserver.MockServer
+import org.junit.jupiter.api.Timeout
+import java.net.InetAddress
+import java.net.ServerSocket
+import java.net.Socket
+import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.concurrent.thread
 import kotlin.test.Test
 
 class VerifyCliTest {
@@ -74,6 +80,33 @@ class VerifyCliTest {
   }
 
   @Test
+  @Timeout(10)
+  fun `json format fails the case with a timeout failure when the server does not answer within the timeout`() {
+    // When
+    val (baseUrl, execution) = withServerNeverAnswering { port ->
+      val baseUrl = "http://localhost:$port"
+      baseUrl to execute("verify", ORDERS, "-u", baseUrl, "--format", "json", "--timeout", "1")
+    }
+
+    // Then
+    val report = json.readTree(execution.stdout)
+    assert(execution.exitCode == 1)
+    assert(report["cases"].single()["diagnostics"].single()["message"].asText() ==
+             "Request failed: no response from $baseUrl within 1s")
+  }
+
+  @Test
+  fun `a timeout that is not positive prints nothing on stdout and exits with 2`() {
+    // When
+    val execution = execute("verify", ORDERS, "--timeout", "0")
+
+    // Then
+    assert(execution.exitCode == 2)
+    assert(execution.stdout.isEmpty())
+    assert(execution.stderr.contains("'0' is not a positive whole number of seconds"))
+  }
+
+  @Test
   fun `text format exits with 0 when every case passes`() {
     // When
     val execution = withMockServer(ORDERS) { baseUrl ->
@@ -103,6 +136,17 @@ class VerifyCliTest {
       mockServer.stop()
     }
   }
+
+  private fun <T> withServerNeverAnswering(block: (port: Int) -> T): T =
+    ServerSocket(0, 0, InetAddress.getLoopbackAddress()).use { socket ->
+      val connections = ConcurrentLinkedQueue<Socket>()
+      thread(isDaemon = true) { runCatching { generateSequence { socket.accept() }.forEach { connections.add(it) } } }
+      try {
+        block(socket.localPort)
+      } finally {
+        connections.forEach { it.close() }
+      }
+    }
 
   private companion object {
     const val ORDERS = "classpath:verify/orders.yaml"

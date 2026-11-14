@@ -55,6 +55,7 @@ Unverified primary responses do not change the exit code.
 **Options:**
 
 - **`-u`, `--base-url`** *(default: `http://localhost:8080`)* -- Absolute base URL of the server (scheme, host, and port).
+- **`--timeout`** *(default: `10`)* -- Seconds each case waits for the response headers before it fails. It does not limit reading the response body.
 - **`-l`, `--log-level`** *(default: `INFO`)* -- Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF.
 - **`-t`, `--http-traffic`** -- Enable HTTP request/response logging.
 - **`--format`** *(default: `text`)* -- Output format: `text` or `json`.

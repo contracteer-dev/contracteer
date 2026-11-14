@@ -92,6 +92,9 @@ Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., `classpath:o
 **`serverPort`** *(default: `8080`)* -- Port of the server under test.
 Overridden by `@ContracteerServerPort` if the annotated field has a non-zero value.
 
+**`timeoutSeconds`** *(default: `10`)* -- Seconds each case waits for the response headers before it fails.
+It does not limit reading the response body.
+
 !!! tip "Treat the OpenAPI document as a shared artifact"
     Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
     Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
@@ -248,8 +251,9 @@ See [Testing Your Server](../concepts/testing-your-server.md) for a detailed exp
 
 ## Debugging Failures
 
-When a verification case fails, Contracteer logs the HTTP request and response at WARN level automatically.
-No configuration is needed -- failed cases are always visible.
+When the server's response fails a verification case, Contracteer logs the HTTP request and response at WARN level automatically.
+No configuration is needed.
+A case that gets no response -- the server cannot be reached or does not answer in time -- logs nothing; its failure message names the base URL.
 
 To see all HTTP traffic -- including successful cases -- set the `dev.contracteer.http` logger to DEBUG:
 

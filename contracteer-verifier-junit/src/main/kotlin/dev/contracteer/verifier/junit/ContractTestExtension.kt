@@ -11,6 +11,7 @@ import dev.contracteer.verifier.VerificationPlan
 import dev.contracteer.verifier.VerifierConfiguration
 import java.lang.System.lineSeparator
 import java.lang.reflect.Modifier
+import java.time.Duration
 import java.util.stream.Stream
 
 internal class ContractTestExtension: TestTemplateInvocationContextProvider {
@@ -49,10 +50,13 @@ internal class ContractTestExtension: TestTemplateInvocationContextProvider {
     return { extensionContext ->
       cached ?: run {
         val port = resolveServerPort(extensionContext, annotation)
-        OpenApiVerifier(VerifierConfiguration("${annotation.serverUrl}:$port")).also { cached = it }
+        OpenApiVerifier(verifierConfiguration(annotation, port)).also { cached = it }
       }
     }
   }
+
+  private fun verifierConfiguration(annotation: ContracteerTest, port: Int) =
+    VerifierConfiguration("${annotation.serverUrl}:$port", Duration.ofSeconds(annotation.timeoutSeconds))
 
   private fun resolveServerPort(extensionContext: ExtensionContext, annotation: ContracteerTest): Int {
     val annotatedPort = extractAnnotatedServerPort(extensionContext)

@@ -19,7 +19,7 @@ import dev.contracteer.core.swagger.LoadReport
  * the server's responses against the expected response schema.
  */
 class OpenApiVerifier(configuration: VerifierConfiguration) {
-  private val client = VerificationHttpClient(configuration.baseUrl)
+  private val client = VerificationHttpClient(configuration.baseUrl, configuration.timeout)
   private val httpLogger = KotlinLogging.logger("dev.contracteer.http")
 
   /**

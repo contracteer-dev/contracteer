@@ -29,6 +29,9 @@ import org.junit.jupiter.api.extension.ExtendWith
  *   with [ContracteerServerPort]), that value will override this static port. **Default:** `8080`.
  *
  * @property openApiDoc Path of the OpenAPI 3 Document from which API operations are loaded
+ *
+ * @property timeoutSeconds How many seconds each verification case waits for the response headers; a case that gets
+ *   none in time fails. Must be positive. It does not limit reading the response body. **Default:** `10`.
  **/
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
@@ -38,4 +41,5 @@ annotation class ContracteerTest(
   val serverUrl: String = "http://localhost",
   val serverPort: Int = 8080,
   val openApiDoc: String,
+  val timeoutSeconds: Long = 10,
 )

@@ -25,7 +25,8 @@ contracteer verify openapi.yaml -t
 contracteer mock openapi.yaml -t
 ```
 
-Contracteer also logs automatically at WARN level when a verification case fails or the mock server returns a 418.
+Contracteer also logs automatically at WARN level when the server's response fails a verification case or the mock server returns a 418.
+A verification case that gets no response logs nothing, even with HTTP traffic logging; its failure message says why.
 At startup, the mock server logs at WARN each operation that answers `418` or an error status to a valid request no scenario matches.
 
 ---
@@ -41,6 +42,17 @@ At startup, the mock server logs at WARN each operation that answers `418` or an
 **Fix:** Start the server before the verification runs.
 Check the base URL given to the verifier: `--base-url` on the CLI, `baseUrl` on `VerifierConfiguration`, `serverUrl` and `serverPort` on `@ContracteerTest`.
 When the server starts on a random port, check that the field annotated with `@ContracteerServerPort` holds that port.
+
+### A case fails with "no response ... within"
+
+**Symptom:** A verification case fails with `Request failed: no response from http://localhost:8080 within 10s`.
+
+**Cause:** The server did not answer within the timeout.
+Either it accepted the connection but sent no response headers (the endpoint is slower than the timeout, the server is stuck, or the base URL uses `https` for a server that speaks plain HTTP and never answers the TLS handshake), or the connection itself was never accepted (a firewall drops it, or no host answers at that address).
+
+**Fix:** Check that the base URL's host and port are reachable, that its scheme matches the server, and that the server answers the request at all.
+If the endpoint is just slow, raise the timeout: `--timeout` on the CLI, `timeout` on `VerifierConfiguration`, `timeoutSeconds` on `@ContracteerTest`.
+Every case waits for the full timeout, so against a server that never answers, a run takes the number of cases times the timeout.
 
 ### All verification cases fail with the wrong status code
 

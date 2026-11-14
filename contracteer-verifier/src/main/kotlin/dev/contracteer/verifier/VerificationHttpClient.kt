@@ -4,6 +4,7 @@ import org.http4k.client.JavaHttpClient
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status.Companion.CLIENT_TIMEOUT
 import org.http4k.core.Status.Companion.CONNECTION_REFUSED
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
@@ -16,21 +17,26 @@ import dev.contracteer.core.result
 import dev.contracteer.core.serde.MultipartSerde
 import dev.contracteer.core.serde.Serde
 import dev.contracteer.verifier.VerificationCase.*
+import java.time.Duration
+import kotlin.time.toKotlinDuration
 
-internal class VerificationHttpClient(serverUrl: String) {
+internal class VerificationHttpClient(serverUrl: String, private val timeout: Duration) {
   private val serverUrl = serverUrl.trimEnd('/')
-  private val baseClient = JavaHttpClient()
+  private val baseClient = JavaHttpClient(requestModifier = { it.timeout(timeout) })
 
   fun execute(case: VerificationCase): Result<Pair<Request, Response>> =
     buildRequest(case).flatMap { send(it) }
 
-  // http4k's client answers a refused connection or an unknown host with a synthetic 503 instead of
-  // throwing. Its status equals CONNECTION_REFUSED; a 503 sent by the server does not.
-  // http4k compares statuses by code and client-generated flag, not description.
+  // http4k's client answers a refused connection or an unknown host with a synthetic 503, and a timeout with a
+  // synthetic 504, instead of throwing. Their statuses equal CONNECTION_REFUSED and CLIENT_TIMEOUT; a 503 or 504 sent
+  // by the server does not. http4k compares statuses by code and client-generated flag, not description.
   private fun send(request: Request): Result<Pair<Request, Response>> {
     val response = baseClient(request)
-    return if (response.status == CONNECTION_REFUSED) failure("Request failed: could not connect to $serverUrl")
-    else success(request to response)
+    return when (response.status) {
+      CONNECTION_REFUSED -> failure("Request failed: could not connect to $serverUrl")
+      CLIENT_TIMEOUT     -> failure("Request failed: no response from $serverUrl within ${timeout.toKotlinDuration()}")
+      else               -> success(request to response)
+    }
   }
 
   private fun buildRequest(case: VerificationCase): Result<Request> =

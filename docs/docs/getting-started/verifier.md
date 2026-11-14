@@ -120,6 +120,9 @@ Three steps: load the OpenAPI document, plan each operation, run the verificatio
 - **`baseUrl`** *(default: `http://localhost:8080`)* -- Absolute base URL of the server under test.
   Must include scheme (`http` or `https`), host, and port.
   May include a path prefix (e.g., `https://api.example.com/v1`); query strings and fragments are rejected.
+- **`timeout`** *(default: 10 seconds)* -- How long each case waits for the response headers, as a `java.time.Duration`.
+  A case that gets none in time fails with `Request failed: no response from <base URL> within <timeout>`.
+  The timeout does not limit reading the response body.
 
 !!! tip "Treat the OpenAPI document as a shared artifact"
     Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
@@ -236,8 +239,9 @@ See [Testing Your Server](../concepts/testing-your-server.md) for a detailed exp
 
 ## Debugging Failures
 
-When a verification case fails, Contracteer logs the HTTP request and response at WARN level automatically.
-No configuration is needed -- failed cases are always visible.
+When the server's response fails a verification case, Contracteer logs the HTTP request and response at WARN level automatically.
+No configuration is needed.
+A case that gets no response -- the server cannot be reached or does not answer in time -- logs nothing; its failure message names the base URL.
 
 To see all HTTP traffic -- including successful cases -- set the `dev.contracteer.http` logger to DEBUG.
 
