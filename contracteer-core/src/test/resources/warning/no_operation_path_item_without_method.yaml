@@ -1,0 +1,7 @@
+openapi: 3.0.3
+info:
+  title: No operation
+  version: '1.0'
+paths:
+  /products:
+    summary: A path item declaring no method

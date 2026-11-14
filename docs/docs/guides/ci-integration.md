@@ -119,7 +119,7 @@ In a repository that holds only the OpenAPI document, there is no server to veri
 ```
 
 The step fails when Contracteer cannot load the document.
-With `--fail-on warning`, it also fails when Contracteer would skip an operation or ignore a constraint.
+With `--fail-on warning`, it also fails when Contracteer would skip an operation or ignore a constraint, or when the document declares no operation.
 See [Check an OpenAPI Document](../getting-started/cli.md#check-an-openapi-document).
 
 ---

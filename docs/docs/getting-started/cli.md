@@ -220,7 +220,7 @@ The document loads: 2 operations declared, 1 excluded. 0 errors, 2 warnings.
 
 Each finding ends with its rule in brackets, when it has one.
 An **error** means Contracteer cannot load the document: neither the verifier nor the mock server can use it.
-A **warning** means the document loads, but a part of it is left out or a declared constraint is not applied.
+A **warning** means the document loads, but a part of it is left out, a declared constraint is not applied, or the document declares no operation to run.
 The closing line states what was checked.
 The report is the only output on stdout; logs go to stderr.
 

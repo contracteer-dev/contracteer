@@ -23,5 +23,7 @@ enum class DiagnosticRule {
   /** A schema declares no constraint at all and accepts any value. */
   EMPTY_SCHEMA,
   /** An example key targets a status code the operation declares no response for. */
-  UNRESOLVED_EXAMPLE_KEY
+  UNRESOLVED_EXAMPLE_KEY,
+  /** The document declares no operation under `paths`, so there is nothing to verify or mock. */
+  NO_OPERATION
 }

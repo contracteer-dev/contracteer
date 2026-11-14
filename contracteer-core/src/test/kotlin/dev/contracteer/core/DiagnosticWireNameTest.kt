@@ -23,7 +23,8 @@ class DiagnosticWireNameTest {
       "conflicting-constraints",
       "unknown-format",
       "empty-schema",
-      "unresolved-example-key"
+      "unresolved-example-key",
+      "no-operation"
     )) { rules.toString() }
     assert(categories == listOf("spec", "contract-violation", "execution-error")) { categories.toString() }
     assert(severities == listOf("error", "warning", "info")) { severities.toString() }

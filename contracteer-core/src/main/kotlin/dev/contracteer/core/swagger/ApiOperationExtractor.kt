@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.parameters.Parameter
+import dev.contracteer.core.DiagnosticRule.NO_OPERATION
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
@@ -30,6 +31,7 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
       else                              ->
         paths
           .flatMap { it.toApiOperations() }
+          .also { declaredOperations -> if (declaredOperations.isEmpty()) warnNoOperation() }
           .combineResults()
           .map {
             it.mapNotNull { operation -> filterUnsupportedOperation(operation, warnings) }
@@ -135,11 +137,12 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
         "These paths are identical after ignoring parameter names and are considered invalid by the OpenAPI Specification (OAS 3.0 §4.7.9)."
       }
 
+  private fun warnNoOperation() =
+    warnings.warn(NO_OPERATION, "The document declares no operation under 'paths': nothing to verify or mock.", keyword = "paths")
+
   private fun logExtractedOperations(operations: List<ApiOperation>) {
-    if (operations.isEmpty()) {
-      logger.warn { "No valid operations were generated." }
-    } else {
-      logger.info { "Found ${operations.size} valid operation(s)." }
+    logger.info { "Found ${operations.size} valid operation(s)." }
+    if (operations.isNotEmpty()) {
       logger.debug {
         operations.joinToString("${System.lineSeparator()}- ", "Operations:${System.lineSeparator()}- ") { operation ->
           "${operation.method.uppercase()} ${operation.path} -> [${operation.responseSchemas.summary()}]"

@@ -5,6 +5,7 @@ import dev.contracteer.core.DiagnosticCategory.SPEC
 import dev.contracteer.core.DiagnosticRule
 import dev.contracteer.core.DiagnosticRule.BODY_EXCLUDED
 import dev.contracteer.core.DiagnosticRule.EMPTY_SCHEMA
+import dev.contracteer.core.DiagnosticRule.NO_OPERATION
 import dev.contracteer.core.DiagnosticRule.OPERATION_EXCLUDED
 import dev.contracteer.core.DiagnosticRule.SCENARIO_EXCLUDED
 import dev.contracteer.core.DiagnosticRule.UNKNOWN_FORMAT
@@ -13,6 +14,8 @@ import dev.contracteer.core.DiagnosticRule.UNSUPPORTED
 import dev.contracteer.core.OperationRef
 import dev.contracteer.core.Severity.ERROR
 import dev.contracteer.core.Severity.WARNING
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.Test
 import kotlin.test.assertIs
 
@@ -53,6 +56,28 @@ class OpenApiLoaderWarningsTest {
     assert(loaded.diagnostics == listOf(
       operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported request body content type.", "POST", "/null-schema"),
       operationWarning(OPERATION_EXCLUDED, "Operation excluded: no supported request body content type.", "POST", "/empty-schema")
+    )) { loaded.diagnostics.toString() }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = [
+    "no_operation_empty_paths.yaml",
+    "no_operation_path_item_without_method.yaml",
+    "no_operation_components_only_3_1.yaml"
+  ])
+  fun `document declaring no operation is reported as a spec warning on paths`(document: String) {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/warning/$document")
+
+    // then
+    val loaded = assertIs<LoadReport.Loaded>(report)
+    assert(loaded.diagnostics == listOf(
+      Diagnostic(
+        "The document declares no operation under 'paths': nothing to verify or mock.",
+        keyword = "paths",
+        rule = NO_OPERATION,
+        category = SPEC,
+        severity = WARNING)
     )) { loaded.diagnostics.toString() }
   }
 

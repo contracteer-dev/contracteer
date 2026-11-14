@@ -205,6 +205,24 @@ class LintCliTest {
   }
 
   @Test
+  fun `text format lists the no operation warning and exits with 1 when failing on warnings`() {
+    // When
+    val execution = execute("lint", ORDERS_WITHOUT_OPERATION, "--fail-on", "warning")
+
+    // Then
+    assert(execution.exitCode == 1)
+    assert(execution.stdout.lines() == listOf(
+      "OpenAPI document: $ORDERS_WITHOUT_OPERATION",
+      "",
+      "Warnings (1)",
+      "   The document declares no operation under 'paths': nothing to verify or mock. [no-operation]",
+      "",
+      "The document loads: 0 operations declared, none excluded. 0 errors, 1 warning.",
+      ""
+    ))
+  }
+
+  @Test
   fun `text format prints a freeform finding without a rule`() {
     // When
     val execution = execute("lint", MISSING_DOCUMENT)
@@ -233,6 +251,7 @@ class LintCliTest {
   private companion object {
     const val ORDERS = "classpath:lint/orders.yaml"
     const val ORDERS_WITH_XML_OPERATION = "classpath:lint/orders_with_xml_operation.yaml"
+    const val ORDERS_WITHOUT_OPERATION = "classpath:lint/orders_without_operation.yaml"
     const val ORDERS_WITH_UNSUPPORTED_KEYWORD = "classpath:lint/orders_with_unsupported_keyword.yaml"
     const val ORDERS_WITH_UNSUPPORTED_KEYWORD_AND_IGNORED_CONSTRAINT =
       "classpath:lint/orders_with_unsupported_keyword_and_ignored_constraint.yaml"

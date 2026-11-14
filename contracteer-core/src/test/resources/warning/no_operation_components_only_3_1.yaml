@@ -1,0 +1,8 @@
+openapi: 3.1.0
+info:
+  title: No operation
+  version: '1.0'
+components:
+  schemas:
+    Product:
+      type: string
