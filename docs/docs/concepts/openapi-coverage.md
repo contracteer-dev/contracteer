@@ -496,6 +496,7 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 | `$ref` via JSON Pointer to nested Schema locations | Resolves pointers into `properties`, `items`, `additionalProperties`, `allOf`/`oneOf`/`anyOf`, and `not`. Example: `#/components/schemas/User/properties/address`. Pointers into non-Schema sections (`examples`, `requestBodies`) are rejected. |
 | Recursive / chained `$ref`                         | Supported, including circular references. Infinite cycles are rejected at load time: every property in the cycle is required and non-nullable, or the cycle goes through `allOf`, `anyOf` or `oneOf` only                                        |
 | External `$ref` (other files)                      | Resolved by the OpenAPI parser before Contracteer processes the model                                                                                                                                                                            |
+| Path Item `$ref`                                   | Supported for `#/paths/<path>` and, in OpenAPI 3.1, for `#/components/pathItems/<name>` and other locations in the document. In OpenAPI 3.0, a pointer outside `#/paths` fails the load. A field beside the `$ref` other than `summary`, `description`, `servers` and `x-` extensions fails the load |
 
 ### Responses
 

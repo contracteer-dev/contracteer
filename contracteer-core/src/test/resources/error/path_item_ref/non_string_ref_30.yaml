@@ -1,0 +1,7 @@
+openapi: 3.0.3
+info:
+  title: Path item reference that is not a string
+  version: 1.0.0
+paths:
+  /products:
+    $ref: 5

@@ -1,0 +1,16 @@
+openapi: 3.1.0
+info:
+  title: Path item reference through a chain of components
+  version: 1.0.0
+paths:
+  /products:
+    $ref: '#/components/pathItems/Alias'
+components:
+  pathItems:
+    Alias:
+      $ref: '#/components/pathItems/Products'
+    Products:
+      get:
+        responses:
+          '200':
+            description: ok

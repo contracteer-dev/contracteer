@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: Two paths referencing the same path item component
+  version: 1.0.0
+paths:
+  /products:
+    $ref: '#/components/pathItems/Listing'
+  /items:
+    $ref: '#/components/pathItems/Listing'
+components:
+  pathItems:
+    Listing:
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      get:
+        parameters:
+          - name: limit
+            in: query
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: ok

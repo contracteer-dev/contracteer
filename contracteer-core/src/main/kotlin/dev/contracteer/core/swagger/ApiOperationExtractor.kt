@@ -40,15 +40,21 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
     }
   }
 
-  private fun Map.Entry<String, PathItem>.toApiOperations(): List<Result<ApiOperation>> {
-    val resolvedPathParams = value.parameters.orEmpty()
+  private fun Map.Entry<String, PathItem>.toApiOperations(): List<Result<ApiOperation>> =
+    when (val resolved = sharedComponents.resolve(value).forProperty(key)) {
+      is Success -> resolved.value.toApiOperations(key)
+      else       -> listOf(resolved.retypeError())
+    }
+
+  private fun PathItem.toApiOperations(path: String): List<Result<ApiOperation>> {
+    val resolvedPathParams = parameters.orEmpty()
       .map { sharedComponents.resolve(it) }
       .combineResults()
-    return value.readOperationsMap().map { (method, operation) ->
+    return readOperationsMap().map { (method, operation) ->
       resolvedPathParams
         .flatMap { pathParams -> normalizeOperationParameters(operation, pathParams) }
-        .flatMap { extractApiOperation(method.name, key, operation) }
-        .forOperation(OperationRef(method.name, key))
+        .flatMap { extractApiOperation(method.name, path, operation) }
+        .forOperation(OperationRef(method.name, path))
     }
   }
 
@@ -57,6 +63,8 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
   // 3.0 docs but not for 3.1 (issue #1950), and its isResolve setting also leaves operation-level
   // $ref parameters un-inlined for 3.1. We resolve operation-level refs, then merge in path-level
   // parameters, mutating operation.parameters in place so downstream extractors never see $refs.
+  // Idempotent: paths that reference the same path item component normalize the same Operation once each,
+  // and the second pass finds every path-level parameter already merged.
   private fun normalizeOperationParameters(operation: Operation, resolvedPathParams: List<Parameter>): Result<Unit> =
     operation.safeParameters()
       .map { sharedComponents.resolve(it) }

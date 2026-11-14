@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info:
+  title: Operation beside a path item reference
+  version: 1.0.0
+paths:
+  /products:
+    get:
+      responses:
+        '200':
+          description: ok
+  /items:
+    $ref: '#/paths/~1products'
+    post:
+      responses:
+        '201':
+          description: created

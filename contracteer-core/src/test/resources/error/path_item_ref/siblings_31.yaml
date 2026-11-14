@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: Fields beside a path item reference
+  version: 1.0.0
+paths:
+  /products:
+    $ref: '#/components/pathItems/Products'
+    summary: Products
+    servers:
+      - url: https://catalog.example.com
+    parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+    post:
+      responses:
+        '201':
+          description: created
+components:
+  pathItems:
+    Products:
+      get:
+        responses:
+          '200':
+            description: ok

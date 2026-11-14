@@ -25,6 +25,7 @@ class ApiOperationExtractorNullPathsTest {
     requestBodies = emptyMap(),
     headers = emptyMap(),
     examples = emptyMap(),
-    responses = emptyMap()
+    responses = emptyMap(),
+    pathItems = emptyMap()
   )
 }

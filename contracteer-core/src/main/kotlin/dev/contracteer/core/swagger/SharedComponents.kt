@@ -1,5 +1,6 @@
 package dev.contracteer.core.swagger
 
+import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.Content
@@ -23,7 +24,8 @@ internal class SharedComponents(
   private val requestBodies: Map<String, RequestBody>,
   private val headers: Map<String, Header>,
   private val examples: Map<String, Example>,
-  private val responses: Map<String, ApiResponse>
+  private val responses: Map<String, ApiResponse>,
+  private val pathItems: Map<String, PathItem>
 ) {
 
   fun dereference(ref: String): Result<Schema<*>> {
@@ -56,6 +58,16 @@ internal class SharedComponents(
 
   fun resolve(response: ApiResponse): Result<ApiResponse> =
     resolveRef(response, responses, ApiResponse::shortRef, "Response", "components/responses")
+
+  // swagger-parser leaves in place a path item reference it cannot inline: one to a 3.1 path item component on
+  // purpose, any pointer outside `#/paths` in 3.0 because its resolver does not know it.
+  fun resolve(pathItem: PathItem): Result<PathItem> =
+    pathItem.`$ref`.let { ref ->
+      when {
+        ref != null && !ref.startsWith(PATH_ITEM_COMPONENTS) -> unsupported(ref, UNRESOLVED_PATH_ITEM_REASON)
+        else                                                 -> resolveRef(pathItem, pathItems, PathItem::shortRef, "Path Item", "components/pathItems")
+      }
+    }
 
   fun resolve(examples: Map<String, Example>): Result<Map<String, Example>> =
     examples
@@ -201,5 +213,8 @@ internal class SharedComponents(
 
   private companion object {
     private const val MAX_DEPTH = 10
+    private const val PATH_ITEM_COMPONENTS = "#/components/pathItems/"
+    private const val UNRESOLVED_PATH_ITEM_REASON =
+      "a path item reference must point to '#/paths/<path>' or, in OpenAPI 3.1, to '#/components/pathItems/<name>'"
   }
 }

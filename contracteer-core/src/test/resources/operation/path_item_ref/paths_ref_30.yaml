@@ -1,0 +1,12 @@
+openapi: 3.0.3
+info:
+  title: Path item reference to another path
+  version: 1.0.0
+paths:
+  /products:
+    get:
+      responses:
+        '200':
+          description: ok
+  /items:
+    $ref: '#/paths/~1products'

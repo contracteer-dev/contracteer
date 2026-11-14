@@ -2,6 +2,7 @@ package dev.contracteer.core.swagger
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.SpecVersion.V31
 import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.headers.Header
@@ -262,6 +263,9 @@ internal fun Components?.safeResponses() =
 internal fun Components?.safeHeaders() =
   this?.headers ?: emptyMap()
 
+internal fun Components?.safePathItems() =
+  this?.pathItems ?: emptyMap()
+
 internal fun Discriminator.safeMapping() =
   mapping ?: emptyMap()
 
@@ -282,6 +286,9 @@ internal fun Example.shortRef() =
 
 internal fun ApiResponse.shortRef() =
   this.`$ref`?.replace("#/components/responses/", "")
+
+internal fun PathItem.shortRef() =
+  this.`$ref`?.replace("#/components/pathItems/", "")
 
 internal fun singleExampleMap(exampleValue: Any) =
   mapOf("_example" to Example().apply { value = exampleValue })

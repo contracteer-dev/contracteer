@@ -422,6 +422,46 @@ See [`$ref` with sibling keywords](../concepts/openapi-coverage.md#ref-with-sibl
 
 ---
 
+### Path item `$ref` is rejected
+
+**Symptom:** Loading fails with `'post' beside a path item '$ref' is not supported in Contracteer.` (one line per field), or with `$ref '#/x-shared/products': cannot resolve JSON Pointer — a path item reference must point to ...`.
+
+**Cause:** A path item combines `$ref` with operations or `parameters`.
+The OpenAPI parser drops such fields, so Contracteer rejects them rather than lose operations without a word.
+Or, in OpenAPI 3.0, the reference points outside `#/paths`, which the parser does not resolve.
+
+**Fix:** Declare the fields in the referenced path item, or give those operations their own path.
+In OpenAPI 3.0, keep the shared path item under `paths` and reference it as `#/paths/~1products`.
+
+```yaml
+# Rejected -- post beside the $ref
+paths:
+  /products:
+    $ref: '#/components/pathItems/Products'
+    post:
+      responses:
+        '201':
+          description: Created
+
+# Accepted -- post declared in the referenced path item
+paths:
+  /products:
+    $ref: '#/components/pathItems/Products'
+components:
+  pathItems:
+    Products:
+      get:
+        responses:
+          '200':
+            description: OK
+      post:
+        responses:
+          '201':
+            description: Created
+```
+
+---
+
 ### Sibling type conflicts with referenced target
 
 **Symptom:** Loading the OpenAPI document fails with `Schema 'X': sibling 'type: A' conflicts with referenced target type 'B'`.

@@ -68,6 +68,7 @@ object OpenApiLoader {
       val version = readDeclaredVersion(document)
       checkSupportedVersion(version).bind()
       checkBooleanSchemaReferences(document, version).bind()
+      checkPathItemReferences(document).bind()
       val openAPI = parse(content).bind()
       val sharedComponents = SharedComponents(
         schemas = openAPI.components.safeSchemas(),
@@ -75,7 +76,8 @@ object OpenApiLoader {
         requestBodies = openAPI.components.safeRequestBodies(),
         headers = openAPI.components.safeHeaders(),
         examples = openAPI.components.safeExamples(),
-        responses = openAPI.components.safeResponses()
+        responses = openAPI.components.safeResponses(),
+        pathItems = openAPI.components.safePathItems()
       )
       ApiOperationExtractor(sharedComponents, warnings).extract(openAPI).bind()
     }
@@ -123,6 +125,9 @@ object OpenApiLoader {
       document != null && version.isOpenApi31() -> document.rejectReferencesToBooleanSchemas()
       else                                      -> success()
     }
+
+  private fun checkPathItemReferences(document: JsonNode?): Result<Unit> =
+    document?.rejectUnsupportedPathItemReferences() ?: success()
 
   private fun VersionRead.isOpenApi31() =
     this is Declared && OPENAPI_31_VERSION matches value

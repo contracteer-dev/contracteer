@@ -1,0 +1,18 @@
+openapi: 3.1.0
+info:
+  title: Path item reference to a component
+  version: 1.0.0
+paths:
+  /products:
+    $ref: '#/components/pathItems/Products'
+components:
+  pathItems:
+    Products:
+      get:
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  type: string

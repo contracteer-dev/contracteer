@@ -1,0 +1,18 @@
+openapi: 3.1.0
+info:
+  title: Path item reference with the siblings Contracteer does not read
+  version: 1.0.0
+paths:
+  /products:
+    $ref: '#/components/pathItems/Products'
+    summary: Products
+    description: The product listing.
+    servers:
+      - url: https://catalog.example.com
+components:
+  pathItems:
+    Products:
+      get:
+        responses:
+          '200':
+            description: ok

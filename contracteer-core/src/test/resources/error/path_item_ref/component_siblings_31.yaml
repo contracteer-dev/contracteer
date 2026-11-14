@@ -1,0 +1,20 @@
+openapi: 3.1.0
+info:
+  title: Field beside a reference inside a path item component
+  version: 1.0.0
+paths:
+  /products:
+    $ref: '#/components/pathItems/Alias'
+components:
+  pathItems:
+    Alias:
+      $ref: '#/components/pathItems/Products'
+      post:
+        responses:
+          '201':
+            description: created
+    Products:
+      get:
+        responses:
+          '200':
+            description: ok

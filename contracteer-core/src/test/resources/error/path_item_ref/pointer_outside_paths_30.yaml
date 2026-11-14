@@ -1,0 +1,13 @@
+openapi: 3.0.3
+info:
+  title: Path item reference to a pointer the parser does not resolve
+  version: 1.0.0
+paths:
+  /products:
+    $ref: '#/x-shared/products'
+x-shared:
+  products:
+    get:
+      responses:
+        '200':
+          description: ok
