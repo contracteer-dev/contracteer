@@ -1456,6 +1456,8 @@ Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., <code>classp
 <p><strong><code>serverUrl</code></strong> <em>(default: <code>http://localhost</code>)</em> -- Base URL of the server under test.</p>
 <p><strong><code>serverPort</code></strong> <em>(default: <code>8080</code>)</em> -- Port of the server under test.
 Overridden by <code>@ContracteerServerPort</code> if the annotated field has a non-zero value.</p>
+<p><strong><code>timeoutSeconds</code></strong> <em>(default: <code>10</code>)</em> -- Seconds each case waits for the response headers before it fails.
+It does not limit reading the response body.</p>
 <div class="admonition tip">
 <p class="admonition-title">Treat the OpenAPI document as a shared artifact</p>
 <p>Contracteer encourages <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI document exists independently of both server and client.
@@ -1583,8 +1585,9 @@ A skipped test does not fail the build: the OpenAPI document is valid, and Contr
 <p>See <a href="../../concepts/testing-your-server/">Testing Your Server</a> for a detailed explanation of what the verifier checks.</p>
 <hr />
 <h2 id="debugging-failures">Debugging Failures<a class="headerlink" href="#debugging-failures" title="Permanent link">&para;</a></h2>
-<p>When a verification case fails, Contracteer logs the HTTP request and response at WARN level automatically.
-No configuration is needed -- failed cases are always visible.</p>
+<p>When the server's response fails a verification case, Contracteer logs the HTTP request and response at WARN level automatically.
+No configuration is needed.
+A case that gets no response -- the server cannot be reached or does not answer in time -- logs nothing; its failure message names the base URL.</p>
 <p>To see all HTTP traffic -- including successful cases -- set the <code>dev.contracteer.http</code> logger to DEBUG:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Logback (logback-test.xml)</label><label for="__tabbed_4_2">application.yaml (Spring Boot)</label></div>
 <div class="tabbed-content">

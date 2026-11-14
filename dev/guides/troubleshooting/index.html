@@ -1037,6 +1037,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#a-case-fails-with-no-response-within" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A case fails with "no response ... within"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#all-verification-cases-fail-with-the-wrong-status-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1746,6 +1757,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#a-case-fails-with-no-response-within" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A case fails with "no response ... within"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#all-verification-cases-fail-with-the-wrong-status-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2414,7 +2436,8 @@ This shows every request and response exchanged between Contracteer and the serv
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>-t
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>openapi.yaml<span class="w"> </span>-t
 </code></pre></div>
-<p>Contracteer also logs automatically at WARN level when a verification case fails or the mock server returns a 418.
+<p>Contracteer also logs automatically at WARN level when the server's response fails a verification case or the mock server returns a 418.
+A verification case that gets no response logs nothing, even with HTTP traffic logging; its failure message says why.
 At startup, the mock server logs at WARN each operation that answers <code>418</code> or an error status to a valid request no scenario matches.</p>
 <hr />
 <h2 id="verifier-issues">Verifier Issues<a class="headerlink" href="#verifier-issues" title="Permanent link">&para;</a></h2>
@@ -2424,6 +2447,13 @@ At startup, the mock server logs at WARN each operation that answers <code>418</
 <p><strong>Fix:</strong> Start the server before the verification runs.
 Check the base URL given to the verifier: <code>--base-url</code> on the CLI, <code>baseUrl</code> on <code>VerifierConfiguration</code>, <code>serverUrl</code> and <code>serverPort</code> on <code>@ContracteerTest</code>.
 When the server starts on a random port, check that the field annotated with <code>@ContracteerServerPort</code> holds that port.</p>
+<h3 id="a-case-fails-with-no-response-within">A case fails with "no response ... within"<a class="headerlink" href="#a-case-fails-with-no-response-within" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> A verification case fails with <code>Request failed: no response from http://localhost:8080 within 10s</code>.</p>
+<p><strong>Cause:</strong> The server did not answer within the timeout.
+Either it accepted the connection but sent no response headers (the endpoint is slower than the timeout, the server is stuck, or the base URL uses <code>https</code> for a server that speaks plain HTTP and never answers the TLS handshake), or the connection itself was never accepted (a firewall drops it, or no host answers at that address).</p>
+<p><strong>Fix:</strong> Check that the base URL's host and port are reachable, that its scheme matches the server, and that the server answers the request at all.
+If the endpoint is just slow, raise the timeout: <code>--timeout</code> on the CLI, <code>timeout</code> on <code>VerifierConfiguration</code>, <code>timeoutSeconds</code> on <code>@ContracteerTest</code>.
+Every case waits for the full timeout, so against a server that never answers, a run takes the number of cases times the timeout.</p>
 <h3 id="all-verification-cases-fail-with-the-wrong-status-code">All verification cases fail with the wrong status code<a class="headerlink" href="#all-verification-cases-fail-with-the-wrong-status-code" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Every scenario-based case expects <code>200</code> but the server returns <code>404</code>.</p>
 <p><strong>Cause:</strong> The test data is not seeded, or the seeded IDs do not match the OpenAPI example values.</p>

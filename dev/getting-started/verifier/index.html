@@ -1453,6 +1453,9 @@ This is the right choice for Kotest, TestNG, a custom test harness, or any setup
 <li><strong><code>baseUrl</code></strong> <em>(default: <code>http://localhost:8080</code>)</em> -- Absolute base URL of the server under test.
   Must include scheme (<code>http</code> or <code>https</code>), host, and port.
   May include a path prefix (e.g., <code>https://api.example.com/v1</code>); query strings and fragments are rejected.</li>
+<li><strong><code>timeout</code></strong> <em>(default: 10 seconds)</em> -- How long each case waits for the response headers, as a <code>java.time.Duration</code>.
+  A case that gets none in time fails with <code>Request failed: no response from &lt;base URL&gt; within &lt;timeout&gt;</code>.
+  The timeout does not limit reading the response body.</li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Treat the OpenAPI document as a shared artifact</p>
@@ -1544,8 +1547,9 @@ It does not check response values.</p>
 <p>See <a href="../../concepts/testing-your-server/">Testing Your Server</a> for a detailed explanation of what the verifier checks.</p>
 <hr />
 <h2 id="debugging-failures">Debugging Failures<a class="headerlink" href="#debugging-failures" title="Permanent link">&para;</a></h2>
-<p>When a verification case fails, Contracteer logs the HTTP request and response at WARN level automatically.
-No configuration is needed -- failed cases are always visible.</p>
+<p>When the server's response fails a verification case, Contracteer logs the HTTP request and response at WARN level automatically.
+No configuration is needed.
+A case that gets no response -- the server cannot be reached or does not answer in time -- logs nothing; its failure message names the base URL.</p>
 <p>To see all HTTP traffic -- including successful cases -- set the <code>dev.contracteer.http</code> logger to DEBUG.</p>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
