@@ -1989,7 +1989,7 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 </tr>
 <tr>
 <td>Keywords on a schema with no <code>type</code></td>
-<td><code>minItems</code>, <code>maxItems</code>, <code>uniqueItems</code>, <code>minProperties</code>, <code>maxProperties</code> and <code>propertyNames</code> (OpenAPI 3.1) on a schema with no <code>type</code>, <code>properties</code>, <code>additionalProperties</code> or <code>items</code> are ignored with a warning, and so is <code>nullable</code> in OpenAPI 3.0, where it has no effect without <code>type</code>. This includes an <code>allOf</code> branch such as <code>{minItems: 2}</code> next to a <code>$ref</code>.</td>
+<td><code>minItems</code>, <code>maxItems</code>, <code>uniqueItems</code>, <code>minProperties</code>, <code>maxProperties</code> and <code>propertyNames</code> (OpenAPI 3.1) on a schema with no <code>type</code>, <code>properties</code>, <code>additionalProperties</code> or <code>items</code> are ignored with a warning, and so is <code>nullable</code> in OpenAPI 3.0, where it has no effect without <code>type</code>. This includes an <code>allOf</code> branch such as <code>{minItems: 2}</code> next to a <code>$ref</code>. <code>minimum</code>, <code>maximum</code>, <code>exclusiveMinimum</code>, <code>exclusiveMaximum</code>, <code>multipleOf</code>, <code>pattern</code>, <code>minLength</code>, <code>maxLength</code> and <code>format</code> on such a schema are rejected at load time, unless it declares <code>const</code> (OpenAPI 3.1).</td>
 </tr>
 <tr>
 <td><code>readOnly</code> / <code>writeOnly</code> inside <code>allOf</code></td>
@@ -2455,7 +2455,8 @@ Contracteer does not process them.</p>
 </table>
 <p><strong>Type inference.</strong>
 When a schema declares no <code>type</code> but uses <code>properties</code>, <code>additionalProperties</code>, or <code>items</code>, Contracteer treats it as an object or array schema accordingly.
-This is consistent with the OpenAPI Specification, which permits typeless schemas while defining these keywords only for objects or arrays.</p>
+This is consistent with the OpenAPI Specification, which permits typeless schemas while defining these keywords only for objects or arrays.
+In OpenAPI 3.1, a schema with <code>const</code> and no <code>type</code> takes its type from the value; see <a href="#const"><code>const</code></a>.</p>
 <h3 id="schema-composition">Schema composition<a class="headerlink" href="#schema-composition" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2701,6 +2702,10 @@ This matches the OpenAPI rule: "The <code>allOf</code> form of <code>discriminat
 <td>External <code>$ref</code> (other files)</td>
 <td>Resolved by the OpenAPI parser before Contracteer processes the model</td>
 </tr>
+<tr>
+<td>Path Item <code>$ref</code></td>
+<td>Supported for <code>#/paths/&lt;path&gt;</code> and, in OpenAPI 3.1, for <code>#/components/pathItems/&lt;name&gt;</code> and other locations in the document. In OpenAPI 3.0, a pointer outside <code>#/paths</code> fails the load. A field beside the <code>$ref</code> other than <code>summary</code>, <code>description</code>, <code>servers</code> and <code>x-</code> extensions fails the load</td>
+</tr>
 </tbody>
 </table>
 <h3 id="responses">Responses<a class="headerlink" href="#responses" title="Permanent link">&para;</a></h3>
@@ -2837,14 +2842,17 @@ A <code>{type: "null"}</code> schema accepts only <code>null</code> and rejects 
 <h3 id="const"><code>const</code><a class="headerlink" href="#const" title="Permanent link">&para;</a></h3>
 <p>OpenAPI 3.1 introduces <code>const</code> for schemas with a single allowed value.
 Contracteer supports <code>const</code> on <code>string</code>, <code>integer</code>, <code>number</code>, and <code>boolean</code> schemas.
-The schema's <code>type</code> must be declared explicitly -- Contracteer does not infer the type from the <code>const</code> value.</p>
+A schema that declares no <code>type</code> takes its type from the <code>const</code> value: <code>string</code>, <code>boolean</code>, <code>integer</code> for a number with no fractional part, or <code>number</code> otherwise.
+The schema's other keywords then apply as they would for that type.
+On a schema with no <code>type</code>, a <code>const</code> with an object, array or <code>null</code> value is rejected at load time.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">components</span><span class="p">:</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">OrderStatus</span><span class="p">:</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
 <a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">      </span><span class="nt">const</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ACTIVE</span>
 </code></pre></div>
-<p>A schema with <code>const: null</code> is not representable.</p>
+<p>Contracteer does not support <code>const: null</code>.
+To allow only <code>null</code> on a nullable schema, use <code>enum: [null]</code>.</p>
 <h3 id="propertynames"><code>propertyNames</code><a class="headerlink" href="#propertynames" title="Permanent link">&para;</a></h3>
 <p>OpenAPI 3.1 introduces <code>propertyNames</code> to constrain the names of properties in an object schema.
 <code>propertyNames</code> takes a schema that must resolve to a string type.</p>
