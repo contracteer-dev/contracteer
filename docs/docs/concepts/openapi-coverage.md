@@ -25,7 +25,7 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 | `externalValue` (Example Objects)                    | Only inline `value` is read. External references are not fetched.                                                                                                                                                                                                                                                                        |
 | Pattern generation (regex)                           | Common Java-specific constructs (POSIX classes, `\p{Is...}` aliases) are rewritten automatically. Patterns that the generator cannot handle are rejected at load time. See [Troubleshooting](../guides/troubleshooting.md#pattern-not-supported-for-value-generation) for details.                                                       |
 | Unknown integer/number formats                       | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints.                                                                                                                                                                                                                                                |
-| Keywords on a schema with no `type`                  | `minItems`, `maxItems`, `uniqueItems`, `minProperties`, `maxProperties` and `propertyNames` (OpenAPI 3.1) on a schema with no `type`, `properties`, `additionalProperties` or `items` are ignored with a warning, and so is `nullable` in OpenAPI 3.0, where it has no effect without `type`. This includes an `allOf` branch such as `{minItems: 2}` next to a `$ref`. |
+| Keywords on a schema with no `type`                  | `minItems`, `maxItems`, `uniqueItems`, `minProperties`, `maxProperties` and `propertyNames` (OpenAPI 3.1) on a schema with no `type`, `properties`, `additionalProperties` or `items` are ignored with a warning, and so is `nullable` in OpenAPI 3.0, where it has no effect without `type`. This includes an `allOf` branch such as `{minItems: 2}` next to a `$ref`. `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`, `pattern`, `minLength`, `maxLength` and `format` on such a schema are rejected at load time, unless it declares `const` (OpenAPI 3.1). |
 | `readOnly` / `writeOnly` inside `allOf`              | Ignored with a warning on an `allOf` branch written in place. They apply only when declared on the property schema itself.                                                                                                                                                                                                               |
 | `anyOf` / `oneOf` branch that accepts any value      | A branch with no `type` and no constraint Contracteer applies, such as `{}`, `{required: [name]}` or, in OpenAPI 3.0, `{nullable: true}`, is ignored with a warning: the composition accepts only its other branches. If every branch is ignored, the composition accepts any value; with `properties` next to it, it accepts the object those properties describe, without the `required` of its branches. In a `oneOf` with other branches, such a branch that declares no `required` is rejected at load time: under the OpenAPI Specification the `oneOf` would accept only the values its other branches reject, which Contracteer cannot express. |
 
@@ -351,6 +351,7 @@ Contracteer does not process them.
 **Type inference.**
 When a schema declares no `type` but uses `properties`, `additionalProperties`, or `items`, Contracteer treats it as an object or array schema accordingly.
 This is consistent with the OpenAPI Specification, which permits typeless schemas while defining these keywords only for objects or arrays.
+In OpenAPI 3.1, a schema with `const` and no `type` takes its type from the value; see [`const`](#const).
 
 ### Schema composition
 
@@ -628,7 +629,9 @@ components:
 
 OpenAPI 3.1 introduces `const` for schemas with a single allowed value.
 Contracteer supports `const` on `string`, `integer`, `number`, and `boolean` schemas.
-The schema's `type` must be declared explicitly -- Contracteer does not infer the type from the `const` value.
+A schema that declares no `type` takes its type from the `const` value: `string`, `boolean`, `integer` for a number with no fractional part, or `number` otherwise.
+The schema's other keywords then apply as they would for that type.
+On a schema with no `type`, a `const` with an object, array or `null` value is rejected at load time.
 
 ```yaml
 components:
@@ -638,7 +641,8 @@ components:
       const: ACTIVE
 ```
 
-A schema with `const: null` is not representable.
+Contracteer does not support `const: null`.
+To allow only `null` on a nullable schema, use `enum: [null]`.
 
 ### `propertyNames`
 

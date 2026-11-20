@@ -1,0 +1,23 @@
+openapi: 3.1.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /test:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filter:
+                  const:
+                    kind: all
+                tags:
+                  const: [a, b]
+                nothing:
+                  const: null
+      responses:
+        '200':
+          description: OK

@@ -76,6 +76,91 @@ class OpenApiLoaderRulesTest {
   }
 
   @Test
+  fun `numeric, string and format keywords on a schema declaring no type are each reported as unsupported with their keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/datatype/3.0/untyped_scalar_constraints_error.yaml")
+
+    // then
+    val errors = report.errors().sortedBy { it.message }
+    assert(errors.map { it.rule to it.keyword } == listOf(
+      UNSUPPORTED to "maxLength",
+      UNSUPPORTED to "minLength",
+      UNSUPPORTED to "pattern",
+      UNSUPPORTED to "format",
+      UNSUPPORTED to "exclusiveMinimum",
+      UNSUPPORTED to "minimum",
+      UNSUPPORTED to "multipleOf",
+      UNSUPPORTED to "exclusiveMaximum",
+      UNSUPPORTED to "maximum"
+    )) { report.diagnostics.toString() }
+    assert(errors.map { it.message } == listOf(
+      "Schema 'code': 'maxLength' applies only to strings, and the schema declares no type. Declare 'type: string'.",
+      "Schema 'code': 'minLength' applies only to strings, and the schema declares no type. Declare 'type: string'.",
+      "Schema 'code': 'pattern' applies only to strings, and the schema declares no type. Declare 'type: string'.",
+      "Schema 'id': 'format' refines a type, and the schema declares no type. Declare the type 'format: uuid' refines.",
+      "Schema 'lowerBound': 'exclusiveMinimum' applies only to numbers, and the schema declares no type. Declare 'type: number' or 'type: integer'.",
+      "Schema 'lowerBound': 'minimum' applies only to numbers, and the schema declares no type. Declare 'type: number' or 'type: integer'.",
+      "Schema 'step': 'multipleOf' applies only to numbers, and the schema declares no type. Declare 'type: number' or 'type: integer'.",
+      "Schema 'upperBound': 'exclusiveMaximum' applies only to numbers, and the schema declares no type. Declare 'type: number' or 'type: integer'.",
+      "Schema 'upperBound': 'maximum' applies only to numbers, and the schema declares no type. Declare 'type: number' or 'type: integer'."
+    )) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `numeric exclusive bounds, pattern and format on an OAS 3 1 schema declaring no type are reported as unsupported, not as an empty schema`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/datatype/3.1/untyped_scalar_constraints_error.yaml")
+
+    // then
+    val errors = report.errors().sortedBy { it.message }
+    assert(errors.map { it.rule to it.keyword } == listOf(
+      UNSUPPORTED to "exclusiveMinimum",
+      UNSUPPORTED to "exclusiveMaximum",
+      UNSUPPORTED to "pattern",
+      UNSUPPORTED to "format"
+    )) { report.diagnostics.toString() }
+    assert(errors.map { it.message } == listOf(
+      "Schema 'above': 'exclusiveMinimum' applies only to numbers, and the schema declares no type. Declare 'type: number' or 'type: integer'.",
+      "Schema 'below': 'exclusiveMaximum' applies only to numbers, and the schema declares no type. Declare 'type: number' or 'type: integer'.",
+      "Schema 'code': 'pattern' applies only to strings, and the schema declares no type. Declare 'type: string'.",
+      "Schema 'count': 'format' refines a type, and the schema declares no type. Declare the type 'format: int32' refines."
+    )) { report.diagnostics.toString() }
+    assert(report.diagnostics.none { it.rule == EMPTY_SCHEMA }) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `const with an object, array or null value on a schema declaring no type is reported as unsupported with the const keyword`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/datatype/3.1/untyped_const_error.yaml")
+
+    // then
+    val errors = report.errors().sortedBy { it.message }
+    assert(errors.map { it.rule to it.keyword } == listOf(
+      UNSUPPORTED to "const",
+      UNSUPPORTED to "const",
+      UNSUPPORTED to "const"
+    )) { report.diagnostics.toString() }
+    assert(errors.map { it.message } == listOf(
+      "Schema 'filter': 'const' has an object value, and the schema declares no type. Declare 'type: object'.",
+      "Schema 'nothing': 'const' has a null value, and the schema declares no type.",
+      "Schema 'tags': 'const' has an array value, and the schema declares no type. Declare 'type: array'."
+    )) { report.diagnostics.toString() }
+  }
+
+  @Test
+  fun `keywords on a schema declaring an unknown type are not reported as declaring no type`() {
+    // when
+    val report = OpenApiLoader.load("src/test/resources/datatype/3.1/unknown_type_with_keywords_error.yaml")
+
+    // then
+    val errors = report.errors().sortedBy { it.message }
+    assert(errors.map { it.message } == listOf(
+      "Error while interpreting schema 'code'. The schema might be misconfigured or incomplete.",
+      "Error while interpreting schema 'status'. The schema might be misconfigured or incomplete."
+    )) { report.diagnostics.toString() }
+  }
+
+  @Test
   fun `multi-type sibling of a reference is reported as unsupported with the type keyword`() {
     // when
     val report = OpenApiLoader.load("src/test/resources/datatype/3.1/ref_with_sibling_multi_type_error.yaml")

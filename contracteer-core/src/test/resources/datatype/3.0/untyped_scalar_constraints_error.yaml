@@ -1,0 +1,30 @@
+openapi: 3.0.3
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /test:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lowerBound:
+                  minimum: 5
+                  exclusiveMinimum: true
+                upperBound:
+                  maximum: 5
+                  exclusiveMaximum: true
+                step:
+                  multipleOf: 2
+                code:
+                  pattern: '^[a-z]+$'
+                  minLength: 1
+                  maxLength: 8
+                id:
+                  format: uuid
+      responses:
+        '200':
+          description: OK

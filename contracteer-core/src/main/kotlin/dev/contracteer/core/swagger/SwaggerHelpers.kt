@@ -19,6 +19,7 @@ import dev.contracteer.core.combineResults
 import dev.contracteer.core.datatype.DataType
 import dev.contracteer.core.datatype.NullDataType
 import dev.contracteer.core.joinWithQuotes
+import dev.contracteer.core.normalize
 import dev.contracteer.core.operation.ContentType
 import java.math.BigDecimal
 
@@ -102,6 +103,16 @@ private fun pickMostRestrictive(inclusive: BigDecimal?,
 
 internal fun Schema<*>.effectiveConst(): Any? =
   if (specVersion == V31) const else null
+
+/** The type of a schema declaring no type, read from its `const`, which accepts only that value; `null` for an object, array or null value. */
+internal fun Schema<*>.typeInferredFromConst(): String? =
+  if (!types.isNullOrEmpty()) null
+  else when (val value = effectiveConst().normalize()) {
+    is String     -> "string"
+    is Boolean    -> "boolean"
+    is BigDecimal -> if (value.stripTrailingZeros().scale() <= 0) "integer" else "number"
+    else          -> null
+  }
 
 internal fun Schema<*>.effectiveContentEncoding(): String? =
   if (specVersion == V31) contentEncoding?.lowercase() else null
@@ -208,16 +219,34 @@ internal fun Schema<*>.isAnyType() =
   properties.isNullOrEmpty() &&
   additionalProperties == null &&
   format == null &&
-  maximum == null &&
-  minimum == null &&
-  exclusiveMaximum == null &&
-  exclusiveMinimum == null &&
-  pattern == null &&
-  minLength == null &&
-  maxLength == null &&
-  multipleOf == null &&
+  numericKeywords().isEmpty() &&
+  stringKeywords().isEmpty() &&
   `enum`.isNullOrEmpty() &&
   effectiveConst() == null
+
+/** The keywords declared on a schema that apply only to numbers. */
+internal fun Schema<*>.numericKeywords(): List<String> =
+  buildList {
+    if (minimum != null) add("minimum")
+    if (maximum != null) add("maximum")
+    if (declaresExclusiveMinimum()) add("exclusiveMinimum")
+    if (declaresExclusiveMaximum()) add("exclusiveMaximum")
+    if (multipleOf != null) add("multipleOf")
+  }
+
+/** The keywords declared on a schema that apply only to strings. */
+internal fun Schema<*>.stringKeywords(): List<String> =
+  buildList {
+    if (pattern != null) add("pattern")
+    if (minLength != null) add("minLength")
+    if (maxLength != null) add("maxLength")
+  }
+
+private fun Schema<*>.declaresExclusiveMinimum(): Boolean =
+  if (specVersion == V31) exclusiveMinimumValue != null else exclusiveMinimum == true
+
+private fun Schema<*>.declaresExclusiveMaximum(): Boolean =
+  if (specVersion == V31) exclusiveMaximumValue != null else exclusiveMaximum == true
 
 /** The keywords declared on a schema [isAnyType] reads as accepting any value, which Contracteer does not apply without a type. */
 internal fun Schema<*>.keywordsIgnoredWithoutType(): List<String> =

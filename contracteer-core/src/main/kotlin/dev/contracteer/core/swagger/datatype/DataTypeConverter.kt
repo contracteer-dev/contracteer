@@ -1,5 +1,6 @@
 package dev.contracteer.core.swagger.datatype
 
+import com.fasterxml.jackson.databind.node.NullNode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.media.MediaType
@@ -12,7 +13,9 @@ import dev.contracteer.core.Result
 import dev.contracteer.core.Result.Companion.failure
 import dev.contracteer.core.Result.Companion.success
 import dev.contracteer.core.Result.Success
+import dev.contracteer.core.accumulate
 import dev.contracteer.core.datatype.*
+import dev.contracteer.core.normalize
 import dev.contracteer.core.operation.ContentType
 import dev.contracteer.core.swagger.*
 import java.util.IdentityHashMap
@@ -112,7 +115,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
     logger.debug { "Creating Datatype for Schema '${schema.name}'" }
     val convert = { s: Schema<*>, name: String -> convertToDataType(s, name) }
     val discriminator = { s: Schema<*> -> convertToDiscriminator(s) }
-    val type = schema.effectiveType()
+    val type = schema.effectiveType() ?: schema.typeInferredFromConst()
     val contentEncoding = schema.effectiveContentEncoding()
     val contentMediaType = schema.effectiveContentMediaType()?.let(::ContentType)
     val unsupportedFeature = schema.unsupportedFeature()
@@ -235,7 +238,44 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents,
 
   private fun tryToInferSchemaType(schema: Schema<*>, reportsEmptySchema: Boolean): Result<DataType<out Any>> =
     if (schema.isAnyType()) success(AnyDataType).also { reportAnyType(schema, reportsEmptySchema) }
-    else failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
+    else rejectSchema(schema)
+
+  private fun rejectSchema(schema: Schema<*>): Result<DataType<out Any>> {
+    val keywordsNeedingType = keywordsNeedingType(schema)
+    return if (keywordsNeedingType.isEmpty()) failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
+    else keywordsNeedingType.accumulate { failure<Unit>(it) }.retypeError()
+  }
+
+  /** The keywords a schema declaring no type cannot apply: its `const`, or else each numeric, string and `format` keyword. A schema declaring a type Contracteer does not know has none. */
+  private fun keywordsNeedingType(schema: Schema<*>): List<Diagnostic> {
+    val const = schema.effectiveConst()
+    return when {
+      schema.effectiveType() != null -> emptyList()
+      const != null                  -> listOfNotNull(constNeedingType(schema, const))
+      else                           -> scalarKeywordsNeedingType(schema)
+    }
+  }
+
+  /** A `const` whose value Contracteer does not read as a type: an object, an array or null. */
+  private fun constNeedingType(schema: Schema<*>, const: Any): Diagnostic? {
+    val description = when (const.normalize()) {
+      is Map<*, *> -> "an object value" to " Declare 'type: object'."
+      is List<*>   -> "an array value" to " Declare 'type: array'."
+      is NullNode  -> "a null value" to ""
+      else         -> null
+    }
+    return description?.let { (value, suggestion) ->
+      Diagnostic("Schema '${schema.name}': 'const' has $value, and the schema declares no type.$suggestion", keyword = "const", rule = UNSUPPORTED)
+    }
+  }
+
+  private fun scalarKeywordsNeedingType(schema: Schema<*>): List<Diagnostic> =
+    schema.numericKeywords().map { keywordNeedingType(schema, it, "applies only to numbers", "Declare 'type: number' or 'type: integer'.") } +
+    schema.stringKeywords().map { keywordNeedingType(schema, it, "applies only to strings", "Declare 'type: string'.") } +
+    listOfNotNull(schema.format?.let { keywordNeedingType(schema, "format", "refines a type", "Declare the type 'format: $it' refines.") })
+
+  private fun keywordNeedingType(schema: Schema<*>, keyword: String, reason: String, suggestion: String) =
+    Diagnostic("Schema '${schema.name}': '$keyword' $reason, and the schema declares no type. $suggestion", keyword = keyword, rule = UNSUPPORTED)
 
   private fun reportAnyType(schema: Schema<*>, reportsEmptySchema: Boolean) {
     val ignoredKeywords = schema.keywordsIgnoredWithoutType()

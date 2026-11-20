@@ -1325,6 +1325,31 @@ class SchemaConversionTest {
     }
   }
 
+  @ParameterizedTest(name = "infer the type of a schema declaring no type from its const value ({0})")
+  @MethodSource("untypedConstFixtures")
+  fun `infer the type of a schema declaring no type from its const value`(propName: String,
+                                                                          expectedType: Class<*>,
+                                                                          allowedValue: Any,
+                                                                          disallowedValue: Any) {
+    // when
+    val dataType = getDataType("3.1", "untyped_const.yaml", propName)
+
+    // then
+    assert(expectedType.isInstance(dataType)) { "Expected ${expectedType.simpleName} but got $dataType" }
+    assert(dataType.allowedValues!!.contains(allowedValue).isSuccess())
+    assert(dataType.allowedValues!!.contains(disallowedValue).isFailure())
+  }
+
+  @Test
+  fun `apply the keywords of the type inferred from const`() {
+    // when
+    val result = loadOperations("3.1", "untyped_const_with_type_keywords_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors == listOf("POST /test: 'request.body.prop1.enum': The value is not within the range of [5, +∞]")) { errors.toString() }
+  }
+
   // --- propertyNames keyword (OAS 3.1) ---
 
   @Test
@@ -1540,6 +1565,15 @@ class SchemaConversionTest {
       Arguments.of("integer_const.yaml", 42, 43),
       Arguments.of("number_const.yaml", 3.14, 2.71),
       Arguments.of("boolean_const.yaml", true, false),
+    )
+
+    @JvmStatic
+    fun untypedConstFixtures() = listOf(
+      Arguments.of("status",        StringDataType::class.java,  "active",        "inactive"),
+      Arguments.of("count",         IntegerDataType::class.java, 42,              43),
+      Arguments.of("largeCount",    IntegerDataType::class.java, 12345678901234L, 12345678901235L),
+      Arguments.of("ratio",         NumberDataType::class.java,  3.5,             2.5),
+      Arguments.of("enabled",       BooleanDataType::class.java, true,            false),
     )
 
     @JvmStatic

@@ -808,6 +808,27 @@ tags:
 
 On a schema outside `allOf`, declare the `type` the constraint applies to, for example `type: array` with `items`.
 
+### Keyword rejected on a schema with no type
+
+**Symptom:** Loading the OpenAPI document fails with a message such as `Schema 'code': 'pattern' applies only to strings, and the schema declares no type. Declare 'type: string'.`
+Each such keyword is reported on its own line.
+
+**Cause:** The schema declares a numeric keyword (`minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`), a string keyword (`pattern`, `minLength`, `maxLength`) or `format`, but no `type`.
+Under the OpenAPI Specification, such a keyword constrains only values of its type: `{pattern: '^[A-Z]{3}$'}` accepts every value that is not a string, and only the strings that match.
+Contracteer rejects the schema rather than guess: ignoring the keyword would accept strings it refuses, and reading the schema as a string would refuse numbers it accepts.
+
+**Fix:** On a standalone schema, declare the type the keyword applies to, for example `type: string` next to `pattern`.
+In an `allOf` branch next to a `$ref`, declaring the type is not enough: Contracteer does not combine an `allOf` of strings or numbers (see [`allOf` with non-structured sub-schemas](../concepts/openapi-coverage.md#allof-with-non-structured-sub-schemas)).
+In OpenAPI 3.1, write the keyword next to the `$ref`, without `allOf`:
+
+```yaml
+code:
+  $ref: '#/components/schemas/CurrencyCode'
+  pattern: '^[A-Z]{3}$'
+```
+
+In OpenAPI 3.0, declare the keyword in the referenced schema, or in a new component schema that the property references.
+
 ### `readOnly` or `writeOnly` ignored inside `allOf`
 
 **Symptom:** `contracteer lint` reports a warning like `Schema 'allOf #1': 'readOnly' is ignored inside 'allOf'; declare it beside 'allOf'.`

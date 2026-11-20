@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /test:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  const: active
+                count:
+                  const: 42
+                largeCount:
+                  const: 12345678901234
+                ratio:
+                  const: 3.5
+                enabled:
+                  const: true
+      responses:
+        '200':
+          description: OK
